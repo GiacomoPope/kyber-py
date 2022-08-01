@@ -1,8 +1,17 @@
+import random
+
 class PolynomialRing:
     def __init__(self, q, d):
         self.q = q
         self.d = d
         self.element = PolynomialRing.Polynomial
+
+    def gen(self):
+        return self([0,1])
+
+    def random_element(self):
+        coefficients = [random.randint(0, self.q - 1) for _ in range(self.d)]
+        return self(coefficients)
 
     def __call__(self, coefficients):
         if isinstance(coefficients, int):
@@ -113,6 +122,22 @@ class PolynomialRing:
         def __imul__(self, other):
             self = self * other
             return self
+
+        def __pow__(self, n):
+            if not isinstance(n, int):
+                raise TypeError(f"Exponentiation of a polynomial must be done using an integer.")
+
+            # Deal with negative scalar multiplication
+            if n < 0:
+                raise ValueError(f"Negative powers are not supported for elements of a Polynomial Ring")
+            f = self
+            g = self.parent(1)
+            while n > 0:
+                if n % 2 == 1:
+                    g = g * f
+                f = f * f
+                n = n // 2
+            return g
 
         def __eq__(self, other):
             if isinstance(other, PolynomialRing.Polynomial):
