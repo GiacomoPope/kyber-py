@@ -19,7 +19,7 @@ written so that reading though Algorithms 1-9 in the
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 closely matches the code which is seen in `kyber.py`.
 
-## Example
+## Using kyber-py
 
 There are three functions exposed on the `Kyber` class which are intended
 for use:
@@ -89,7 +89,7 @@ to move from bytes to polynomials (and back again).
 - `PolynomialRing`
   - `parse(bytes)` takes $3n$ bytes and produces a random polynomial in $R_q$
   - `decode(bytes, l)` takes $\ell n$ bits and produces a polynomial in $R_q$
-  - `cbd(beta, eta) takes $\eta n / 4$ bytes and produces a polynomial in $R_q$ with coefficents taken from a centered binomial distribution
+  - `cbd(beta, eta)` takes $\eta \cdot n / 4$ bytes and produces a polynomial in $R_q$ with coefficents taken from a centered binomial distribution
 - `Polynomial`
   - `self.encode(l)` takes the polynomial and returns a length $\ell n / 8$ bytearray
 
@@ -104,9 +104,9 @@ A module is a generalisation of a vector space, where the field
 of scalars is replaced with a ring. In the case of Kyber, we 
 need the module with the ring $R_q$ as described above. 
 
-`Matrix` allows elements of the module to be of size `m \times n`
-but for Kyber, we only need vectors of length `k` and square
-matricies of size `k \times k.
+`Matrix` allows elements of the module to be of size $m \times n$
+but for Kyber, we only need vectors of length $k$ and square
+matricies of size $k \times k$.
 
 As an example of the operations we can perform with out `Module`
 lets revisit the ring from the previous example:
@@ -121,6 +121,8 @@ lets revisit the ring from the previous example:
 >>> # We create a matrix by feeding the coefficients to M
 >>> A = M([[x + 3*x**2, 4 + 3*x**7], [3*x**3 + 9*x**7, x**4]])
 >>> A
+[    x + 3*x^2, 4 + 3*x^7]
+[3*x^3 + 9*x^7,       x^4]
 >>> # We can add and subtract matricies of the same size
 >>> A + A
 [  2*x + 6*x^2, 8 + 6*x^7]
@@ -128,7 +130,7 @@ lets revisit the ring from the previous example:
 >>> A - A
 [0, 0]
 [0, 0]
->>> A vector can be constructed by a list of coefficents
+>>> # A vector can be constructed by a list of coefficents
 >>> v = M([3*x**5, x])
 >>> v
 [3*x^5, x]
