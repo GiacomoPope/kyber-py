@@ -117,14 +117,16 @@ polynomials following page 2 of the
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 
 $$
-\textsf{compress}_q(x, d) = \lceil (2^d / q) \cdot x \rfloor \mod^+ 2^d, \\
-\textsf{decompress}_q(x, d) = \lceil (q / 2^d) \cdot x \\.
+\textsf{compress}_q(x, d) = \lceil (2^d / q) \cdot x \rfloor \textrm{mod}^+ 2^d,
+$$
+$$
+\textsf{decompress}_q(x, d) = \lceil (q / 2^d) \cdot x \rfloor.
 $$
 
 The functions `compress` and `decompress` are defined for the coefficients of a
-polynomial and a polynomial is compressed/decompressed by acting the function
+polynomial and a polynomial is (de)compressed by acting the function
 on every coefficient. 
-Similarly, an element of a module is compressed/decompressed by acting the
+Similarly, an element of a module is (de)compressed by acting the
 function on every polynomial.
 
 #### Example 3
