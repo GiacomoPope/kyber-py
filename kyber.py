@@ -88,21 +88,21 @@ class Kyber:
         """
         return shake_256(input_bytes).digest(length)
     
-    def _generate_error_vector(self, sigma, N):
+    def _generate_error_vector(self, sigma, N, is_ntt=False):
         """
         Helper function which generates a element in the
         module from the Centered Binomial Distribution.
         """
-        coefficients = []
+        elements = []
         for i in range(self.k):
             input_bytes = self._prf(sigma,  bytes([N]), 64*self.eta_1)
-            c = self.R.cbd(input_bytes, self.eta_1)
-            coefficients.append(c)
+            poly = self.R.cbd(input_bytes, self.eta_1, is_ntt=is_ntt)
+            elements.append(poly)
             N = N + 1
-        v = self.M(coefficients).transpose()
+        v = self.M(elements).transpose()
         return v, N
         
-    def _generate_matrix_from_seed(self, rho, N, transpose=False):
+    def _generate_matrix_from_seed(self, rho, N, transpose=False, is_ntt=False):
         """
         Helper function which generates a element of size
         k x k from a seed `rho`.
@@ -115,10 +115,12 @@ class Kyber:
             row = []
             for j in range(self.k):
                 if transpose:
-                    aij = self.R.parse(self._xof(rho, bytes([i]), bytes([j]), 3*self.R.n))
+                    input_bytes = self._xof(rho, bytes([i]), bytes([j]), 3*self.R.n)
                 else:
-                    aij = self.R.parse(self._xof(rho, bytes([j]), bytes([i]), 3*self.R.n))
+                    input_bytes = self._xof(rho, bytes([j]), bytes([i]), 3*self.R.n)
+                aij = self.R.parse(input_bytes, is_ntt=is_ntt)
                 row.append(aij)
+                N = N + 1
             A.append(row)
         return self.M(A), N
     
@@ -141,14 +143,18 @@ class Kyber:
         N = 0
         
         # Generate the matrix A ∈ R^kxk
-        A, N = self._generate_matrix_from_seed(rho, N)
+        A, N = self._generate_matrix_from_seed(rho, N, is_ntt=True)
         
         # Generate the error vector s ∈ R^k
         s, N = self._generate_error_vector(sigma, N)
         
         # Generate the error vector e ∈ R^k
         e, N = self._generate_error_vector(sigma, N)
-        
+                
+        # Convert elements to NTT form
+        s.to_ntt()
+        e.to_ntt()                
+            
         # Construct the public key
         t = A @ s + e
         
@@ -171,13 +177,14 @@ class Kyber:
         """
         N = 0
         _pk, rho = pk[:-32], pk[-32:]
-        t = self.M.decode(_pk, self.k, 1, l=12)
+        t = self.M.decode(_pk, self.k, 1, l=12, is_ntt=True)
         
         # Generate the matrix A^T ∈ R^(kxk)
-        At, N = self._generate_matrix_from_seed(rho, N, transpose=True)
+        At, N = self._generate_matrix_from_seed(rho, N, transpose=True, is_ntt=True)
         
         # Generate the error vector r ∈ R^k
         r, N = self._generate_error_vector(coins, N)
+        r.to_ntt()
         
         # Generate the error vector e1 ∈ R^k
         e1, N = self._generate_error_vector(coins, N)
@@ -187,8 +194,11 @@ class Kyber:
         e2 = self.R.cbd(input_bytes, self.eta_2)
         
         m_poly = self.R.decode(m, l=1).decompress(1)
-        u = At @ r + e1
-        v = (t.transpose() @ r)[0][0] + e2 + m_poly
+        
+        
+        u = (At @ r).from_ntt() + e1
+        v = (t.transpose() @ r)[0][0].from_ntt()
+        v = v + e2 + m_poly
         
         c1 = u.compress(self.du).encode(l=self.du)
         c2 = v.compress(self.dv).encode(l=self.dv)
@@ -209,9 +219,13 @@ class Kyber:
         index = self.du * self.k * self.R.n // 8
         c1, c2 = c[:index], c[index:]
         u = self.M.decode(c1, self.k, 1, l=self.du).decompress(self.du)
+        u.to_ntt()
         v = self.R.decode(c2, l=self.dv).decompress(self.dv)
-        st = self.M.decode(sk, 1, self.k, l=12)
-        return (v - (st @ u)[0][0]).compress(1).encode(l=1)
+        st = self.M.decode(sk, 1, self.k, l=12, is_ntt=True)
+        
+        m = (st @ u)[0][0].from_ntt()
+        m = v - m
+        return m.compress(1).encode(l=1)
         
     def keygen(self):
         """

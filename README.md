@@ -4,8 +4,6 @@ This repository contains a pure python implementation of CRYSTALS-Kyber
 following the most recent (v3.02)
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf))
 
-**TODO**: Implement the NTT to speed up polynomial multiplication.
-
 ## Disclaimer
 
 :warning: **Under no circumstances should this be used for a cryptographic application.** :warning:
@@ -46,13 +44,50 @@ so you can simply import the NIST level you want to play with:
 
 The above example would also work with `Kyber768` and `Kyber1024`.
 
+### Benchmarks
+
+**TODO**: in-depth benchmarks
+
+For now, here are some approximate benchmarks:
+
+#### Kyber-512
+
+```python
+>>> timeit("Kyber512.keygen()", globals=globals(), number=1000) / 1000
+0.005577755830003298
+>>> timeit("Kyber512.encrypt(pk)", globals=globals(), number=1000) / 1000
+0.010908756061995518
+>>> timeit("Kyber512.decrypt(c, sk)", globals=globals(), number=1000) / 1000
+0.01810154920700006
+```
+
+#### Kyber-768
+
+```python
+>>> timeit("Kyber768.keygen()", globals=globals(), number=1000) / 1000
+0.008204252133997215
+>>> timeit("Kyber768.encrypt(pk)", globals=globals(), number=1000) / 1000
+0.015505350967003324
+>>> timeit("Kyber768.decrypt(c, sk)", globals=globals(), number=1000) / 1000
+0.026082826769998065
+```
+
+#### Kyber-1024
+
+```python
+>>> timeit("Kyber1024.keygen()", globals=globals(), number=1000) / 1000
+0.01213216471499618
+>>> timeit("Kyber1024.encrypt(pk)", globals=globals(), number=1000) / 1000
+0.021581338303003576
+>>> timeit("Kyber1024.decrypt(c, sk)", globals=globals(), number=1000) / 1000
+0.03543514921599854
+```
+
 ## Future Plans
 
-### Faster multiplication by using NTT 
-
-At the moment, the implementation is very slow, as we perform schoolbook
-multiplication on the polynomials. This should be updated to instead use
-the number theoretic transform as is outlined in the spec.
+* **High priority**: Assure that output matches the Known Answer Test files
+* Faster polynomial multiplication by performing Barrett reduction
+* Add documentation on `NTT` transform for polynomials
 
 ### Include Dilithium
 
@@ -132,8 +167,8 @@ $$
 \textsf{decompress}_q(x, d) = \lceil (q / 2^d) \cdot x \rfloor.
 $$
 
-The functions `compress` and `decompress` are defined for the coefficients of a
-polynomial and a polynomial is (de)compressed by acting the function
+The functions `compress` and `decompress` are defined for the coefficients 
+of a polynomial and a polynomial is (de)compressed by acting the function
 on every coefficient. 
 Similarly, an element of a module is (de)compressed by acting the
 function on every polynomial.

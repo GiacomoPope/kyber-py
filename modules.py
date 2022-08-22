@@ -2,7 +2,7 @@ class Module:
     def __init__(self, ring):
         self.ring = ring
         
-    def decode(self, input_bytes, m, n, l=None):
+    def decode(self, input_bytes, m, n, l=None, is_ntt=False):
         if l is None:
             l, check = divmod(8*len(input_bytes), self.ring.n*m*n)
             if check != 0:
@@ -16,7 +16,7 @@ class Module:
         for i in range(m):
             row = []
             for j in range(n):
-                mij = self.ring.decode(byte_chunks[n*i+j], l=l)
+                mij = self.ring.decode(byte_chunks[n*i+j], l=l, is_ntt=is_ntt)
                 row.append(mij)
             matrix.append(row)
         return self(matrix)
@@ -87,7 +87,19 @@ class Module:
             for row in self.rows:
                 for ele in row:
                     ele.decompress(d)
-            return self            
+            return self    
+    
+        def to_ntt(self):
+            for row in self.rows:
+                for ele in row:
+                    ele.to_ntt()
+            return self
+    
+        def from_ntt(self):
+            for row in self.rows:
+                for ele in row:
+                    ele.from_ntt()
+            return self        
                     
         def __getitem__(self, i):
             return self.rows[i]
