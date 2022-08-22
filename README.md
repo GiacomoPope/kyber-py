@@ -92,10 +92,57 @@ to move from bytes to polynomials (and back again).
   - `cbd(beta, eta)` takes $\eta \cdot n / 4$ bytes and produces a polynomial in $R_q$ with coefficents taken from a centered binomial distribution
 - `Polynomial`
   - `self.encode(l)` takes the polynomial and returns a length $\ell n / 8$ bytearray
+  
+#### Example 3
+
+```python
+>>> R = PolynomialRing(11, 8)
+>>> f = R.random_element()
+>>> # If we do not specify `l` then it is computed for us (minimal value)
+>>> f_bytes = f.encode()
+>>> f_bytes.hex()
+'06258910'
+>>> R.decode(f_bytes) == f
+True
+>>> # We can also set `l` ourselves
+>>> f_bytes = f.encode(l=10)
+>>> f_bytes.hex()
+'00180201408024010000'
+>>> R.decode(f_bytes, l=10) == f
+True
+```
 
 Lastly, we define a `self.compress(d)` and `self.decompress(d)` method for
 polynomials following page 2 of the 
-[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf).
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
+
+$$
+\textsf{compress}_q(x, d) = \lceil (2^d / q) \cdot x \rfloor \mod^+ 2^d, \\
+\textsf{decompress}_q(x, d) = \lceil (q / 2^d) \cdot x \\.
+$$
+
+The functions `compress` and `decompress` are defined for the coefficients of a
+polynomial and a polynomial is compressed/decompressed by acting the function
+on every coefficient. 
+Similarly, an element of a module is compressed/decompressed by acting the
+function on every polynomial.
+
+#### Example 3
+
+```python
+>>> R = PolynomialRing(11, 8)
+>>> f = R.random_element()
+>>> f
+9 + 3*x + 5*x^2 + 2*x^3 + 9*x^4 + 10*x^5 + 6*x^6 + x^7
+>>> f.compress(1)
+x + x^2 + x^6
+>>> f.decompress(1)
+6*x + 6*x^2 + 6*x^6
+```
+
+**Note**: compression is lossy! We do not get the same polynomial back 
+by computing `f.compress(d).decompress(d)`. They are however *close*.
+See the specification for more information.
 
 ### Modules
 
@@ -111,7 +158,7 @@ matricies of size $k \times k$.
 As an example of the operations we can perform with out `Module`
 lets revisit the ring from the previous example:
 
-#### Example 3
+#### Example 4
 
 ```python
 >>> R = PolynomialRing(11, 8)
@@ -153,6 +200,38 @@ lets revisit the ring from the previous example:
 [        2 + 6*x^4 + x^5]
 ```
 
-We also carry through `Matrix.encode(d)` anf `Module.decode(d, n_rows, n_cols)` 
+We also carry through `Matrix.encode()` and 
+`Module.decode(bytes, n_rows, n_cols)` 
 which simply use the above functions defined for polynomials and run for each
 element.
+
+#### Example 5
+
+We can see how encoding / decoding a vector works in the following example.
+Note that we can swap the rows/columns to decode bytes into the transpose
+when working with a vector.
+
+```python
+>>> R = PolynomialRing(11, 8)
+>>> M = Module(R)
+>>> v = M([R.random_element() for _ in range(2)])
+>>> v_bytes = v.encode()
+>>> v_bytes.hex()
+'d'
+>>> M.decode(v_bytes, 1, 2) == v
+True
+>>> v_bytes = v.encode(l=10)
+>>> v_bytes.hex()
+'a014020100103004000040240a03009030080200'
+>>> M.decode(v_bytes, 1, 2, l=10) == v
+True
+>>> M.decode(v_bytes, 2, 1, l=10) == v.transpose()
+True
+>>> # We can also compress and decompress elements of the module
+>>> v
+[5 + 10*x + 4*x^2 + 2*x^3 + 8*x^4 + 3*x^5 + 2*x^6, 2 + 9*x + 5*x^2 + 3*x^3 + 9*x^4 + 3*x^5 + x^6 + x^7]
+>>> v.compress(1)
+[1 + x^2 + x^4 + x^5, x^2 + x^3 + x^5]
+>>> v.decompress(1)
+[6 + 6*x^2 + 6*x^4 + 6*x^5, 6*x^2 + 6*x^3 + 6*x^5]
+```
