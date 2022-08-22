@@ -238,3 +238,10 @@ True
 >>> v.decompress(1)
 [6 + 6*x^2 + 6*x^4 + 6*x^5, 6*x^2 + 6*x^3 + 6*x^5]
 ```
+
+## Baby Kyber
+
+A great resource for learning Kyber is available at
+[Approachable Cryptography](https://cryptopedia.dev/posts/kyber/).
+
+We include code corresponding to their example in `baby_kyber.py`.
