@@ -34,6 +34,8 @@ protocol parameters. An example can be seen in `DEFAULT_PARAMETERS`.
 Additionally, the class has been initialised with these default parameters, 
 so you can simply import the NIST level you want to play with:
 
+#### Example 1
+
 ```python
 >>> from kyber import Kyber512
 >>> pk, sk = Kyber512.keygen()
@@ -59,11 +61,13 @@ The file `polynomials.py` contains the classes `PolynomialRing` and
 `Polynomial`. This implements the univariate polynomial ring
 
 $$
-R = \mathbb{F}_q[X] /(X^n + 1) 
+R_q = \mathbb{F}_q[X] /(X^n + 1) 
 $$
 
 The implementation is inspired by `SageMath` and you can create the
-ring $R = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
+ring $R_{11} = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
+
+#### Example 2
 
 ```python
 >>> R = PolynomialRing(11, 8)
@@ -79,8 +83,74 @@ ring $R = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
 0
 ```
 
+We additionally include functions for `PolynomialRing` and `Polynomial`
+to move from bytes to polynomials (and back again). 
+
+- `PolynomialRing`
+  - `parse(bytes)` takes $3n$ bytes and produces a random polynomial in $R_q$
+  - `decode(bytes, l)` takes $\ell n$ bits and produces a polynomial in $R_q$
+  - `cbd(beta, eta) takes $\eta n / 4$ bytes and produces a polynomial in $R_q$ with coefficents taken from a centered binomial distribution
+- `Polynomial`
+  - `self.encode(l)` takes the polynomial and returns a length $\ell n / 8$ bytearray
+
+Lastly, we define a `self.compress(d)` and `self.decompress(d)` method for
+polynomials following page 2 of the 
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf).
+
 ### Modules
 
+The file `modules.py` contains the classes `Module` and `Matrix`.
+A module is a generalisation of a vector space, where the field
+of scalars is replaced with a ring. In the case of Kyber, we 
+need the module with the ring $R_q$ as described above. 
+
+`Matrix` allows elements of the module to be of size `m \times n`
+but for Kyber, we only need vectors of length `k` and square
+matricies of size `k \times k.
+
+As an example of the operations we can perform with out `Module`
+lets revisit the ring from the previous example:
+
+#### Example 3
+
+```python
+>>> R = PolynomialRing(11, 8)
+>>> x = R.gen()
+>>>
+>>> M = Module(R)
+>>> # We create a matrix by feeding the coefficients to M
+>>> A = M([[x + 3*x**2, 4 + 3*x**7], [3*x**3 + 9*x**7, x**4]])
+>>> A
+>>> # We can add and subtract matricies of the same size
+>>> A + A
+[  2*x + 6*x^2, 8 + 6*x^7]
+[6*x^3 + 7*x^7,     2*x^4]
+>>> A - A
+[0, 0]
+[0, 0]
+>>> A vector can be constructed by a list of coefficents
+>>> v = M([3*x**5, x])
+>>> v
+[3*x^5, x]
+>>> # We can compute the transpose
+>>> v.transpose()
+[3*x^5]
+[    x]
+>>> v + v
+[6*x^5, 2*x]
+>>> # We can also compute the transpose in place
+>>> v.transpose_self()
+[3*x^5]
+[    x]
+>>> v + v
+[6*x^5]
+[  2*x]
+>>> # Matrix multiplication follows python standards and is denoted by @
+>>> A @ v
+[8 + 4*x + 3*x^6 + 9*x^7]
+[        2 + 6*x^4 + x^5]
 ```
-TODO
-```
+
+We also carry through `Matrix.encode(d)` anf `Module.decode(d, n_rows, n_cols)` 
+which simply use the above functions defined for polynomials and run for each
+element.
