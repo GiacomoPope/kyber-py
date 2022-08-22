@@ -24,7 +24,7 @@ for use:
 
 - `Kyber.keygen()`: generate a keypair `(pk, sk)`
 - `Kyber.encrypt(pk)`: generate a challenge and a shared key `(c, K)`
-- `Kyber.keygen(sk, c)`: generate the shared key `K`
+- `Kyber.decrypt(sk, c)`: generate the shared key `K`
 
 To use `Kyber()` it must be initialised with a dictionary of the 
 protocol parameters. An example can be seen in `DEFAULT_PARAMETERS`.
