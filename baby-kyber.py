@@ -67,12 +67,15 @@ def decrypt(u, v, private_key):
     return integer_from_poly(m_n)
     
 if __name__ == '__main__':
-    for m in range(3,15):
-        R = PolynomialRing(17, 4)
-        M = Module(R)
-        pub, priv = keygen()
-        u, v = encrypt(m, pub)
-        n = decrypt(u, v, priv)
-        assert n == m, f"{n,m}"
+    # for m in range(3,15):
+    #     R = PolynomialRing(17, 4)
+    #     M = Module(R)
+    #     pub, priv = keygen()
+    #     u, v = encrypt(m, pub)
+    #     n = decrypt(u, v, priv)
+    #     assert n == m, f"{n,m}"
+        
+    R = PolynomialRing(17, 16)
+    M = Module(R)
 
 

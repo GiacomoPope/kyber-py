@@ -1,6 +1,25 @@
 class Module:
     def __init__(self, ring):
         self.ring = ring
+        
+    def decode(self, input_bytes, m, n, l=None):
+        if l is None:
+            l, check = divmod(8*len(input_bytes), self.ring.d*m*n)
+            if check != 0:
+                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+        else:
+            if self.ring.d*l*m*n != len(input_bytes)*8:
+                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+        chunk_length = len(input_bytes) // (m * n)
+        byte_chunks = [input_bytes[i:i+chunk_length] for i in range(0, len(input_bytes), chunk_length)]
+        matrix = []
+        for i in range(m):
+            row = []
+            for j in range(n):
+                mij = self.ring.decode(byte_chunks[n*i+j], l=l)
+                row.append(mij)
+            matrix.append(row)
+        return self(matrix)
 
     def __repr__(self):
         return f"Module over the commutative ring: {self.ring}"
@@ -50,9 +69,28 @@ class Module:
             self.m, self.n = self.n, self.m
             self.rows = [list(item) for item in zip(*self.rows)]
             return self
-
-        def __getitem__(self, idx):
-            return self.rows[idx]
+        
+        def encode(self, l=None):
+            output = b""
+            for row in self.rows:
+                for j in range(self.n):
+                    output += row[j].encode(l=l)
+            return output
+            
+        def compress(self, d):
+            for row in self.rows:
+                for ele in row:
+                    ele.compress(d)
+            return self
+        
+        def decompress(self, d):
+            for row in self.rows:
+                for ele in row:
+                    ele.decompress(d)
+            return self            
+                    
+        def __getitem__(self, i):
+            return self.rows[i]
 
         def __eq__(self, other):
             return other.rows == self.rows

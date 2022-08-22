@@ -1,6 +1,12 @@
 import random
+from utils import *
 
 class PolynomialRing:
+    """
+    Initialise the polynomial ring:
+        
+        R = GF(q) / (X^n + 1) 
+    """
     def __init__(self, q, d):
         self.q = q
         self.d = d
@@ -12,7 +18,69 @@ class PolynomialRing:
     def random_element(self):
         coefficients = [random.randint(0, self.q - 1) for _ in range(self.d)]
         return self(coefficients)
-
+        
+    def parse(self, input_bytes):
+        """
+        Algorithm 1 (Parse)
+        https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
+        
+        Parse: B^* -> R
+        """
+        i, j = 0, 0
+        coefficients = [0 for _ in range(self.d)]
+        while j < self.d:
+            # d1 = input_bytes[i] + 256*(input_bytes[i+1] & (16 - 1))
+            d1 = input_bytes[i] + 256*(input_bytes[i+1] % 16)
+            d2 = (input_bytes[i+1] // 16) + 16*input_bytes[i+2]
+            
+            if d1 < self.q:
+                coefficients[j] = d1
+                j = j + 1
+            
+            if d2 < self.q and j < self.d:
+                coefficients[j] = d2
+                j = j + 1
+                
+            i = i + 3
+        return self(coefficients)      
+        
+    def cbd(self, input_bytes, eta):
+        """
+        Algorithm 2 (Centered Binomial Distribution)
+        https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
+        
+        Expects a byte array of length (eta * deg / 4)
+        For Kyber, this is 64 eta.
+        """
+        assert (self.d >> 2)*eta == len(input_bytes)
+        coefficients = []
+        list_of_bits = bytes_to_bits(input_bytes)
+        for i in range(self.d):
+            a = sum(list_of_bits[2*i*eta + j] for j in range(eta))
+            b = sum(list_of_bits[2*i*eta + eta + j] for j in range(eta))
+            coefficients.append(a-b)
+        return self(coefficients)
+        
+    def decode(self, input_bytes, l=None):
+        """
+        Decode (Algorithm 3)
+        
+        decode: B^32l -> R_q
+        """
+        if l is None:
+            l, check = divmod(8*len(input_bytes), self.d)
+            if check != 0:
+                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+        else:
+            if self.d*l != len(input_bytes)*8:
+                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+        coefficients = []
+        list_of_bits = bytes_to_bits(input_bytes)
+        for i in range(self.d):
+            fi = sum(list_of_bits[i*l + j] * 2**j for j in range(l))
+            coefficients.append(fi)
+        return self(coefficients)
+            
     def __call__(self, coefficients):
         if isinstance(coefficients, int):
             return self.element(self, [coefficients])
@@ -23,12 +91,10 @@ class PolynomialRing:
     def __repr__(self):
         return f"Univariate Polynomial Ring in x over Finite Field of size {self.q} with modulus x^{self.d} + 1"
 
-        
     class Polynomial:
         def __init__(self, parent, coefficients):
             self.parent = parent
-            coefficients = self.parse_coefficients(coefficients)
-            self.coeffs = coefficients
+            self.coeffs = self.parse_coefficients(coefficients)
 
         def parse_coefficients(self, coefficients):
             l = len(coefficients)
@@ -37,7 +103,27 @@ class PolynomialRing:
             elif l < self.parent.d:
                 coefficients = coefficients + [0]*(self.parent.d - l)
             return [(c % self.parent.q) for c in coefficients]
-
+        
+        def encode(self, l=None):
+            """
+            Encode (Inverse of Algorithm 3)
+            """
+            if l is None:
+                l = max(x.bit_length() for x in self.coeffs)
+            bit_string = ''.join(format(c, f'0{l}b')[::-1] for c in self.coeffs)
+            return bitstring_to_bytes(bit_string)
+            
+        def compress(self, d):
+            compress_mod   = 2**d
+            compress_float = compress_mod / self.parent.q
+            self.coeffs = [round_up(compress_float * c) % compress_mod for c in self.coeffs ]
+            return self
+            
+        def decompress(self, d):
+            decompress_float = self.parent.q / 2**d
+            self.coeffs = [round_up(decompress_float * c) for c in self.coeffs ]
+            return self
+            
         def add_mod_q(self, x, y):
             tmp = x + y
             if tmp >= self.parent.q:
@@ -147,6 +233,9 @@ class PolynomialRing:
                     return True
             return False
 
+        def __getitem__(self, idx):
+            return self.coeffs[idx]
+
         def __repr__(self):
             if self.is_zero():
                 return "0"
@@ -166,7 +255,7 @@ class PolynomialRing:
                             info.append(f"x^{i}")
                         else:
                             info.append(f"{c}*x^{i}")
-            return " + ".join(info[::-1])
+            return " + ".join(info)
 
         def __str__(self):
             return self.__repr__()
