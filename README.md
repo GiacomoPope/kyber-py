@@ -119,6 +119,7 @@ polynomials following page 2 of the
 $$
 \textsf{compress}_q(x, d) = \lceil (2^d / q) \cdot x \rfloor \textrm{mod}^+ 2^d,
 $$
+
 $$
 \textsf{decompress}_q(x, d) = \lceil (q / 2^d) \cdot x \rfloor.
 $$
