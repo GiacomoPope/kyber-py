@@ -7,16 +7,16 @@ class PolynomialRing:
         
         R = GF(q) / (X^n + 1) 
     """
-    def __init__(self, q, d):
+    def __init__(self, q, n):
         self.q = q
-        self.d = d
+        self.n = n
         self.element = PolynomialRing.Polynomial
 
     def gen(self):
         return self([0,1])
 
     def random_element(self):
-        coefficients = [random.randint(0, self.q - 1) for _ in range(self.d)]
+        coefficients = [random.randint(0, self.q - 1) for _ in range(self.n)]
         return self(coefficients)
         
     def parse(self, input_bytes):
@@ -27,8 +27,8 @@ class PolynomialRing:
         Parse: B^* -> R
         """
         i, j = 0, 0
-        coefficients = [0 for _ in range(self.d)]
-        while j < self.d:
+        coefficients = [0 for _ in range(self.n)]
+        while j < self.n:
             # d1 = input_bytes[i] + 256*(input_bytes[i+1] & (16 - 1))
             d1 = input_bytes[i] + 256*(input_bytes[i+1] % 16)
             d2 = (input_bytes[i+1] // 16) + 16*input_bytes[i+2]
@@ -37,7 +37,7 @@ class PolynomialRing:
                 coefficients[j] = d1
                 j = j + 1
             
-            if d2 < self.q and j < self.d:
+            if d2 < self.q and j < self.n:
                 coefficients[j] = d2
                 j = j + 1
                 
@@ -52,10 +52,10 @@ class PolynomialRing:
         Expects a byte array of length (eta * deg / 4)
         For Kyber, this is 64 eta.
         """
-        assert (self.d >> 2)*eta == len(input_bytes)
+        assert (self.n >> 2)*eta == len(input_bytes)
         coefficients = []
         list_of_bits = bytes_to_bits(input_bytes)
-        for i in range(self.d):
+        for i in range(self.n):
             a = sum(list_of_bits[2*i*eta + j] for j in range(eta))
             b = sum(list_of_bits[2*i*eta + eta + j] for j in range(eta))
             coefficients.append(a-b)
@@ -68,15 +68,15 @@ class PolynomialRing:
         decode: B^32l -> R_q
         """
         if l is None:
-            l, check = divmod(8*len(input_bytes), self.d)
+            l, check = divmod(8*len(input_bytes), self.n)
             if check != 0:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         else:
-            if self.d*l != len(input_bytes)*8:
+            if self.n*l != len(input_bytes)*8:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         coefficients = []
         list_of_bits = bytes_to_bits(input_bytes)
-        for i in range(self.d):
+        for i in range(self.n):
             fi = sum(list_of_bits[i*l + j] * 2**j for j in range(l))
             coefficients.append(fi)
         return self(coefficients)
@@ -85,11 +85,11 @@ class PolynomialRing:
         if isinstance(coefficients, int):
             return self.element(self, [coefficients])
         if not isinstance(coefficients, list):
-            raise TypeError(f"Polynomials should be constructed from a list of integers, of length at most d = {self.d}")
+            raise TypeError(f"Polynomials should be constructed from a list of integers, of length at most d = {self.n}")
         return self.element(self, coefficients)
 
     def __repr__(self):
-        return f"Univariate Polynomial Ring in x over Finite Field of size {self.q} with modulus x^{self.d} + 1"
+        return f"Univariate Polynomial Ring in x over Finite Field of size {self.q} with modulus x^{self.n} + 1"
 
     class Polynomial:
         def __init__(self, parent, coefficients):
@@ -98,10 +98,10 @@ class PolynomialRing:
 
         def parse_coefficients(self, coefficients):
             l = len(coefficients)
-            if l > self.parent.d:
-                raise ValueError(f"Coefficients describe polynomial of degree greater than maximum degree {self.parent.d}")
-            elif l < self.parent.d:
-                coefficients = coefficients + [0]*(self.parent.d - l)
+            if l > self.parent.n:
+                raise ValueError(f"Coefficients describe polynomial of degree greater than maximum degree {self.parent.n}")
+            elif l < self.parent.n:
+                coefficients = coefficients + [0]*(self.parent.n - l)
             return [(c % self.parent.q) for c in coefficients]
         
         def encode(self, l=None):
@@ -137,16 +137,16 @@ class PolynomialRing:
             return tmp
 
         def schoolbook_multiplication(self, other):
-            d = self.parent.d
+            n = self.parent.n
             a = self.coeffs
             b = other.coeffs
-            new_coeffs = [0]*d
-            for i in range(d):
-                for j in range(0, d-i):
+            new_coeffs = [0 for _ in range(n)]
+            for i in range(n):
+                for j in range(0, n-i):
                     new_coeffs[i+j] += (a[i] * b[j])
-            for j in range(1, d):
-                for i in range(d-j, d):
-                    new_coeffs[i+j-d] -= (a[i] * b[j])
+            for j in range(1, n):
+                for i in range(n-j, n):
+                    new_coeffs[i+j-n] -= (a[i] * b[j])
             return [c % self.parent.q for c in new_coeffs]
 
         def is_zero(self):

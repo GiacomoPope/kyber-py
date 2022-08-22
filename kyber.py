@@ -115,9 +115,9 @@ class Kyber:
             row = []
             for j in range(self.k):
                 if transpose:
-                    aij = self.R.parse(self._xof(rho, bytes([i]), bytes([j]), 3*self.R.d))
+                    aij = self.R.parse(self._xof(rho, bytes([i]), bytes([j]), 3*self.R.n))
                 else:
-                    aij = self.R.parse(self._xof(rho, bytes([j]), bytes([i]), 3*self.R.d))
+                    aij = self.R.parse(self._xof(rho, bytes([j]), bytes([i]), 3*self.R.n))
                 row.append(aij)
             A.append(row)
         return self.M(A), N
@@ -206,7 +206,7 @@ class Kyber:
         Output:
             m:  message ∈ B^32
         """
-        index = self.du * self.k * self.R.d // 8
+        index = self.du * self.k * self.R.n // 8
         c1, c2 = c[:index], c[index:]
         u = self.M.decode(c1, self.k, 1, l=self.du).decompress(self.du)
         v = self.R.decode(c2, l=self.dv).decompress(self.dv)
@@ -259,7 +259,7 @@ class Kyber:
         """
         # Extract values from `sk`
         # sk = _sk || pk || H(pk) || z
-        index = 12 * self.k * self.R.d // 8
+        index = 12 * self.k * self.R.n // 8
         _sk =  sk[:index]
         pk = sk[index:-64]
         hpk = sk[-64:-32]

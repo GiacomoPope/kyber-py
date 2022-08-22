@@ -4,11 +4,11 @@ class Module:
         
     def decode(self, input_bytes, m, n, l=None):
         if l is None:
-            l, check = divmod(8*len(input_bytes), self.ring.d*m*n)
+            l, check = divmod(8*len(input_bytes), self.ring.n*m*n)
             if check != 0:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         else:
-            if self.ring.d*l*m*n != len(input_bytes)*8:
+            if self.ring.n*l*m*n != len(input_bytes)*8:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         chunk_length = len(input_bytes) // (m * n)
         byte_chunks = [input_bytes[i:i+chunk_length] for i in range(0, len(input_bytes), chunk_length)]
