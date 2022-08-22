@@ -54,6 +54,14 @@ At the moment, the implementation is very slow, as we perform schoolbook
 multiplication on the polynomials. This should be updated to instead use
 the number theoretic transform as is outlined in the spec.
 
+### Include Dilithium
+
+Using `polynomials.py` and `modules.py` this work could be extended to
+have a pure python implementation of CRYSTALS-Dilithium too.
+
+I suppose then this repo should be called `crystals-py` but I wont
+get ahead of myself.
+
 ## Discussion of Implementation
 ### Polynomials
 
