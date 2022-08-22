@@ -101,7 +101,7 @@ class PolynomialRing:
             if l > self.parent.n:
                 raise ValueError(f"Coefficients describe polynomial of degree greater than maximum degree {self.parent.n}")
             elif l < self.parent.n:
-                coefficients = coefficients + [0]*(self.parent.n - l)
+                coefficients = coefficients + [0 for _ in range (self.parent.n - l)]
             return [(c % self.parent.q) for c in coefficients]
         
         def encode(self, l=None):
