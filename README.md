@@ -4,6 +4,12 @@ This repository contains a pure python implementation of CRYSTALS-Kyber
 following the most recent (v3.02)
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf))
 
+🚨 **This implementation currently doesn't match the known answer tests!!** 🚨
+
+- The code is internally consistant though, which makes me think I have a parsing bug... 🐛 
+- You can see small Kyber tests in `test_kyber.py`. These all pass.
+- You can see the first KAT example in `known_answer_tests.py`. This currently fails.
+
 ## Disclaimer
 
 :warning: **Under no circumstances should this be used for a cryptographic application.** :warning:
