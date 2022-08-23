@@ -75,11 +75,10 @@ class PolynomialRing:
         else:
             if self.n*l != len(input_bytes)*8:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
-        coefficients = []
+        coefficients = [0 for _ in range(self.n)]
         list_of_bits = bytes_to_bits(input_bytes)
         for i in range(self.n):
-            fi = sum(list_of_bits[i*l + j] * 2**j for j in range(l))
-            coefficients.append(fi)
+            coefficients[i] = sum(list_of_bits[i*l + j] * 2**j for j in range(l))
         return self(coefficients, is_ntt=is_ntt)
             
     def __call__(self, coefficients, is_ntt=False):
@@ -341,7 +340,7 @@ class PolynomialRing:
         def __rsub__(self, other):
             return self.__sub__(other)
 
-        def __iadd__(self, other):
+        def __isub__(self, other):
             self = self - other
             return self
 
@@ -419,4 +418,3 @@ class PolynomialRing:
 
         def __str__(self):
             return self.__repr__()
-    

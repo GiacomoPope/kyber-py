@@ -9,8 +9,8 @@ def profile_kyber(Kyber):
     gvars = {}
     lvars = {"Kyber": Kyber, "c": c, "pk": pk, "sk": sk}
     
-    cProfile.runctx("Kyber.keygen()", globals=gvars, locals=lvars, sort=1)
-    cProfile.runctx("Kyber.encrypt(pk)", globals=gvars, locals=lvars, sort=1)
+    # cProfile.runctx("Kyber.keygen()", globals=gvars, locals=lvars, sort=1)
+    # cProfile.runctx("Kyber.encrypt(pk)", globals=gvars, locals=lvars, sort=1)
     cProfile.runctx("Kyber.decrypt(c, sk)", globals=gvars, locals=lvars, sort=1)
     
 def benchmark_kyber(Kyber, name):
@@ -33,8 +33,8 @@ def benchmark_kyber(Kyber, name):
 if __name__ == '__main__':
     # profile_kyber(Kyber512)
     # profile_kyber(Kyber768)
-    # profile_kyber(Kyber1024)
+    profile_kyber(Kyber1024)
 
-    benchmark_kyber(Kyber512,  "Kyber512")
-    benchmark_kyber(Kyber768,  "Kyber768")    
-    benchmark_kyber(Kyber1024, "Kyber1024")    
+    # benchmark_kyber(Kyber512,  "Kyber512")
+    # benchmark_kyber(Kyber768,  "Kyber768")    
+    # benchmark_kyber(Kyber1024, "Kyber1024")    

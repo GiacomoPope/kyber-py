@@ -7,26 +7,27 @@ class TestKyber(unittest.TestCase):
     consistency by generating keypairs
     and shared secrets.
     """
+    
     def test_kyber512(self):
-        for _ in range(10):
+        for _ in range(1):
             pk, sk = Kyber512.keygen()
-            for _ in range(20):
+            for _ in range(1):
                 c, key = Kyber512.encrypt(pk)
                 _key = Kyber512.decrypt(c, sk)
                 self.assertEqual(key, _key)
     
     def test_kyber768(self):
-        for _ in range(10):
+        for _ in range(1):
             pk, sk = Kyber768.keygen()
-            for _ in range(20):
+            for _ in range(1):
                 c, key = Kyber768.encrypt(pk)
                 _key = Kyber768.decrypt(c, sk)
                 self.assertEqual(key, _key)
                 
     def test_kyber1024(self):
-        for _ in range(10):
+        for _ in range(1):
             pk, sk = Kyber1024.keygen()
-            for _ in range(20):
+            for _ in range(1):
                 c, key = Kyber1024.encrypt(pk)
                 _key = Kyber1024.decrypt(c, sk)
                 self.assertEqual(key, _key)
