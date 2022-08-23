@@ -1,8 +1,10 @@
 # CRYSTALS-Kyber Python Implementation
 
 This repository contains a pure python implementation of CRYSTALS-Kyber 
-following the most recent (v3.02)
-[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf))
+following (at the time of writing) the most recent 
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
+(v3.02)
+
 
 ## Disclaimer
 
@@ -52,9 +54,11 @@ For now, here are some approximate benchmarks:
 
 |                          | Kyber512 | Kyber768 | Kyber1024 |
 |--------------------------|----------|----------|-----------|
-| `KeyGen()`  (1000 Calls) | 8.009s   | 11.373s  | 16.793s   |
-| `Encrypt()` (1000 Calls) | 14.129s  | 20.283s  | 27.370s   |
-| `Decrypt()` (1000 Calls) | 22.848s  | 32.502s  | 44.914s   |
+| `KeyGen()`  (1000 Calls) |  6.842s  | 10.246s  | 14.921s   |
+| `Encrypt()` (1000 Calls) | 10.092s  | 14.817s  | 20.549s   |
+| `Decrypt()` (1000 Calls) | 15.812s  | 22.910s  | 31.173s   |
+
+All times recorded using a MacBook Pro using a Intel Core i7 CPU @ 2.6 GHz.
 
 ## Future Plans
 
