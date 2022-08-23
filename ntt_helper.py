@@ -26,7 +26,7 @@ def montgomery_reduce(a):
 
 def barrett_reduce(a):
     """
-    a mod q \in -(q-1)/2, ... ,(q-1)/2
+    return a mod q
     """
     return a % KYBER_Q
     

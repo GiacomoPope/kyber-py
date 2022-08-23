@@ -88,15 +88,15 @@ class Kyber:
         """
         return shake_256(input_bytes).digest(length)
     
-    def _generate_error_vector(self, sigma, N, is_ntt=False):
+    def _generate_error_vector(self, sigma, eta, N, is_ntt=False):
         """
         Helper function which generates a element in the
         module from the Centered Binomial Distribution.
         """
         elements = []
         for i in range(self.k):
-            input_bytes = self._prf(sigma,  bytes([N]), 64*self.eta_1)
-            poly = self.R.cbd(input_bytes, self.eta_1, is_ntt=is_ntt)
+            input_bytes = self._prf(sigma,  bytes([N]), 64*eta)
+            poly = self.R.cbd(input_bytes, eta, is_ntt=is_ntt)
             elements.append(poly)
             N = N + 1
         v = self.M(elements).transpose()
@@ -144,11 +144,11 @@ class Kyber:
         A = self._generate_matrix_from_seed(rho, is_ntt=True)
         
         # Generate the error vector s ∈ R^k
-        s, N = self._generate_error_vector(sigma, N)
+        s, N = self._generate_error_vector(sigma, self.eta_1, N)
         s.to_ntt()
         
         # Generate the error vector e ∈ R^k
-        e, N = self._generate_error_vector(sigma, N)
+        e, N = self._generate_error_vector(sigma, self.eta_1, N)
         e.to_ntt() 
                            
         # Construct the public key
@@ -176,9 +176,9 @@ class Kyber:
             c:  ciphertext
         """
         N = 0
-        _pk, rho = pk[:-32], pk[-32:]
+        rho = pk[-32:]
         
-        tt = self.M.decode(_pk, 1, self.k, l=12, is_ntt=True)        
+        tt = self.M.decode(pk, 1, self.k, l=12, is_ntt=True)        
         
         # Encode message as polynomial
         m_poly = self.R.decode(m, l=1).decompress(1)
@@ -187,18 +187,17 @@ class Kyber:
         At = self._generate_matrix_from_seed(rho, transpose=True, is_ntt=True)
         
         # Generate the error vector r ∈ R^k
-        r, N = self._generate_error_vector(coins, N)
+        r, N = self._generate_error_vector(coins, self.eta_1, N)
         r.to_ntt()
-        r.reduce_coefficents()
         
         # Generate the error vector e1 ∈ R^k
-        e1, N = self._generate_error_vector(coins, N)
+        e1, N = self._generate_error_vector(coins, self.eta_2, N)
         
         # Generate the error polynomial e2 ∈ R
         input_bytes = self._prf(coins,  bytes([N]), 64*self.eta_2)
         e2 = self.R.cbd(input_bytes, self.eta_2)
         
-        # Module arithmatic 
+        # Module/Polynomial arithmatic 
         u = (At @ r).from_ntt() + e1
         v = (tt @ r)[0][0].from_ntt()
         v = v + e2 + m_poly
@@ -222,10 +221,10 @@ class Kyber:
         """
         # Split ciphertext to vectors
         index = self.du * self.k * self.R.n // 8
-        c1, c2 = c[:index], c[index:]
+        c2 = c[index:]
         
         # Recover the vector u and convert to NTT form
-        u = self.M.decode(c1, self.k, 1, l=self.du).decompress(self.du)
+        u = self.M.decode(c, self.k, 1, l=self.du).decompress(self.du)
         u.to_ntt()
         
         # Recover the polynomial v
@@ -237,7 +236,6 @@ class Kyber:
         # Recover message as polynomial
         m = (st @ u)[0][0].from_ntt()
         m = v - m
-        m.reduce_coefficents()
         
         # Return message as bytes
         return m.compress(1).encode(l=1)

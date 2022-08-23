@@ -30,7 +30,6 @@ class PolynomialRing:
         i, j = 0, 0
         coefficients = [0 for _ in range(self.n)]
         while j < self.n:
-            # d1 = input_bytes[i] + 256*(input_bytes[i+1] & (16 - 1))
             d1 = input_bytes[i] + 256*(input_bytes[i+1] % 16)
             d2 = (input_bytes[i+1] // 16) + 16*input_bytes[i+2]
             
@@ -54,12 +53,12 @@ class PolynomialRing:
         For Kyber, this is 64 eta.
         """
         assert (self.n >> 2)*eta == len(input_bytes)
-        coefficients = []
+        coefficients = [0 for _ in range(self.n)]
         list_of_bits = bytes_to_bits(input_bytes)
         for i in range(self.n):
-            a = sum(list_of_bits[2*i*eta + j] for j in range(eta))
+            a = sum(list_of_bits[2*i*eta + j]       for j in range(eta))
             b = sum(list_of_bits[2*i*eta + eta + j] for j in range(eta))
-            coefficients.append(a-b)
+            coefficients[i] = a-b
         return self(coefficients, is_ntt=is_ntt)
         
     def decode(self, input_bytes, l=None, is_ntt=False):
@@ -78,7 +77,7 @@ class PolynomialRing:
         coefficients = [0 for _ in range(self.n)]
         list_of_bits = bytes_to_bits(input_bytes)
         for i in range(self.n):
-            coefficients[i] = sum(list_of_bits[i*l + j] * 2**j for j in range(l))
+            coefficients[i] = sum(list_of_bits[i*l + j] << j for j in range(l))
         return self(coefficients, is_ntt=is_ntt)
             
     def __call__(self, coefficients, is_ntt=False):

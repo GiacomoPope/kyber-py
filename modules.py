@@ -4,21 +4,20 @@ class Module:
         
     def decode(self, input_bytes, m, n, l=None, is_ntt=False):
         if l is None:
+            # Input length must be 32*l*m*n bytes long
             l, check = divmod(8*len(input_bytes), self.ring.n*m*n)
             if check != 0:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         else:
-            if self.ring.n*l*m*n != len(input_bytes)*8:
-                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
-        chunk_length = len(input_bytes) // (m * n)
+            if self.ring.n*l*m*n > len(input_bytes)*8:
+                raise ValueError("Byte length is too short for given l")
+        chunk_length = 32*l
         byte_chunks = [input_bytes[i:i+chunk_length] for i in range(0, len(input_bytes), chunk_length)]
-        matrix = []
+        matrix = [[0 for _ in range(n)] for _ in range(m)]
         for i in range(m):
-            row = []
             for j in range(n):
                 mij = self.ring.decode(byte_chunks[n*i+j], l=l, is_ntt=is_ntt)
-                row.append(mij)
-            matrix.append(row)
+                matrix[i][j] = mij
         return self(matrix)
 
     def __repr__(self):
