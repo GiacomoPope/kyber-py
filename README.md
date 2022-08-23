@@ -52,11 +52,11 @@ The above example would also work with `Kyber768` and `Kyber1024`.
 
 For now, here are some approximate benchmarks:
 
-|                          | Kyber512 | Kyber768 | Kyber1024 |
+|  1000 Iterations         | Kyber512 | Kyber768 | Kyber1024 |
 |--------------------------|----------|----------|-----------|
-| `KeyGen()`  (1000 Calls) |  6.842s  | 10.246s  | 14.921s   |
-| `Encrypt()` (1000 Calls) | 10.092s  | 14.817s  | 20.549s   |
-| `Decrypt()` (1000 Calls) | 15.812s  | 22.910s  | 31.173s   |
+| `KeyGen()`               |  6.842s  | 10.246s  | 14.921s   |
+| `Encrypt()`              | 10.092s  | 14.817s  | 20.549s   |
+| `Decrypt()`              | 15.812s  | 22.910s  | 31.173s   |
 
 All times recorded using a MacBook Pro using a Intel Core i7 CPU @ 2.6 GHz.
 
