@@ -50,43 +50,15 @@ The above example would also work with `Kyber768` and `Kyber1024`.
 
 For now, here are some approximate benchmarks:
 
-#### Kyber-512
-
-```python
->>> timeit("Kyber512.keygen()", globals=globals(), number=1000) / 1000
-0.005577755830003298
->>> timeit("Kyber512.encrypt(pk)", globals=globals(), number=1000) / 1000
-0.010908756061995518
->>> timeit("Kyber512.decrypt(c, sk)", globals=globals(), number=1000) / 1000
-0.01810154920700006
-```
-
-#### Kyber-768
-
-```python
->>> timeit("Kyber768.keygen()", globals=globals(), number=1000) / 1000
-0.008204252133997215
->>> timeit("Kyber768.encrypt(pk)", globals=globals(), number=1000) / 1000
-0.015505350967003324
->>> timeit("Kyber768.decrypt(c, sk)", globals=globals(), number=1000) / 1000
-0.026082826769998065
-```
-
-#### Kyber-1024
-
-```python
->>> timeit("Kyber1024.keygen()", globals=globals(), number=1000) / 1000
-0.01213216471499618
->>> timeit("Kyber1024.encrypt(pk)", globals=globals(), number=1000) / 1000
-0.021581338303003576
->>> timeit("Kyber1024.decrypt(c, sk)", globals=globals(), number=1000) / 1000
-0.03543514921599854
-```
+|                          | Kyber512 | Kyber768 | Kyber1024 |
+|--------------------------|----------|----------|-----------|
+| `KeyGen()`  (1000 Calls) | 8.009s   | 11.373s  | 16.793s   |
+| `Encrypt()` (1000 Calls) | 14.129s  | 20.283s  | 27.370s   |
+| `Decrypt()` (1000 Calls) | 22.848s  | 32.502s  | 44.914s   |
 
 ## Future Plans
 
 * **High priority**: Assure that output matches the Known Answer Test files
-* Faster polynomial multiplication by performing Barrett reduction
 * Add documentation on `NTT` transform for polynomials
 
 ### Include Dilithium
