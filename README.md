@@ -4,11 +4,18 @@ This repository contains a pure python implementation of CRYSTALS-Kyber
 following the most recent (v3.02)
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf))
 
-🚨 **This implementation currently doesn't match the known answer tests!!** 🚨
+🚨 **This implementation currently doesn't match all known answer tests!!** 🚨
 
-- The code is internally consistant though, which makes me think I have a parsing bug... 🐛 
-- You can see small Kyber tests in `test_kyber.py`. These all pass.
-- You can see the first KAT example in `known_answer_tests.py`. This currently fails.
+- As I do not have a impl. of AES-256 CRT DRGB (yet) I use system randomness.
+ This means I cannot do the full KATs, but only check that:
+ ```py
+ Kyber.decrypt(ct, sk) == ss
+ ```
+ Using `ct, sk, ss` from the KAT files. This is the same trick used as in 
+[kyber-k2so](https://github.com/symbolicsoft/kyber-k2so)
+
+- All checks of this equality pass for Kyber512 and Kyber768
+- 13 of the 100 checks fail for Kyber 1024
 
 ## Disclaimer
 
