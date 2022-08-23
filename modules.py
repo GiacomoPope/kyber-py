@@ -69,7 +69,19 @@ class Module:
             self.m, self.n = self.n, self.m
             self.rows = [list(item) for item in zip(*self.rows)]
             return self
-        
+            
+        def reduce_coefficents(self):
+            for row in self.rows:
+                for ele in row:
+                    ele.reduce_coefficents()
+            return self
+            
+        def to_montgomery(self):
+            for row in self.rows:
+                for ele in row:
+                    ele.to_montgomery()
+            return self
+
         def encode(self, l=None):
             output = b""
             for row in self.rows:

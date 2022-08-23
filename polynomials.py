@@ -1,6 +1,6 @@
 import random
 from utils import *
-from ntt_constants import *
+from ntt_helper import *
 
 class PolynomialRing:
     """
@@ -99,17 +99,25 @@ class PolynomialRing:
             self.is_ntt = is_ntt
 
         def parse_coefficients(self, coefficients):
+            """
+            Helper function which right pads with zeros
+            to allow polynomial construction as 
+            f = R([1,1,1])
+            """
             l = len(coefficients)
             if l > self.parent.n:
                 raise ValueError(f"Coefficients describe polynomial of degree greater than maximum degree {self.parent.n}")
             elif l < self.parent.n:
                 coefficients = coefficients + [0 for _ in range (self.parent.n - l)]
-            return [(c % self.parent.q) for c in coefficients]
+            return coefficients
             
         def reduce_coefficents(self):
+            """
+            Reduce all coefficents modulo q
+            """
             self.coeffs = [c % self.parent.q for c in self.coeffs]
             return self
-        
+ 
         def encode(self, l=None):
             """
             Encode (Inverse of Algorithm 3)
@@ -120,79 +128,132 @@ class PolynomialRing:
             return bitstring_to_bytes(bit_string)
             
         def compress(self, d):
+            """
+            Compress the polynomial by compressing each coefficent
+            NOTE: This is lossy compression
+            """
             compress_mod   = 2**d
             compress_float = compress_mod / self.parent.q
             self.coeffs = [round_up(compress_float * c) % compress_mod for c in self.coeffs]
             return self
             
         def decompress(self, d):
+            """
+            Decompress the polynomial by decompressing each coefficent
+            NOTE: This as compression is lossy, we have
+            x' = decompress(compress(x)), which x' != x, but is 
+            close in magnitude.
+            """
             decompress_float = self.parent.q / 2**d
             self.coeffs = [round_up(decompress_float * c) for c in self.coeffs ]
             return self
             
         def to_ntt(self):
+            """
+            Convert a polynomial to number-theoretic transform (NTT) form in place
+            The input is in standard order, the output is in bit-reversed order.
+            NTT_ZETAS also has the Montgomery factor 2^16 included, so NTT 
+            additionally maps to Montgomery domain.
+            
+            Only implemented (currently) for n = 256
+            """
             if self.parent.n != 256:
                 raise NotImplementedError
             if self.is_ntt:
                 raise ValueError("Cannot convert NTT form polynomial to NTT form")
-            k = 1
-            l = self.parent.n >> 1
+
+            k, l = 1, 128
             while l >= 2:
                 start = 0
-                while start < self.parent.n:
-                    zeta = ntt_zetas[k]
+                while start < 256:
+                    zeta = NTT_ZETAS[k]
                     k = k + 1
                     for j in range(start, start + l):
-                        t = (zeta * self.coeffs[j+l])
+                        t = ntt_mul(zeta, self.coeffs[j+l])
                         self.coeffs[j+l] = self.coeffs[j] - t
                         self.coeffs[j]   = self.coeffs[j] + t
                     start = l + (j + 1)
                 l = l >> 1
             
-            self.reduce_coefficents()
             self.is_ntt = True
             return self
         
         def from_ntt(self):
+            """
+            Convert a polynomial from number-theoretic transform (NTT) form in place
+            and multiplication by Montgomery factor 2^16.
+            The input is in bit-reversed order, the output is in standard order.
+            
+            Because of the montgomery multiplication, we have:
+                f != f.to_ntt().from_ntt()
+                f = (1/2^16) * f.to_ntt().from_ntt()
+            
+            To recover f we do
+                f == f.to_ntt().from_ntt().from_montgomery()
+                
+            Only implemented (currently) for n = 256
+            """
             if self.parent.n != 256:
                 raise NotImplementedError
             if not self.is_ntt:
                 raise ValueError("Can only convert from a polynomial in NTT form")
-            # n = 256 -> l_upper = 128
-            l, l_upper = 2, self.parent.n >> 1
-            # n = 256 -> k = 127
+                
+            l, l_upper = 2, 128
             k = l_upper - 1
+            f = 1441 # MONT_R^2 / 128
             while l <= 128:
                 start = 0
                 while start < self.parent.n:
-                    zeta = ntt_zetas[k]
+                    zeta = NTT_ZETAS[k]
                     k = k - 1
                     for j in range(start, start+l):
                         t = self.coeffs[j]
-                        self.coeffs[j]   = (t + self.coeffs[j+l])
+                        self.coeffs[j]   = barrett_reduce(t + self.coeffs[j+l])
                         self.coeffs[j+l] = self.coeffs[j+l] - t
-                        self.coeffs[j+l] = (zeta * self.coeffs[j+l])
+                        self.coeffs[j+l] = ntt_mul(zeta, self.coeffs[j+l])
                     start = j + l + 1
                 l = l << 1
             for j in range(self.parent.n):
-                self.coeffs[j] = (self.coeffs[j] * pow(128,-1,self.parent.q)) % self.parent.q
+                self.coeffs[j] = ntt_mul(self.coeffs[j], f)
                 
             self.is_ntt = False
             return self
+            
+        def to_montgomery(self):
+            """
+            Multiply every element by 2^16 mod q
+            
+            Only implemented (currently) for n = 256
+            """
+            if self.parent.n != 256:
+                raise NotImplementedError
+            f = (1 << 32) % self.parent.q
+            self.coeffs = [montgomery_reduce(f * c) for c in self.coeffs]
+            return self
                 
         def add_mod_q(self, x, y):
+            """
+            add two coefficents modulo q
+            """
             tmp = x + y
             if tmp >= self.parent.q:
                 tmp -= self.parent.q
             return tmp
 
         def sub_mod_q(self, x, y):
+            """
+            sub two coefficents modulo q
+            """
             tmp = x - y
             if tmp < 0:
                 tmp += self.parent.q
             return tmp
-
+            
         def schoolbook_multiplication(self, other):
+            """
+            Naive implementation of polynomial multiplication
+            suitible for all R_q = F_1[X]/(X^n + 1)
+            """
             n = self.parent.n
             a = self.coeffs
             b = other.coeffs
@@ -205,44 +266,44 @@ class PolynomialRing:
                     new_coeffs[i+j-n] -= (a[i] * b[j])
             return [c % self.parent.q for c in new_coeffs]
         
-        def ntt_base_multiplication(self, a0, a1, b0, b1, zeta):
-            if self.parent.n != 256:
-                raise NotImplementedError
-            r0  = a1 * b1 * zeta
-            r0 += a0 * b0
-            r1 =  a0*b1 + a1*b0
-            return r0, r1
-            
         def ntt_multiplication(self, other):
+            """
+            Number Theoretic Transform multiplication.
+            Only implemented (currently) for n = 256
+            """
             if self.parent.n != 256:
                 raise NotImplementedError
             if not (self.is_ntt and other.is_ntt):
                 raise ValueError("Can only multiply using NTT if both polynomials are in NTT form")
-            new_coeffs = []
-            for i in range(self.parent.n // 4):
-                r0, r1 = self.ntt_base_multiplication(
-                                    self.coeffs[4*i+0],  self.coeffs[4*i+1],
-                                    other.coeffs[4*i+0], other.coeffs[4*i+1],
-                                    ntt_zetas[64+i])
-                r2, r3 = self.ntt_base_multiplication(
-                                    self.coeffs[4*i+2],  self.coeffs[4*i+3],
-                                    other.coeffs[4*i+2], other.coeffs[4*i+3],
-                                    -ntt_zetas[64+i])
-                new_coeffs += [r0, r1, r2, r3]
-            return new_coeffs
+            # function in ntt_helper.py
+            new_coeffs = ntt_coefficient_multiplication(self.coeffs, other.coeffs)
+            return self.parent(new_coeffs, is_ntt=True)
             
         def is_zero(self):
+            """
+            Return if polynomial is zero: f = 0
+            """
             return all(c == 0 for c in self.coeffs)
 
         def is_constant(self):
+            """
+            Return if polynomial is constant: f = c
+            """
             return all(c == 0 for c in self.coeffs[1:])
         
         def is_ntt(self):
+            """
+            Return whether the polynomial is in NTT form
+            Only implemented (currently) for n = 256
+            """
             if self.parent.n != 256:
                 raise NotImplementedError
             return self.is_ntt
 
         def __neg__(self):
+            """
+            Returns -f, by negating all coefficients
+            """
             neg_coeffs = [(-x % self.parent.q) for x in self.coeffs]
             return self.parent(neg_coeffs, is_ntt=self.is_ntt)
 
@@ -287,7 +348,7 @@ class PolynomialRing:
         def __mul__(self, other):
             if isinstance(other, PolynomialRing.Polynomial):
                 if self.is_ntt and other.is_ntt:
-                    new_coeffs = self.ntt_multiplication(other)
+                    return self.ntt_multiplication(other)
                 elif self.is_ntt ^ other.is_ntt:
                      raise ValueError(f"Both or neither polynomials must be in NTT form before multiplication")
                 else:
