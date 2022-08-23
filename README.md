@@ -4,19 +4,6 @@ This repository contains a pure python implementation of CRYSTALS-Kyber
 following the most recent (v3.02)
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf))
 
-🚨 **This implementation currently doesn't match all known answer tests!!** 🚨
-
-- As I do not have a impl. of AES-256 CRT DRGB (yet) I use system randomness.
- This means I cannot do the full KATs, but only check that:
- ```py
- Kyber.decrypt(ct, sk) == ss
- ```
- Using `ct, sk, ss` from the KAT files. This is the same trick used as in 
-[kyber-k2so](https://github.com/symbolicsoft/kyber-k2so)
-
-- All checks of this equality pass for Kyber512 and Kyber768
-- 13 of the 100 checks fail for Kyber 1024
-
 ## Disclaimer
 
 :warning: **Under no circumstances should this be used for a cryptographic application.** :warning:
@@ -71,8 +58,24 @@ For now, here are some approximate benchmarks:
 
 ## Future Plans
 
-* **High priority**: Assure that output matches the Known Answer Test files
+* Write my own AES-256 CRT DRGB so we can have full coverage of the known test answers
 * Add documentation on `NTT` transform for polynomials
+* Add documentation on Montgomery and Barrett reduction
+
+### Known Test Answers
+
+To perfectly test with the Known Test Answers, we need to seed our own
+AES-256 CRT DRGB to get deterministic randomness. Currently,
+I use system randomness (via `os.urandom()`.
+
+As such, I cannot do the full KATs, but only perform the partial check that
+
+```py
+Kyber.decrypt(ct, sk) == ss
+```
+
+Using `ct, sk, ss` from the KAT files. This is the same trick used as in 
+[kyber-k2so](https://github.com/symbolicsoft/kyber-k2so)
 
 ### Include Dilithium
 

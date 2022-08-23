@@ -19,7 +19,7 @@ def round_up(x):
     """
     Round x.5 up always
     """
-    return int(x + .5)
+    return round(x + 0.000001)
     
 def br(i, k):
     """

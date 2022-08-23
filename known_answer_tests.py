@@ -20,6 +20,38 @@ def parse_kat_data(data):
         }
     return parsed_data
             
+def test_kyber_512():
+    fails = 0
+    with open("assets/PQCkemKAT_1632.rsp") as f:
+        kat_data_512 = f.read()
+        parsed_data = parse_kat_data(kat_data_512)
+        
+        for count, data in parsed_data.items():
+            sk, ct, ss = data.values()
+            _ss = Kyber512.decrypt(ct, sk)
+            if ss != _ss:
+                print(f"Failed for count: {count}")
+                print(ss.hex(), len(ss))
+                print(_ss.hex(), len(_ss))
+                fails += 1
+    print(f"Test for Kyber512 failed {fails} time(s)")
+    
+def test_kyber_768():
+    fails = 0
+    with open("assets/PQCkemKAT_2400.rsp") as f:
+        kat_data_768 = f.read()
+        parsed_data = parse_kat_data(kat_data_768)
+        
+        for count, data in parsed_data.items():
+            sk, ct, ss = data.values()
+            _ss = Kyber768.decrypt(ct, sk)
+            if ss != _ss:
+                print(f"Failed for count: {count}")
+                print(ss.hex(), len(ss))
+                print(_ss.hex(), len(_ss))
+                fails += 1
+    print(f"Test for Kyber768 failed {fails} time(s)")
+
 def test_kyber_1024():
     fails = 0
     with open("assets/PQCkemKAT_3168.rsp") as f:
