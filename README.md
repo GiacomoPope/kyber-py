@@ -66,7 +66,7 @@ For now, here are some approximate benchmarks:
 
 To perfectly test with the Known Test Answers, we need to seed our own
 AES-256 CRT DRGB to get deterministic randomness. Currently,
-I use system randomness (via `os.urandom()`.
+I use system randomness (via `os.urandom()`).
 
 As such, I cannot do the full KATs, but only perform the partial check that
 
