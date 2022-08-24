@@ -288,15 +288,6 @@ class PolynomialRing:
             Return if polynomial is constant: f = c
             """
             return all(c == 0 for c in self.coeffs[1:])
-        
-        def is_ntt(self):
-            """
-            Return whether the polynomial is in NTT form
-            Only implemented (currently) for n = 256
-            """
-            if self.parent.n != 256:
-                raise NotImplementedError
-            return self.is_ntt
 
         def __neg__(self):
             """
