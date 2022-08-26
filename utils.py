@@ -21,10 +21,9 @@ def round_up(x):
     """
     return round(x + 0.000001)
     
-def br(i, k):
+def xor_bytes(a, b):
     """
-    bit reversal of an unsigned k-bit integer
+    XOR two byte arrays, assume that they are 
+    of the same length
     """
-    bin_i = bin(i & (2**k - 1))[2:].zfill(k)
-    return int(bin_i[::-1], 2)
-    
+    return bytes(a^b for a,b in zip(a,b))

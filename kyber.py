@@ -2,7 +2,14 @@ import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from polynomials import *
 from modules import *
-
+try:
+    from aes256_crt_drgb import AES256_CRT_DRGB
+except ImportError as e:
+    print("Error importing AES CRT DRGB. Have you tried installing requirements?")
+    print(f"ImportError: {e}\n")
+    print("Kyber will work perfectly fine with system randomness")
+    
+    
 DEFAULT_PARAMETERS = {
     "kyber_512" : {
         "n" : 256,
@@ -45,7 +52,33 @@ class Kyber:
         
         self.R = PolynomialRing(self.q, self.n)
         self.M = Module(self.R)
-    
+        
+        self.drgb = None
+        self.random_bytes = os.urandom
+        
+    def set_drgb_seed(self, seed):
+        """
+        Setting the seed switches the entropy source
+        from os.urandom to AES256 CRT DRGB
+        
+        Note: requires pycryptodome for AES impl.
+        (Seemed overkill to code my own AES for Kyber)
+        """
+        self.drgb = AES256_CRT_DRGB(seed)
+        self.random_bytes = self.drgb.random_bytes
+
+    def reseed_drgb(self, seed):
+        """
+        Reseeds the DRGB, errors if a DRGB is not set.
+        
+        Note: requires pycryptodome for AES impl.
+        (Seemed overkill to code my own AES for Kyber)
+        """
+        if self.drgb is None:
+            raise Warning(f"Cannot reseed DRGB without first initialising. Try using `set_drgb_seed`")
+        else:
+            self.drgb.reseed(seed)
+        
     @staticmethod
     def _xof(bytes32, a, b, length):
         """
@@ -135,7 +168,7 @@ class Kyber:
             Public Key (12*k*n) / 8 + 32 bytes
         """
         # Generate random value, hash and split
-        d = os.urandom(32)
+        d = self.random_bytes(32)
         rho, sigma = self._g(d)
         # Set counter for PRF
         N = 0
@@ -239,7 +272,7 @@ class Kyber:
         
         # Return message as bytes
         return m.compress(1).encode(l=1)
-        
+    
     def keygen(self):
         """
         Algorithm 7 (CCA KEM KeyGen)
@@ -250,8 +283,13 @@ class Kyber:
             sk: Secret key
             
         """
-        z = os.urandom(32)
+        # Note, although the paper gens z then
+        # pk, sk, the implementation does it this
+        # way around, which matters for deterministic
+        # randomness...
         pk, _sk = self._cpapke_keygen()
+        z = self.random_bytes(32)
+        
         # sk = sk' || pk || H(pk) || z
         sk = _sk + pk + self._h(pk) + z
         return pk, sk
@@ -267,7 +305,7 @@ class Kyber:
             c:  Ciphertext
             K:  Shared key
         """
-        m = os.urandom(32)
+        m = self.random_bytes(32)
         m_hash = self._h(m)
         Kbar, r = self._g(m_hash + self._h(pk))
         c = self._cpapke_enc(pk, m_hash, r)

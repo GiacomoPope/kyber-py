@@ -5,6 +5,21 @@ following (at the time of writing) the most recent
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 (v3.02)
 
+### KATs
+
+This implementation currently passes all KAT tests from the reference implementation.
+
+For more information, see the unit tests in `test_kyber.py`.
+
+### Dependencies
+
+Originally this was planned to have zero dependencies, however to make this work
+pass the KATs, I needed a deterministic CSRNG. The reference implementation uses
+AES256 CRT DRGB. I have implemented this in `ase256_crt_drgb.py`. However,
+I have not implemented AES itself, instead I import this from `pycryptodome`.
+
+If you're happy to use system randomness (`os.urandom`) then you don't need
+this dependency.
 
 ## Disclaimer
 
@@ -62,24 +77,8 @@ All times recorded using a MacBook Pro using a Intel Core i7 CPU @ 2.6 GHz.
 
 ## Future Plans
 
-* Write my own AES-256 CRT DRGB so we can have full coverage of the known test answers
 * Add documentation on `NTT` transform for polynomials
 * Add documentation on Montgomery and Barrett reduction
-
-### Known Test Answers
-
-To perfectly test with the Known Test Answers, we need to seed our own
-AES-256 CRT DRGB to get deterministic randomness. Currently,
-I use system randomness (via `os.urandom()`).
-
-As such, I cannot do the full KATs, but only perform the partial check that
-
-```py
-Kyber.decrypt(ct, sk) == ss
-```
-
-Using `ct, sk, ss` from the KAT files. This is the same trick used as in 
-[kyber-k2so](https://github.com/symbolicsoft/kyber-k2so)
 
 ### Include Dilithium
 
