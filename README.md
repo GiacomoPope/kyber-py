@@ -18,6 +18,8 @@ pass the KATs, I needed a deterministic CSRNG. The reference implementation uses
 AES256 CRT DRGB. I have implemented this in `ase256_crt_drgb.py`. However,
 I have not implemented AES itself, instead I import this from `pycryptodome`.
 
+To install dependencies, run `pip -r install requirements`.
+
 If you're happy to use system randomness (`os.urandom`) then you don't need
 this dependency.
 
