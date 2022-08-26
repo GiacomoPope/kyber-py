@@ -10,6 +10,12 @@ following (at the time of writing) the most recent
 This implementation currently passes all KAT tests from the reference implementation. 
 For more information, see the unit tests in [`test_kyber.py`](test_kyber.py).
 
+**Note**: there is a discrepancy between the specification and reference implementation.
+To ensure all KATs pass, I have to generate the public key **before** the random
+bytes $z = \mathcal{B}^{32}$ in algorithm 7 of the 
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
+(v3.02).
+
 ### Dependencies
 
 Originally this was planned to have zero dependencies, however to make this work
