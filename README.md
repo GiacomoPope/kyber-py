@@ -7,16 +7,15 @@ following (at the time of writing) the most recent
 
 ### KATs
 
-This implementation currently passes all KAT tests from the reference implementation.
-
-For more information, see the unit tests in `test_kyber.py`.
+This implementation currently passes all KAT tests from the reference implementation. 
+For more information, see the unit tests in [`test_kyber.py`](test_kyber.py).
 
 ### Dependencies
 
 Originally this was planned to have zero dependencies, however to make this work
 pass the KATs, I needed a deterministic CSRNG. The reference implementation uses
-AES256 CRT DRGB. I have implemented this in `ase256_crt_drgb.py`. However,
-I have not implemented AES itself, instead I import this from `pycryptodome`.
+AES256 CRT DRGB. I have implemented this in [`ase256_crt_drgb.py`](ase256_crt_drgb.py). 
+However, I have not implemented AES itself, instead I import this from `pycryptodome`.
 
 To install dependencies, run `pip -r install requirements`.
 
@@ -81,10 +80,12 @@ All times recorded using a MacBook Pro using a Intel Core i7 CPU @ 2.6 GHz.
 
 * Add documentation on `NTT` transform for polynomials
 * Add documentation on Montgomery and Barrett reduction
+* Add documentation for working with DRGB and setting the seed.
 
 ### Include Dilithium
 
-Using `polynomials.py` and `modules.py` this work could be extended to
+Using [`polynomials.py`](polynomials.py) and [`modules.py`](modules.py) 
+this work could be extended to
 have a pure python implementation of CRYSTALS-Dilithium too.
 
 I suppose then this repo should be called `crystals-py` but I wont
@@ -93,7 +94,8 @@ get ahead of myself.
 ## Discussion of Implementation
 ### Polynomials
 
-The file `polynomials.py` contains the classes `PolynomialRing` and 
+The file [`polynomials.py`](polynomials.py) contains the classes 
+`PolynomialRing` and 
 `Polynomial`. This implements the univariate polynomial ring
 
 $$
@@ -185,7 +187,7 @@ See the specification for more information.
 
 ### Modules
 
-The file `modules.py` contains the classes `Module` and `Matrix`.
+The file [`modules.py`](modules.py) contains the classes `Module` and `Matrix`.
 A module is a generalisation of a vector space, where the field
 of scalars is replaced with a ring. In the case of Kyber, we 
 need the module with the ring $R_q$ as described above. 
