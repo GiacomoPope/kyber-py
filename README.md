@@ -5,6 +5,19 @@ following (at the time of writing) the most recent
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 (v3.02)
 
+## Disclaimer
+
+:warning: **Under no circumstances should this be used for a cryptographic application.** :warning:
+
+I have written `kyber-py` as a way to learn about the way Kyber works, and to
+try and create a clean, well commented implementation which people can learn 
+from.
+
+This code is not constant time, or written to be performant. Rather, it was 
+written so that reading though Algorithms 1-9 in the 
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
+closely matches the code which is seen in `kyber.py`.
+
 ### KATs
 
 This implementation currently passes all KAT tests from the reference implementation. 
@@ -27,19 +40,6 @@ To install dependencies, run `pip -r install requirements`.
 
 If you're happy to use system randomness (`os.urandom`) then you don't need
 this dependency.
-
-## Disclaimer
-
-:warning: **Under no circumstances should this be used for a cryptographic application.** :warning:
-
-I have written `kyber-py` as a way to learn about the way Kyber works, and to
-try and create a clean, well commented implementation which people can learn 
-from.
-
-This code is not constant time, or written to be performant. Rather, it was 
-written so that reading though Algorithms 1-9 in the 
-[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
-closely matches the code which is seen in `kyber.py`.
 
 ## Using kyber-py
 
