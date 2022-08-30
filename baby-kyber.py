@@ -92,12 +92,12 @@ if __name__ == '__main__':
     R = PolynomialRing(17, 4)
     M = Module(R)
     # Our polynomial encoding follows Kyber spec
-    # So we encode the byte `b'\xa2'` to get the
+    # So we encode the byte `b'E'` to get the
     # polynomial from the blog post
-    # >>> R.decode(bytes([162]))
+    # >>> R.decode(bytes([69]))
     # 1 + x + x^3
-    m = bytes([162])
-    assert R.decode(m) == R([1,1,0,1]) 
+    m = bytes([69])
+    assert R.decode(m) == R([1,1,0,1])
     # Generate keypair
     pub, priv = keygen()
     # Encrypt message
