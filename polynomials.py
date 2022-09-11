@@ -1,6 +1,5 @@
 import random
 from utils import *
-from ntt_helper import *
 
 class PolynomialRing:
     """
@@ -8,10 +7,11 @@ class PolynomialRing:
         
         R = GF(q) / (X^n + 1) 
     """
-    def __init__(self, q, n):
+    def __init__(self, q, n, ntt_helper=None):
         self.q = q
         self.n = n
         self.element = PolynomialRing.Polynomial
+        self.ntt_helper = ntt_helper
 
     def gen(self, is_ntt=False):
         return self([0,1], is_ntt=is_ntt)
@@ -147,75 +147,14 @@ class PolynomialRing:
             return self
             
         def to_ntt(self):
-            """
-            Convert a polynomial to number-theoretic transform (NTT) form in place
-            The input is in standard order, the output is in bit-reversed order.
-            NTT_ZETAS also has the Montgomery factor 2^16 included, so NTT 
-            additionally maps to Montgomery domain.
-            
-            Only implemented (currently) for n = 256
-            """
-            if self.parent.n != 256:
-                raise NotImplementedError
-            if self.is_ntt:
-                raise ValueError("Cannot convert NTT form polynomial to NTT form")
-
-            k, l = 1, 128
-            while l >= 2:
-                start = 0
-                while start < 256:
-                    zeta = NTT_ZETAS[k]
-                    k = k + 1
-                    for j in range(start, start + l):
-                        t = ntt_mul(zeta, self.coeffs[j+l])
-                        self.coeffs[j+l] = self.coeffs[j] - t
-                        self.coeffs[j]   = self.coeffs[j] + t
-                    start = l + (j + 1)
-                l = l >> 1
-            
-            self.is_ntt = True
-            return self
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
+            return self.parent.ntt_helper.to_ntt(self)
         
         def from_ntt(self):
-            """
-            Convert a polynomial from number-theoretic transform (NTT) form in place
-            and multiplication by Montgomery factor 2^16.
-            The input is in bit-reversed order, the output is in standard order.
-            
-            Because of the montgomery multiplication, we have:
-                f != f.to_ntt().from_ntt()
-                f = (1/2^16) * f.to_ntt().from_ntt()
-            
-            To recover f we do
-                f == f.to_ntt().from_ntt().from_montgomery()
-                
-            Only implemented (currently) for n = 256
-            """
-            if self.parent.n != 256:
-                raise NotImplementedError
-            if not self.is_ntt:
-                raise ValueError("Can only convert from a polynomial in NTT form")
-                
-            l, l_upper = 2, 128
-            k = l_upper - 1
-            f = 1441 # MONT_R^2 / 128
-            while l <= 128:
-                start = 0
-                while start < self.parent.n:
-                    zeta = NTT_ZETAS[k]
-                    k = k - 1
-                    for j in range(start, start+l):
-                        t = self.coeffs[j]
-                        self.coeffs[j]   = barrett_reduce(t + self.coeffs[j+l])
-                        self.coeffs[j+l] = self.coeffs[j+l] - t
-                        self.coeffs[j+l] = ntt_mul(zeta, self.coeffs[j+l])
-                    start = j + l + 1
-                l = l << 1
-            for j in range(self.parent.n):
-                self.coeffs[j] = ntt_mul(self.coeffs[j], f)
-                
-            self.is_ntt = False
-            return self
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
+            return self.parent.ntt_helper.from_ntt(self)
             
         def to_montgomery(self):
             """
@@ -223,10 +162,10 @@ class PolynomialRing:
             
             Only implemented (currently) for n = 256
             """
-            if self.parent.n != 256:
-                raise NotImplementedError
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform Mont. reduction when parent element has an NTT Helper")
             f = (1 << 32) % self.parent.q
-            self.coeffs = [montgomery_reduce(f * c) for c in self.coeffs]
+            self.coeffs = [self.parent.ntt_helper.ntt_mul(f, c) for c in self.coeffs]
             return self
                 
         def add_mod_q(self, x, y):
@@ -269,12 +208,12 @@ class PolynomialRing:
             Number Theoretic Transform multiplication.
             Only implemented (currently) for n = 256
             """
-            if self.parent.n != 256:
-                raise NotImplementedError
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform ntt reduction when parent element has an NTT Helper")
             if not (self.is_ntt and other.is_ntt):
                 raise ValueError("Can only multiply using NTT if both polynomials are in NTT form")
             # function in ntt_helper.py
-            new_coeffs = ntt_coefficient_multiplication(self.coeffs, other.coeffs)
+            new_coeffs = self.parent.ntt_helper.ntt_coefficient_multiplication(self.coeffs, other.coeffs)
             return self.parent(new_coeffs, is_ntt=True)
             
         def is_zero(self):

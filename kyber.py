@@ -2,6 +2,7 @@ import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from polynomials import *
 from modules import *
+from ntt_helper import NTTHelperKyber
 try:
     from aes256_crt_drgb import AES256_CRT_DRGB
 except ImportError as e:
@@ -50,7 +51,7 @@ class Kyber:
         self.du = parameter_set["du"]
         self.dv = parameter_set["dv"]
         
-        self.R = PolynomialRing(self.q, self.n)
+        self.R = PolynomialRing(self.q, self.n, ntt_helper=NTTHelperKyber)
         self.M = Module(self.R)
         
         self.drgb = None
