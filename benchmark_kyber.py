@@ -9,8 +9,8 @@ def profile_kyber(Kyber):
     gvars = {}
     lvars = {"Kyber": Kyber, "c": c, "pk": pk, "sk": sk}
     
-    # cProfile.runctx("Kyber.keygen()", globals=gvars, locals=lvars, sort=1)
-    # cProfile.runctx("Kyber.encrypt(pk)", globals=gvars, locals=lvars, sort=1)
+    cProfile.runctx("Kyber.keygen()", globals=gvars, locals=lvars, sort=1)
+    cProfile.runctx("Kyber.encrypt(pk)", globals=gvars, locals=lvars, sort=1)
     cProfile.runctx("Kyber.decrypt(c, sk)", globals=gvars, locals=lvars, sort=1)
     
 def benchmark_kyber(Kyber, name):
@@ -18,17 +18,22 @@ def benchmark_kyber(Kyber, name):
     c, key = Kyber.encrypt(pk)
     n = 1000
     
-    keygen = timeit("Kyber.keygen()", number=n, globals=locals())
-    encrypt = timeit("Kyber.encrypt(pk)", number=n, globals=locals())
-    decrypt = timeit("Kyber.decrypt(c, sk)", number=n, globals=locals())
-    
-    print(f"-"*25)
+    # Banner
+    print(f"-"*27)
     print(f"  {name} | ({n} calls)")
-    print(f"-"*25)
+    print(f"-"*27)
     
-    print(f"keygen:  {round(keygen,5)}s")
-    print(f"encrypt: {round(encrypt,5)}s")
-    print(f"decrypt: {round(decrypt,5)}s\n")
+    # Benchmark Kyber.keygen()
+    keygen = timeit("Kyber.keygen()", number=n, globals=locals())
+    print(f"keygen:  {round(keygen, 3)}s")
+    
+    # Benchmark Kyber.encrypt()
+    encrypt = timeit("Kyber.encrypt(pk)", number=n, globals=locals())
+    print(f"encrypt: {round(encrypt,3)}s")
+    
+    # Benchmark Kyber.decrypt()
+    decrypt = timeit("Kyber.decrypt(c, sk)", number=n, globals=locals())
+    print(f"decrypt: {round(decrypt,3)}s\n")
     
 if __name__ == '__main__':
     # profile_kyber(Kyber512)

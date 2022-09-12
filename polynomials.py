@@ -96,6 +96,18 @@ class PolynomialRing:
             self.coeffs = self.parse_coefficients(coefficients)
             self.is_ntt = is_ntt
 
+        def is_zero(self):
+            """
+            Return if polynomial is zero: f = 0
+            """
+            return all(c == 0 for c in self.coeffs)
+
+        def is_constant(self):
+            """
+            Return if polynomial is constant: f = c
+            """
+            return all(c == 0 for c in self.coeffs[1:])
+            
         def parse_coefficients(self, coefficients):
             """
             Helper function which right pads with zeros
@@ -145,28 +157,6 @@ class PolynomialRing:
             decompress_float = self.parent.q / 2**d
             self.coeffs = [round_up(decompress_float * c) for c in self.coeffs ]
             return self
-            
-        def to_ntt(self):
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
-            return self.parent.ntt_helper.to_ntt(self)
-        
-        def from_ntt(self):
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
-            return self.parent.ntt_helper.from_ntt(self)
-            
-        def to_montgomery(self):
-            """
-            Multiply every element by 2^16 mod q
-            
-            Only implemented (currently) for n = 256
-            """
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform Mont. reduction when parent element has an NTT Helper")
-            f = (1 << 32) % self.parent.q
-            self.coeffs = [self.parent.ntt_helper.ntt_mul(f, c) for c in self.coeffs]
-            return self
                 
         def add_mod_q(self, x, y):
             """
@@ -203,6 +193,31 @@ class PolynomialRing:
                     new_coeffs[i+j-n] -= (a[i] * b[j])
             return [c % self.parent.q for c in new_coeffs]
         
+        """
+        The next four `Polynomial` methods rely on the parent
+        `PolynomialRing` having a  `ntt_helper` from 
+        ntt_helper.py and are used for NTT speediness.
+        """
+        def to_ntt(self):
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
+            return self.parent.ntt_helper.to_ntt(self)
+        
+        def from_ntt(self):
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
+            return self.parent.ntt_helper.from_ntt(self)
+            
+        def to_montgomery(self):
+            """
+            Multiply every element by 2^16 mod q
+            
+            Only implemented (currently) for n = 256
+            """
+            if self.parent.ntt_helper is None:
+                raise ValueError("Can only perform Mont. reduction when parent element has an NTT Helper")
+            return self.parent.ntt_helper.to_montgomery(self)
+        
         def ntt_multiplication(self, other):
             """
             Number Theoretic Transform multiplication.
@@ -215,18 +230,6 @@ class PolynomialRing:
             # function in ntt_helper.py
             new_coeffs = self.parent.ntt_helper.ntt_coefficient_multiplication(self.coeffs, other.coeffs)
             return self.parent(new_coeffs, is_ntt=True)
-            
-        def is_zero(self):
-            """
-            Return if polynomial is zero: f = 0
-            """
-            return all(c == 0 for c in self.coeffs)
-
-        def is_constant(self):
-            """
-            Return if polynomial is constant: f = c
-            """
-            return all(c == 0 for c in self.coeffs[1:])
 
         def __neg__(self):
             """

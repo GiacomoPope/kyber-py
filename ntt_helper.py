@@ -1,16 +1,25 @@
 """
-TODO: Build structure to allow this to generalise away from n=256.
+The class `NTTHelper` has been defined to allow for the 
+`Polynomial` class to have some `n=256` NTT help for 
+Kyber. This is ok code, but it doesnt generalise nicely.
+
+TODOs: 
+
+- Build structure to allow this to generalise away from n=256.
+- Allow for kyber and dilithium NTT in one file. 
+
 """
 
 NTT_PARAMETERS = {
     "kyber" : {
         "q" : 3329,
-        "mont_r"        : 2**16,
-        "mont_r_inv"    : pow(2**16, -1, 3329),
-        "mont_mask"     : 2**16 - 1,
-        "q_inv"         : pow(-3329, -1, 2**16),
+        "mont_r"        : 2285,  # 2^16 % q
+        "mont_r2"       : 1353,  # 2^32 % q
+        "mont_r_inv"    : 169,   # (1 / 2^16) % q
+        "mont_mask"     : 65535, # 2^16 - 1,
+        "q_inv"         : 3327,  # -1 / 3329 ^ 2^16,
         "root_of_unity" : 17,
-        # NTT_ZETAS  : [(mont_r * pow(17,  br(i,7), q)) % q for i in range(128)],
+        # NTT_ZETAS  : [(mont_r * pow(root_of_unity,  br(i,7), q)) % q for i in range(128)],
         "zetas" : [2285, 2571, 2970, 1812, 1493, 1422, 287, 202, 3158, 622, 1577, 182, 962, 2127, 1855, 1468, 
                      573, 2004, 264, 383, 2500, 1458, 1727, 3199, 2648, 1017, 732, 608, 1787, 411, 3124, 1758, 
                      1223, 652, 2777, 1015, 2036, 1491, 3047, 1785, 516, 3321, 3009, 2663, 1711, 2167, 126, 1469, 
@@ -19,7 +28,7 @@ NTT_PARAMETERS = {
                      778, 1159, 3182, 2552, 1483, 2727, 1119, 1739, 644, 2457, 349, 418, 329, 3173, 3254, 817, 
                      1097, 603, 610, 1322, 2044, 1864, 384, 2114, 3193, 1218, 1994, 2455, 220, 2142, 1670, 2144, 
                      1799, 2051, 794, 1819, 2475, 2459, 478, 3221, 3021, 996, 991, 958, 1869, 1522, 1628],
-        "f" : 1441, # MONT_R^2 / 128
+        "f" : 1441,              # 2^32 / 128 % q
     },
 }
 
@@ -28,6 +37,7 @@ class NTTHelper():
     def __init__(self, parameter_set):
         self.q          = parameter_set["q"]
         self.mont_r     = parameter_set["mont_r"]
+        self.mont_r2    = parameter_set["mont_r2"]
         self.mont_r_inv = parameter_set["mont_r_inv"]
         self.q_inv      = parameter_set["q_inv"]
         self.zetas      = parameter_set["zetas"]
@@ -53,6 +63,10 @@ class NTTHelper():
         a -> R^(-1) a mod q
         """
         return a * self.mont_r_inv % self.q
+        
+    def to_montgomery(self, poly):
+        poly.coeffs = [self.ntt_mul(self.mont_r2, c) for c in poly.coeffs]
+        return poly
 
     def reduce_mod_q(self, a):
         """
@@ -116,15 +130,16 @@ class NTTHelper():
             raise ValueError("Cannot convert NTT form polynomial to NTT form")
 
         k, l = 1, 128
+        coeffs = poly.coeffs
         while l >= 2:
             start = 0
             while start < 256:
                 zeta = self.zetas[k]
                 k = k + 1
                 for j in range(start, start + l):
-                    t = self.ntt_mul(zeta, poly.coeffs[j+l])
-                    poly.coeffs[j+l] = poly.coeffs[j] - t
-                    poly.coeffs[j]   = poly.coeffs[j] + t
+                    t = self.ntt_mul(zeta, coeffs[j+l])
+                    coeffs[j+l] = coeffs[j] - t
+                    coeffs[j]   = coeffs[j] + t
                 start = l + (j + 1)
             l = l >> 1
         
@@ -151,20 +166,21 @@ class NTTHelper():
             
         l, l_upper = 2, 128
         k = l_upper - 1
+        coeffs = poly.coeffs
         while l <= 128:
             start = 0
             while start < poly.parent.n:
                 zeta = self.zetas[k]
                 k = k - 1
                 for j in range(start, start+l):
-                    t = poly.coeffs[j]
-                    poly.coeffs[j]   = self.reduce_mod_q(t + poly.coeffs[j+l])
-                    poly.coeffs[j+l] = poly.coeffs[j+l] - t
-                    poly.coeffs[j+l] = self.ntt_mul(zeta, poly.coeffs[j+l])
+                    t = coeffs[j]
+                    coeffs[j]   = self.reduce_mod_q(t + coeffs[j+l])
+                    coeffs[j+l] = coeffs[j+l] - t
+                    coeffs[j+l] = self.ntt_mul(zeta, coeffs[j+l])
                 start = j + l + 1
             l = l << 1
         for j in range(poly.parent.n):
-            poly.coeffs[j] = self.ntt_mul(poly.coeffs[j], self.f)
+            coeffs[j] = self.ntt_mul(coeffs[j], self.f)
             
         poly.is_ntt = False
         return poly

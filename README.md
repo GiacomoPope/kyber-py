@@ -56,7 +56,7 @@ protocol parameters. An example can be seen in `DEFAULT_PARAMETERS`.
 Additionally, the class has been initialised with these default parameters, 
 so you can simply import the NIST level you want to play with:
 
-#### Example 1
+#### Example
 
 ```python
 >>> from kyber import Kyber512
@@ -70,23 +70,22 @@ The above example would also work with `Kyber768` and `Kyber1024`.
 
 ### Benchmarks
 
-**TODO**: in-depth benchmarks
+**TODO**: Better benchmarks? Although this was never about speed haha.
 
 For now, here are some approximate benchmarks:
 
 |  1000 Iterations         | Kyber512 | Kyber768 | Kyber1024 |
 |--------------------------|----------|----------|-----------|
-| `KeyGen()`               |  6.842s  | 10.246s  | 14.921s   |
-| `Encrypt()`              | 10.092s  | 14.817s  | 20.549s   |
-| `Decrypt()`              | 15.812s  | 22.910s  | 31.173s   |
+| `KeyGen()`               |  6.868s  | 10.820s  | 16.172s   |
+| `Encrypt()`              | 10.677s  | 16.094s  | 22.341s   |
+| `Decrypt()`              | 16.822s  | 25.979s  | 33.524s   |
 
-All times recorded using a MacBook Pro using a Intel Core i7 CPU @ 2.6 GHz.
+All times recorded using a Intel Core i7-9750H CPU. 
 
 ## Future Plans
 
 * Add documentation on `NTT` transform for polynomials
-* Add documentation on Montgomery and Barrett reduction
-* Add documentation for working with DRGB and setting the seed.
+* Add documentation for working with DRGB and setting the seed
 
 ### Include Dilithium
 
@@ -98,6 +97,16 @@ I suppose then this repo should be called `crystals-py` but I wont
 get ahead of myself.
 
 ## Discussion of Implementation
+
+### Kyber
+
+```
+TODO:
+
+Add some more information about how working with Kyber works with this
+library...
+```
+
 ### Polynomials
 
 The file [`polynomials.py`](polynomials.py) contains the classes 
@@ -111,7 +120,7 @@ $$
 The implementation is inspired by `SageMath` and you can create the
 ring $R_{11} = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
 
-#### Example 2
+#### Example
 
 ```python
 >>> R = PolynomialRing(11, 8)
@@ -137,7 +146,7 @@ to move from bytes to polynomials (and back again).
 - `Polynomial`
   - `self.encode(l)` takes the polynomial and returns a length $\ell n / 8$ bytearray
   
-#### Example 3
+#### Example
 
 ```python
 >>> R = PolynomialRing(11, 8)
@@ -174,7 +183,7 @@ on every coefficient.
 Similarly, an element of a module is (de)compressed by acting the
 function on every polynomial.
 
-#### Example 3
+#### Example
 
 ```python
 >>> R = PolynomialRing(11, 8)
@@ -191,6 +200,17 @@ x + x^2 + x^6
 by computing `f.compress(d).decompress(d)`. They are however *close*.
 See the specification for more information.
 
+### Number Theoretic Transform
+
+```
+TODO:
+
+This is now handled by `NTTHelper` which is passed to `PolynomialRing`
+and has functions which are accessed by `Polynomial`.
+
+Talk about what is available, and how they are used.
+```
+
 ### Modules
 
 The file [`modules.py`](modules.py) contains the classes `Module` and `Matrix`.
@@ -205,7 +225,7 @@ matricies of size $k \times k$.
 As an example of the operations we can perform with out `Module`
 lets revisit the ring from the previous example:
 
-#### Example 4
+#### Example
 
 ```python
 >>> R = PolynomialRing(11, 8)
@@ -252,7 +272,7 @@ We also carry through `Matrix.encode()` and
 which simply use the above functions defined for polynomials and run for each
 element.
 
-#### Example 5
+#### Example
 
 We can see how encoding / decoding a vector works in the following example.
 Note that we can swap the rows/columns to decode bytes into the transpose
