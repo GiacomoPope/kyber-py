@@ -155,7 +155,7 @@ class Module:
             return self.__sub__(other)
 
         def __isub__(self, other):
-            self = self + other
+            self = self - other
             return self
 
         def __matmul__(self, other):
