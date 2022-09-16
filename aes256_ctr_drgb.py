@@ -2,7 +2,7 @@ import os
 from utils import xor_bytes
 from Crypto.Cipher import AES
 
-class AES256_CRT_DRGB:
+class AES256_CTR_DRGB:
     def __init__(self, seed=None, personalization=b""):
         self.seed_length = 48
         self.reseed_interval = 2**48
@@ -11,7 +11,7 @@ class AES256_CRT_DRGB:
         self.entropy_input = self.__check_entropy_input(seed)
       
         seed_material = self.__instantiate(personalization=personalization)
-        self.crt_drgb_update(seed_material)
+        self.ctr_drgb_update(seed_material)
         self.reseed_ctr = 1
         
     def __check_entropy_input(self, entropy_input):
@@ -43,7 +43,7 @@ class AES256_CRT_DRGB:
         new_V = (int_V + 1) % 2**(8*16)
         self.V = new_V.to_bytes(16, byteorder='big')
         
-    def crt_drgb_update(self, provided_data):
+    def ctr_drgb_update(self, provided_data):
         tmp = b""
         cipher = AES.new(self.key, AES.MODE_ECB)
         # Collect bytes from AES ECB
@@ -65,7 +65,7 @@ class AES256_CRT_DRGB:
         limit.
         """
         seed_material = self.__instantiate(additional_information)
-        self.crt_drgb_update(seed_material)
+        self.ctr_drgb_update(seed_material)
         self.reseed_ctr = 1
         
     def random_bytes(self, num_bytes, additional=None):
@@ -80,7 +80,7 @@ class AES256_CRT_DRGB:
                  raise ValueError(f"The additional input must be of length at most: {self.seed_length}. Input has length {len(seed)}")
             elif len(additional) < self.seed_length:
                 additional += bytes([0]) * (self.seed_length - len(additional))
-            self.crt_drgb_update(additional)
+            self.ctr_drgb_update(additional)
         
         # Collect bytes!
         tmp = b""
@@ -91,7 +91,7 @@ class AES256_CRT_DRGB:
         
         # Collect only the requested number of bits
         output_bytes = tmp[:num_bytes]
-        self.crt_drgb_update(additional)
+        self.ctr_drgb_update(additional)
         self.reseed_ctr += 1
         return output_bytes
             

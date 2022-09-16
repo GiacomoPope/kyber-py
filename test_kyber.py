@@ -1,7 +1,7 @@
 import unittest
 import os
 from kyber import Kyber512, Kyber768, Kyber1024
-from aes256_crt_drgb import AES256_CRT_DRGB
+from aes256_ctr_drgb import AES256_CTR_DRGB
 
 def parse_kat_data(data):
     parsed_data = {}
@@ -53,7 +53,7 @@ class TestKyberDeterministic(unittest.TestCase):
     """
     Ensure that deterministic DRGB is deterministic!
     
-    Uses AES256 CRT DRGB for randomness.
+    Uses AES256 CTR DRGB for randomness.
     Note: requires pycryptodome for AES impl.
     (Seemed overkill to code my own AES for Kyber)
     """
@@ -165,7 +165,7 @@ class TestKnownTestValuesDRGB(unittest.TestCase):
     def test_kyber_512_known_answer_seed(self):
         # Set DRGB to generate seeds
         entropy_input = bytes([i for i in range(48)])
-        rng = AES256_CRT_DRGB(entropy_input)
+        rng = AES256_CTR_DRGB(entropy_input)
         
         with open("assets/PQCkemKAT_1632.rsp") as f:
             # extract data from KAT
