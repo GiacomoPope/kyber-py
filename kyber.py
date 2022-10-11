@@ -295,9 +295,9 @@ class Kyber:
         sk = _sk + pk + self._h(pk) + z
         return pk, sk
         
-    def encrypt(self, pk, key_length=32):
+    def enc(self, pk, key_length=32):
         """
-        Algorithm 8 (CCA KEM Encryption)
+        Algorithm 8 (CCA KEM Encapsulation)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
         
         Input: 
@@ -313,9 +313,9 @@ class Kyber:
         K = self._kdf(Kbar + self._h(c), key_length)
         return c, K
 
-    def decrypt(self, c, sk, key_length=32):
+    def dec(self, c, sk, key_length=32):
         """
-        Algorithm 9 (CCA KEM Decryption)
+        Algorithm 9 (CCA KEM Decapsulation)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
         
         Input: 

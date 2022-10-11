@@ -44,7 +44,7 @@ def keygen():
     assert t == M([R([7,0,15,16]),R([6,11,12,10])]).transpose()
     return (A, t), s
 
-def encrypt(m, public_key):
+def enc(m, public_key):
     # randomness fixed for example
     # gen random vector `r` from
     # binomial distribution
@@ -79,7 +79,7 @@ def encrypt(m, public_key):
     assert v == R([15, 8 , 6, 7])
     return u, v
 
-def decrypt(u, v, s):
+def dec(u, v, s):
     m_n = v - (s.transpose() @ u)[0][0]
     # Check against blogpost
     assert m_n == R([5,7,14,7])
@@ -101,9 +101,9 @@ if __name__ == '__main__':
     # Generate keypair
     pub, priv = keygen()
     # Encrypt message
-    u, v = encrypt(m, pub)
+    u, v = enc(m, pub)
     # Decrypt message
-    n = decrypt(u, v, priv)
+    n = dec(u, v, priv)
     assert n == m
 
 

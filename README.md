@@ -47,8 +47,8 @@ There are three functions exposed on the `Kyber` class which are intended
 for use:
 
 - `Kyber.keygen()`: generate a keypair `(pk, sk)`
-- `Kyber.encrypt(pk)`: generate a challenge and a shared key `(c, K)`
-- `Kyber.decrypt(sk, c)`: generate the shared key `K`
+- `Kyber.enc(pk)`: generate a challenge and a shared key `(c, K)`
+- `Kyber.dec(sk, c)`: generate the shared key `K`
 
 To use `Kyber()` it must be initialised with a dictionary of the 
 protocol parameters. An example can be seen in `DEFAULT_PARAMETERS`.
@@ -61,8 +61,8 @@ so you can simply import the NIST level you want to play with:
 ```python
 >>> from kyber import Kyber512
 >>> pk, sk = Kyber512.keygen()
->>> c, key = Kyber512.encrypt(pk)
->>> _key = Kyber512.decrypt(c, sk)
+>>> c, key = Kyber512.enc(pk)
+>>> _key = Kyber512.dec(c, sk)
 >>> assert key == _key
 ```
 
@@ -77,8 +77,8 @@ For now, here are some approximate benchmarks:
 |  1000 Iterations         | Kyber512 | Kyber768 | Kyber1024 |
 |--------------------------|----------|----------|-----------|
 | `KeyGen()`               |  6.868s  | 10.820s  | 16.172s   |
-| `Encrypt()`              | 10.677s  | 16.094s  | 22.341s   |
-| `Decrypt()`              | 16.822s  | 25.979s  | 33.524s   |
+| `Enc()`                  | 10.677s  | 16.094s  | 22.341s   |
+| `Dec()`                  | 16.822s  | 25.979s  | 33.524s   |
 
 All times recorded using a Intel Core i7-9750H CPU. 
 
