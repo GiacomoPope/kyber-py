@@ -33,7 +33,7 @@ bytes $z = \mathcal{B}^{32}$ in algorithm 7 of the
 
 Originally this was planned to have zero dependencies, however to make this work
 pass the KATs, I needed a deterministic CSRNG. The reference implementation uses
-AES256 CTR DRGB. I have implemented this in [`ase256_ctr_drgb.py`](ase256_ctr_drgb.py). 
+AES256 CTR DRGB. I have implemented this in [`aes256_ctr_drgb.py`](aes256_ctr_drgb.py). 
 However, I have not implemented AES itself, instead I import this from `pycryptodome`.
 
 To install dependencies, run `pip -r install requirements`.
