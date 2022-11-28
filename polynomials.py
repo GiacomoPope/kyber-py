@@ -258,9 +258,9 @@ class PolynomialRing:
             return self
 
         def __sub__(self, other):
-            if self.is_ntt ^ other.is_ntt:
-                raise ValueError(f"Both or neither polynomials must be in NTT form before multiplication")
             if isinstance(other, PolynomialRing.Polynomial):
+                if self.is_ntt ^ other.is_ntt:
+                    raise ValueError(f"Both or neither polynomials must be in NTT form before multiplication")
                 new_coeffs = [self.sub_mod_q(x,y) for x,y in zip(self.coeffs, other.coeffs)]
             elif isinstance(other, int):
                 new_coeffs = self.coeffs.copy()

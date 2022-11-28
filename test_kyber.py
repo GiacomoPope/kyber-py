@@ -1,7 +1,7 @@
 import unittest
 import os
 from kyber import Kyber512, Kyber768, Kyber1024
-from aes256_ctr_drgb import AES256_CTR_DRGB
+from aes256_ctr_drbg import AES256_CTR_DRBG
 
 def parse_kat_data(data):
     parsed_data = {}
@@ -44,9 +44,9 @@ class TestKyber(unittest.TestCase):
                 
 class TestKyberDeterministic(unittest.TestCase):
     """
-    Ensure that deterministic DRGB is deterministic!
+    Ensure that deterministic DRBG is deterministic!
     
-    Uses AES256 CTR DRGB for randomness.
+    Uses AES256 CTR DRBG for randomness.
     Note: requires pycryptodome for AES impl.
     (Seemed overkill to code my own AES for Kyber)
     """
@@ -60,7 +60,7 @@ class TestKyberDeterministic(unittest.TestCase):
         seed = os.urandom(48)
         pk_output = []
         for _ in range(count):
-            Kyber.set_drgb_seed(seed)
+            Kyber.set_drbg_seed(seed)
             pk, sk = Kyber.keygen()
             pk_output.append(pk + sk)
         self.assertEqual(len(pk_output), 5)
@@ -74,7 +74,7 @@ class TestKyberDeterministic(unittest.TestCase):
         seed = os.urandom(48)
         pk, sk = Kyber.keygen()
         for _ in range(count):
-            Kyber.set_drgb_seed(seed)
+            Kyber.set_drbg_seed(seed)
             c, key = Kyber.enc(pk)
             _key = Kyber.dec(c, sk)
             # Check key derivation works
@@ -93,7 +93,7 @@ class TestKyberDeterministic(unittest.TestCase):
         self.generic_test_kyber_deterministic(Kyber1024, 5)
         
 
-class TestKnownTestValuesDRGB(unittest.TestCase):
+class TestKnownTestValuesDRBG(unittest.TestCase):
     """
     We know how the seeds for the KAT are generated, so
     let's check against our own implementation.
@@ -102,9 +102,9 @@ class TestKnownTestValuesDRGB(unittest.TestCase):
     same across the three files.
     """
     def test_kyber512_known_answer_seed(self):
-        # Set DRGB to generate seeds
+        # Set DRBG to generate seeds
         entropy_input = bytes([i for i in range(48)])
-        rng = AES256_CTR_DRGB(entropy_input)
+        rng = AES256_CTR_DRBG(entropy_input)
         
         with open("assets/PQCkemKAT_1632.rsp") as f:
             # extract data from KAT
@@ -124,8 +124,8 @@ class TestKnownTestValues(unittest.TestCase):
             for data in parsed_data.values():
                 seed, pk, sk, ct, ss = data.values()
                 
-                # Seed DRGB with KAT seed
-                Kyber.set_drgb_seed(seed)
+                # Seed DRBG with KAT seed
+                Kyber.set_drbg_seed(seed)
                 
                 # Assert keygen matches
                 _pk, _sk = Kyber.keygen()

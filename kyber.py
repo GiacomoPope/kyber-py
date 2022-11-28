@@ -4,9 +4,9 @@ from polynomials import *
 from modules import *
 from ntt_helper import NTTHelperKyber
 try:
-    from aes256_ctr_drgb import AES256_CTR_DRGB
+    from aes256_ctr_drbg import AES256_CTR_DRBG
 except ImportError as e:
-    print("Error importing AES CTR DRGB. Have you tried installing requirements?")
+    print("Error importing AES CTR DRBG. Have you tried installing requirements?")
     print(f"ImportError: {e}\n")
     print("Kyber will work perfectly fine with system randomness")
     
@@ -54,31 +54,31 @@ class Kyber:
         self.R = PolynomialRing(self.q, self.n, ntt_helper=NTTHelperKyber)
         self.M = Module(self.R)
         
-        self.drgb = None
+        self.drbg = None
         self.random_bytes = os.urandom
         
-    def set_drgb_seed(self, seed):
+    def set_drbg_seed(self, seed):
         """
         Setting the seed switches the entropy source
-        from os.urandom to AES256 CTR DRGB
+        from os.urandom to AES256 CTR DRBG
         
         Note: requires pycryptodome for AES impl.
         (Seemed overkill to code my own AES for Kyber)
         """
-        self.drgb = AES256_CTR_DRGB(seed)
-        self.random_bytes = self.drgb.random_bytes
+        self.drbg = AES256_CTR_DRBG(seed)
+        self.random_bytes = self.drbg.random_bytes
 
-    def reseed_drgb(self, seed):
+    def reseed_drbg(self, seed):
         """
-        Reseeds the DRGB, errors if a DRGB is not set.
+        Reseeds the DRBG, errors if a DRBG is not set.
         
         Note: requires pycryptodome for AES impl.
         (Seemed overkill to code my own AES for Kyber)
         """
-        if self.drgb is None:
-            raise Warning(f"Cannot reseed DRGB without first initialising. Try using `set_drgb_seed`")
+        if self.drbg is None:
+            raise Warning(f"Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`")
         else:
-            self.drgb.reseed(seed)
+            self.drbg.reseed(seed)
         
     @staticmethod
     def _xof(bytes32, a, b, length):
