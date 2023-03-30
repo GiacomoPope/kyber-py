@@ -1,5 +1,5 @@
 import os
-from utils import xor_bytes
+from .utils import xor_bytes
 from Crypto.Cipher import AES
 
 class AES256_CTR_DRBG:
