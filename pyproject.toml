@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "kyber-py"
-version = "0.2.1"
+version = "0.2.2"
 description = "Implementation of the kyber crystal algorithm made by https://github.com/jack4818/kyber-py"
 authors = ["Marc Partensky <marc.partensky@gmail.com>"]
 license = "MIT"
