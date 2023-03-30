@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "kyber-py"
+version = "0.1.0"
+description = "Implementation of the kyber crystal algorithm made by https://github.com/jack4818/kyber-py"
+authors = ["Marc Partensky <marc.partensky@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "kyber_py"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pycryptodome = "3.14.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
