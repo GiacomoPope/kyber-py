@@ -5,7 +5,7 @@ description = "Implementation of the kyber crystal algorithm made by https://git
 authors = ["Marc Partensky <marc.partensky@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "kyber_py"}]
+packages = [{include = "kyber"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
