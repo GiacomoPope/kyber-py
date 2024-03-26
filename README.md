@@ -48,7 +48,7 @@ for use:
 
 - `Kyber.keygen()`: generate a keypair `(pk, sk)`
 - `Kyber.enc(pk)`: generate a challenge and a shared key `(c, K)`
-- `Kyber.dec(sk, c)`: generate the shared key `K`
+- `Kyber.dec(c, sk)`: generate the shared key `K`
 
 To use `Kyber()` it must be initialised with a dictionary of the 
 protocol parameters. An example can be seen in `DEFAULT_PARAMETERS`.
