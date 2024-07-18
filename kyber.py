@@ -186,7 +186,7 @@ class Kyber:
         e.to_ntt() 
                            
         # Construct the public key
-        t = (A @ s).to_montgomery() + e
+        t = (A @ s) + e
         
         # Reduce vectors mod^+ q
         t.reduce_coefficents()

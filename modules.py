@@ -74,12 +74,6 @@ class Module:
                 for ele in row:
                     ele.reduce_coefficents()
             return self
-            
-        def to_montgomery(self):
-            for row in self.rows:
-                for ele in row:
-                    ele.to_montgomery()
-            return self
 
         def encode(self, l=None):
             output = b""
