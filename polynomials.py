@@ -207,16 +207,6 @@ class PolynomialRing:
             if self.parent.ntt_helper is None:
                 raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
             return self.parent.ntt_helper.from_ntt(self)
-            
-        def to_montgomery(self):
-            """
-            Multiply every element by 2^16 mod q
-            
-            Only implemented (currently) for n = 256
-            """
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform Mont. reduction when parent element has an NTT Helper")
-            return self.parent.ntt_helper.to_montgomery(self)
         
         def ntt_multiplication(self, other):
             """
