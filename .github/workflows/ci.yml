@@ -1,0 +1,41 @@
+Name: GitHub CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: py3.11
+            os: ubuntu-latest
+            python-version: "3.11"
+          - name: py3.12
+            os: ubuntu-latest
+            python-version: "3.12"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 10
+      - name: Verify git status
+        run: |
+          git status
+          git remote -v
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Run unit tests
+        run: |
+          python3 -m unittest discover
