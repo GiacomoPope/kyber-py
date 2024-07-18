@@ -14,11 +14,6 @@ def profile_kyber(Kyber):
     cProfile.runctx("Kyber.dec(c, sk)", globals=gvars, locals=lvars, sort=1)
     
 def benchmark_kyber(Kyber, name, count):
-    # Banner
-    print(f"-"*27)
-    print(f"  {name} | ({count} calls)")
-    print(f"-"*27)
-    
     keygen_times = []
     enc_times = []
     dec_times = []
@@ -35,18 +30,27 @@ def benchmark_kyber(Kyber, name, count):
         t2 = time()
         dec = Kyber.dec(c, sk)
         dec_times.append(time() - t2)
-            
-    print(f"Keygen: {round(sum(keygen_times),3)}")
-    print(f"Enc: {round(sum(enc_times), 3)}")
-    print(f"Dec: {round(sum(dec_times),3)}")
-    
-    
+
+    avg_keygen = sum(keygen_times)/count
+    avg_enc = sum(enc_times)/count
+    avg_dec = sum(dec_times)/count
+    print(f" {name:9} |"
+          f"{avg_keygen*1000:6.2f}ms  {1/avg_keygen:8.2f}  "
+          f"{avg_enc*1000:6.2f}ms  {1/avg_enc:8.2f}  "
+          f"{avg_dec*1000:6.2f}ms  {1/avg_dec:8.2f}")
+
+
 if __name__ == '__main__':
     # profile_kyber(Kyber512)
     # profile_kyber(Kyber768)
     # profile_kyber(Kyber1024)
     
     count = 1000
+    # common banner
+    print("-" * 70)
+    print(" Params    | keygen | keygen/s | encap  | encap/s  "
+          "| decap  | decap/s")
+    print("-" * 70)
     benchmark_kyber(Kyber512, "Kyber512", count)
     benchmark_kyber(Kyber768, "Kyber768", count)    
-    benchmark_kyber(Kyber1024, "Kyber1024", count)    
+    benchmark_kyber(Kyber1024, "Kyber1024", count)
