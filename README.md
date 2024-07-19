@@ -227,14 +227,14 @@ lets revisit the ring from the previous example:
 >>> A
 [    x + 3*x^2, 4 + 3*x^7]
 [3*x^3 + 9*x^7,       x^4]
->>> # We can add and subtract matricies of the same size
+>>> # We can add and subtract matrices of the same size
 >>> A + A
 [  2*x + 6*x^2, 8 + 6*x^7]
 [6*x^3 + 7*x^7,     2*x^4]
 >>> A - A
 [0, 0]
 [0, 0]
->>> # A vector can be constructed by a list of coefficents
+>>> # A vector can be constructed by a list of coefficients
 >>> v = M([3*x**5, x])
 >>> v
 [3*x^5, x]

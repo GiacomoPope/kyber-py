@@ -39,7 +39,7 @@ def keygen():
 
     # Compute `t` from example
     t = A @ s + e
-    
+
     # Check against blogpost
     assert t == M([R([7,0,15,16]),R([6,11,12,10])]).transpose()
     return (A, t), s
@@ -75,12 +75,12 @@ def enc(m, public_key):
     
     # Typo in blog post, we need to use
     # `- m` rather than `+ m` to make values match
-    v = (t.transpose() @ r)[0][0] + e_2 - poly_m  
+    v = t.dot(r) + e_2 - poly_m  
     assert v == R([15, 8 , 6, 7])
     return u, v
 
 def dec(u, v, s):
-    m_n = v - (s.transpose() @ u)[0][0]
+    m_n = v - s.dot(u)
     # Check against blogpost
     assert m_n == R([5,7,14,7])
     # Check against blogpost

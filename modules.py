@@ -162,7 +162,10 @@ class Module:
                 return self._data[idx[1]][idx[0]]
 
         def __eq__(self, other):
-            return other._data == self._data and other._transpose == self._transpose
+            if self.dim() != other.dim():
+                return False
+            m, n = self.dim()
+            return all([self[i, j] == other[i, j] for i in range(m) for j in range(n)])
 
         def __add__(self, other):
             if not isinstance(other, Module.Matrix):
@@ -230,12 +233,11 @@ class Module:
             return res[0, 0]
 
         def __repr__(self):
-            n, m = self.dim()
+            m, n = self.dim()
 
-            if n == 1:
+            if m == 1:
                 return str(self._data[0])
-            max_col_width = []
-            for n_col in range(n):
-                max_col_width.append(max(len(str(row[n_col])) for row in self._data))
-            info = ']\n['.join([', '.join([f'{str(x):>{max_col_width[i]}}' for i,x in enumerate(r)]) for r in self._data])
+
+            max_col_width = [max(len(str(self[i, j])) for i in range(m)) for j in range(n)]
+            info = ']\n['.join([', '.join([f'{str(self[i, j]):>{max_col_width[j]}}' for j in range(n)]) for i in range(m)])
             return f"[{info}]"
