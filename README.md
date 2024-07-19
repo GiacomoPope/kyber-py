@@ -70,15 +70,14 @@ The above example would also work with `Kyber768` and `Kyber1024`.
 
 ### Benchmarks
 
-**TODO**: Better benchmarks? Although this was never about speed haha.
+For now, here are some approximate benchmarks, although the purpose of this project is not speed, but rather education!
 
-For now, here are some approximate benchmarks:
-
-|  1000 Iterations         | Kyber512 | Kyber768 | Kyber1024 |
-|--------------------------|----------|----------|-----------|
-| `KeyGen()`               |  6.868s  | 10.820s  | 16.172s   |
-| `Enc()`                  | 10.677s  | 16.094s  | 22.341s   |
-| `Dec()`                  | 16.822s  | 25.979s  | 33.524s   |
+--------------------------------------------------------------------------------
+   Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s
+--------------------------------------------------------------------------------
+ Kyber512    |    4.82ms       207.59    7.10ms      140.80   11.65ms     85.82
+ Kyber768    |    6.87ms       145.60   10.11ms       98.92   16.51ms     60.58
+ Kyber1024   |    9.72ms       102.91   13.71ms       72.94   22.20ms     45.05
 
 All times recorded using a Intel Core i7-9750H CPU. 
 
@@ -86,15 +85,6 @@ All times recorded using a Intel Core i7-9750H CPU.
 
 * Add documentation on `NTT` transform for polynomials
 * Add documentation for working with DRBG and setting the seed
-
-### Include Dilithium
-
-Using [`polynomials.py`](polynomials.py) and [`modules.py`](modules.py) 
-this work could be extended to
-have a pure python implementation of CRYSTALS-Dilithium too.
-
-I suppose then this repo should be called `crystals-py` but I wont
-get ahead of myself.
 
 ## Discussion of Implementation
 
