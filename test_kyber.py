@@ -7,7 +7,7 @@ from aes256_ctr_drbg import AES256_CTR_DRBG
 def parse_kat_data(data):
     parsed_data = {}
     count_blocks = data.split("\n\n")
-    for block in count_blocks[1:-1]:
+    for block in count_blocks[:-1]:
         block_data = block.split("\n")
         count, seed, pk, sk, ct, ss = [
             line.split(" = ")[-1] for line in block_data
