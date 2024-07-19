@@ -127,12 +127,11 @@ class Kyber:
         Helper function which generates a element in the
         module from the Centered Binomial Distribution.
         """
-        elements = []
-        for _ in range(self.k):
+        elements = [0 for _ in range(self.k)]
+        for i in range(self.k):
             input_bytes = self._prf(sigma,  bytes([N]), 64*eta)
-            poly = self.R.cbd(input_bytes, eta, is_ntt=is_ntt)
-            elements.append(poly)
-            N = N + 1
+            elements[i] = self.R.cbd(input_bytes, eta, is_ntt=is_ntt)
+            N += 1
         v = self.M.vector(elements)
         return v, N
         
@@ -144,18 +143,13 @@ class Kyber:
         When `transpose` is set to True, the matrix A is
         built as the transpose.
         """
-        A = []
+        A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
         for i in range(self.k):
-            row = []
             for j in range(self.k):
-                if transpose:
-                    input_bytes = self._xof(rho, bytes([i]), bytes([j]), 3*self.R.n)
-                else:
-                    input_bytes = self._xof(rho, bytes([j]), bytes([i]), 3*self.R.n)
-                aij = self.R.parse(input_bytes, is_ntt=is_ntt)
-                row.append(aij)
-            A.append(row)
-        return self.M(A)
+                input_bytes = self._xof(rho, bytes([j]), bytes([i]), 3*self.R.n)
+                A_data[i][j] = self.R.parse(input_bytes, is_ntt=is_ntt)
+        A_hat = self.M(A_data, transpose=transpose)
+        return A_hat
         
     def _cpapke_keygen(self):
         """
@@ -171,6 +165,7 @@ class Kyber:
         # Generate random value, hash and split
         d = self.random_bytes(32)
         rho, sigma = self._g(d)
+        
         # Set counter for PRF
         N = 0
         
@@ -212,6 +207,7 @@ class Kyber:
         N = 0
         rho = pk[-32:]
         t = self.M.decode_vector(pk, self.k, l=12, is_ntt=True)        
+        
         # Encode message as polynomial
         m_poly = self.R.decode(m, l=1).decompress(1)
         
