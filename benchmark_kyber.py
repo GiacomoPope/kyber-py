@@ -9,9 +9,9 @@ def profile_kyber(Kyber):
     gvars = {}
     lvars = {"Kyber": Kyber, "c": c, "pk": pk, "sk": sk}
     
-    cProfile.runctx("Kyber.keygen()", globals=gvars, locals=lvars, sort=1)
-    cProfile.runctx("Kyber.enc(pk)", globals=gvars, locals=lvars, sort=1)
-    cProfile.runctx("Kyber.dec(c, sk)", globals=gvars, locals=lvars, sort=1)
+    cProfile.runctx("[Kyber.keygen() for _ in range(100)]", globals=gvars, locals=lvars, sort=1)
+    cProfile.runctx("[Kyber.enc(pk) for _ in range(100)]", globals=gvars, locals=lvars, sort=1)
+    cProfile.runctx("[Kyber.dec(c, sk) for _ in range(100)]", globals=gvars, locals=lvars, sort=1)
     
 def benchmark_kyber(Kyber, name, count):
     keygen_times = []

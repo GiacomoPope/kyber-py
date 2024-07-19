@@ -12,12 +12,23 @@ def bitstring_to_bytes(s):
     Convert a string of bits to bytes with bytes stored little endian
     """
     return bytes([int(s[i:i+8][::-1], 2) for i in range(0, len(s), 8)])
-    
-def round_up(x):
+
+def compress(x, d, q):
     """
-    Round x.5 up always
+    Compute round((2^d / q) * x) % 2^d
     """
-    return round(x + 0.000001)
+    t = 1 << d
+    q_over_2 = q // 2
+    y = (t * x + q_over_2) // q
+    return y % t
+
+def decompress(x, d, q):
+    """
+    Compute round((q / 2^d) * x)
+    """
+    t = 1 << (d - 1)
+    y = (q * x + t) >> d
+    return y
     
 def xor_bytes(a, b):
     """

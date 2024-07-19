@@ -1,5 +1,5 @@
 import random
-from utils import *
+from utils import bytes_to_bits, bitstring_to_bytes, compress, decompress
 
 class PolynomialRing:
     """
@@ -139,28 +139,25 @@ class PolynomialRing:
             
         def compress(self, d):
             """
-            Compress the polynomial by compressing each coefficent
+            Compress the polynomial by compressing each coefficient
             NOTE: This is lossy compression
             """
-            compress_mod   = 2**d
-            compress_float = compress_mod / self.parent.q
-            self.coeffs = [round_up(compress_float * c) % compress_mod for c in self.coeffs]
+            self.coeffs = [compress(c, d, self.parent.q) for c in self.coeffs]
             return self
             
         def decompress(self, d):
             """
-            Decompress the polynomial by decompressing each coefficent
+            Decompress the polynomial by decompressing each coefficient
             NOTE: This as compression is lossy, we have
             x' = decompress(compress(x)), which x' != x, but is 
             close in magnitude.
             """
-            decompress_float = self.parent.q / 2**d
-            self.coeffs = [round_up(decompress_float * c) for c in self.coeffs ]
+            self.coeffs = [decompress(c, d, self.parent.q) for c in self.coeffs ]
             return self
                 
         def add_mod_q(self, x, y):
             """
-            add two coefficents modulo q
+            add two coefficients modulo q
             """
             tmp = x + y
             if tmp >= self.parent.q:
@@ -169,7 +166,7 @@ class PolynomialRing:
 
         def sub_mod_q(self, x, y):
             """
-            sub two coefficents modulo q
+            sub two coefficients modulo q
             """
             tmp = x - y
             if tmp < 0:
@@ -231,13 +228,13 @@ class PolynomialRing:
         def __add__(self, other):
             if isinstance(other, PolynomialRing.Polynomial):
                 if self.is_ntt ^ other.is_ntt:                    
-                    raise ValueError(f"Both or neither polynomials must be in NTT form before multiplication")
+                    raise ValueError("Both or neither polynomials must be in NTT form before multiplication")
                 new_coeffs = [self.add_mod_q(x,y) for x,y in zip(self.coeffs, other.coeffs)]
             elif isinstance(other, int):
                 new_coeffs = self.coeffs.copy()
                 new_coeffs[0] = self.add_mod_q(new_coeffs[0], other)
             else:
-                raise NotImplementedError(f"Polynomials can only be added to each other")
+                raise NotImplementedError("Polynomials can only be added to each other")
             return self.parent(new_coeffs, is_ntt=self.is_ntt)
 
         def __radd__(self, other):
@@ -250,13 +247,13 @@ class PolynomialRing:
         def __sub__(self, other):
             if isinstance(other, PolynomialRing.Polynomial):
                 if self.is_ntt ^ other.is_ntt:
-                    raise ValueError(f"Both or neither polynomials must be in NTT form before multiplication")
+                    raise ValueError("Both or neither polynomials must be in NTT form before multiplication")
                 new_coeffs = [self.sub_mod_q(x,y) for x,y in zip(self.coeffs, other.coeffs)]
             elif isinstance(other, int):
                 new_coeffs = self.coeffs.copy()
                 new_coeffs[0] = self.sub_mod_q(new_coeffs[0], other)
             else:
-                raise NotImplementedError(f"Polynomials can only be subracted from each other")
+                raise NotImplementedError("Polynomials can only be subracted from each other")
             return self.parent(new_coeffs, is_ntt=self.is_ntt)
 
         def __rsub__(self, other):
@@ -271,13 +268,13 @@ class PolynomialRing:
                 if self.is_ntt and other.is_ntt:
                     return self.ntt_multiplication(other)
                 elif self.is_ntt ^ other.is_ntt:
-                     raise ValueError(f"Both or neither polynomials must be in NTT form before multiplication")
+                     raise ValueError("Both or neither polynomials must be in NTT form before multiplication")
                 else:
                     new_coeffs = self.schoolbook_multiplication(other)
             elif isinstance(other, int):
                 new_coeffs = [(c * other) % self.parent.q for c in self.coeffs]
             else:
-                raise NotImplementedError(f"Polynomials can only be multiplied by each other, or scaled by integers")
+                raise NotImplementedError("Polynomials can only be multiplied by each other, or scaled by integers")
             return self.parent(new_coeffs, is_ntt=self.is_ntt)
 
         def __rmul__(self, other):
@@ -289,11 +286,11 @@ class PolynomialRing:
 
         def __pow__(self, n):
             if not isinstance(n, int):
-                raise TypeError(f"Exponentiation of a polynomial must be done using an integer.")
+                raise TypeError("Exponentiation of a polynomial must be done using an integer.")
 
             # Deal with negative scalar multiplication
             if n < 0:
-                raise ValueError(f"Negative powers are not supported for elements of a Polynomial Ring")
+                raise ValueError("Negative powers are not supported for elements of a Polynomial Ring")
             f = self
             g = self.parent(1, is_ntt=self.is_ntt)
             while n > 0:
