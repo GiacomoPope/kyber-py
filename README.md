@@ -72,12 +72,11 @@ The above example would also work with `Kyber768` and `Kyber1024`.
 
 For now, here are some approximate benchmarks, although the purpose of this project is not speed, but rather education!
 
---------------------------------------------------------------------------------
-   Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s
---------------------------------------------------------------------------------
- Kyber512    |    4.82ms       207.59    7.10ms      140.80   11.65ms     85.82
- Kyber768    |    6.87ms       145.60   10.11ms       98.92   16.51ms     60.58
- Kyber1024   |    9.72ms       102.91   13.71ms       72.94   22.20ms     45.05
+|  Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s |
+|------------|---------:|-----------:|--------:|----------:|--------:|---------:|
+|Kyber512    |    4.82ms|      207.59|   7.10ms|     140.80|  11.65ms|    85.82 |
+|Kyber768    |    6.87ms|      145.60|  10.11ms|      98.92|  16.51ms|    60.58 |
+|Kyber1024   |    9.72ms|      102.91|  13.71ms|      72.94|  22.20ms|    45.05 |
 
 All times recorded using a Intel Core i7-9750H CPU. 
 
