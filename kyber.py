@@ -1,7 +1,7 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from polynomials import *
-from modules import *
+from polynomials import PolynomialRing
+from modules import Module
 from ntt_helper import NTTHelperKyber
 try:
     from aes256_ctr_drbg import AES256_CTR_DRBG
@@ -76,7 +76,7 @@ class Kyber:
         (Seemed overkill to code my own AES for Kyber)
         """
         if self.drbg is None:
-            raise Warning(f"Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`")
+            raise Warning("Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`")
         else:
             self.drbg.reseed(seed)
         
@@ -87,7 +87,7 @@ class Kyber:
         """
         input_bytes = bytes32 + a + b
         if len(input_bytes) != 34:
-            raise ValueError(f"Input bytes should be one 32 byte array and 2 single bytes.")
+            raise ValueError("Input bytes should be one 32 byte array and 2 single bytes.")
         return shake_128(input_bytes).digest(length)
         
     @staticmethod
@@ -112,7 +112,7 @@ class Kyber:
         """
         input_bytes = s + b
         if len(input_bytes) != 33:
-            raise ValueError(f"Input bytes should be one 32 byte array and one single byte.")
+            raise ValueError("Input bytes should be one 32 byte array and one single byte.")
         return shake_256(input_bytes).digest(length)
     
     @staticmethod
@@ -128,12 +128,12 @@ class Kyber:
         module from the Centered Binomial Distribution.
         """
         elements = []
-        for i in range(self.k):
+        for _ in range(self.k):
             input_bytes = self._prf(sigma,  bytes([N]), 64*eta)
             poly = self.R.cbd(input_bytes, eta, is_ntt=is_ntt)
             elements.append(poly)
             N = N + 1
-        v = self.M(elements).transpose()
+        v = self.M.vector(elements)
         return v, N
         
     def _generate_matrix_from_seed(self, rho, transpose=False, is_ntt=False):
@@ -189,8 +189,8 @@ class Kyber:
         t = (A @ s) + e
         
         # Reduce vectors mod^+ q
-        t.reduce_coefficents()
-        s.reduce_coefficents()
+        t.reduce_coefficients()
+        s.reduce_coefficients()
         
         # Encode elements to bytes and return
         pk = t.encode(l=12) + rho
@@ -211,9 +211,7 @@ class Kyber:
         """
         N = 0
         rho = pk[-32:]
-        
-        tt = self.M.decode(pk, 1, self.k, l=12, is_ntt=True)        
-        
+        t = self.M.decode_vector(pk, self.k, l=12, is_ntt=True)        
         # Encode message as polynomial
         m_poly = self.R.decode(m, l=1).decompress(1)
         
@@ -233,7 +231,7 @@ class Kyber:
         
         # Module/Polynomial arithmetic 
         u = (At @ r).from_ntt() + e1
-        v = (tt @ r)[0][0].from_ntt()
+        v = t.dot(r).from_ntt()
         v = v + e2 + m_poly
         
         # Ciphertext to bytes
@@ -258,17 +256,17 @@ class Kyber:
         c2 = c[index:]
         
         # Recover the vector u and convert to NTT form
-        u = self.M.decode(c, self.k, 1, l=self.du).decompress(self.du)
+        u = self.M.decode_vector(c, self.k, l=self.du).decompress(self.du)
         u.to_ntt()
         
         # Recover the polynomial v
         v = self.R.decode(c2, l=self.dv).decompress(self.dv)
         
         # s_transpose (already in NTT form)
-        st = self.M.decode(sk, 1, self.k, l=12, is_ntt=True)
+        s = self.M.decode_vector(sk, self.k, l=12, is_ntt=True)
         
         # Recover message as polynomial
-        m = (st @ u)[0][0].from_ntt()
+        m = s.dot(u).from_ntt()
         m = v - m
         
         # Return message as bytes

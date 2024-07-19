@@ -73,7 +73,7 @@ class PolynomialRing:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         else:
             if self.n*l != len(input_bytes)*8:
-                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+                raise ValueError(f"input bytes must be a multiple of (polynomial degree) / 8, {self.n*l = }, {len(input_bytes)*8 = }")
         coefficients = [0 for _ in range(self.n)]
         list_of_bits = bytes_to_bits(input_bytes)
         for i in range(self.n):
@@ -121,9 +121,9 @@ class PolynomialRing:
                 coefficients = coefficients + [0 for _ in range (self.parent.n - l)]
             return coefficients
             
-        def reduce_coefficents(self):
+        def reduce_coefficients(self):
             """
-            Reduce all coefficents modulo q
+            Reduce all coefficients modulo q
             """
             self.coeffs = [c % self.parent.q for c in self.coeffs]
             return self
