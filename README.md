@@ -84,6 +84,10 @@ For now, here are some approximate benchmarks, although the purpose of this proj
 
 All times recorded using a Intel Core i7-9750H CPU. 
 
+## Documentation (under active development)
+
+- https://kyber-py.readthedocs.io/en/latest/
+
 ## Future Plans
 
 * Add documentation on `NTT` transform for polynomials
