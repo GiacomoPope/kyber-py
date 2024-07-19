@@ -182,10 +182,8 @@ See the specification for more information.
 ```
 TODO:
 
-This is now handled by `NTTHelper` which is passed to `PolynomialRing`
-and has functions which are accessed by `Polynomial`.
-
-Talk about what is available, and how they are used.
+Talk about what is available, and how it is used and the two Polynomial types
+we have to handle this.
 ```
 
 ### Modules
