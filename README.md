@@ -125,33 +125,20 @@ ring $R_{11} = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
 0
 ```
 
-We additionally include functions for `PolynomialRing` and `Polynomial`
+We additionally include functions for `PolynomialRingKyber` and `PolynomialKyber`
 to move from bytes to polynomials (and back again). 
 
-- `PolynomialRing`
+- `PolynomialRingKyber`
   - `parse(bytes)` takes $3n$ bytes and produces a random polynomial in $R_q$
   - `decode(bytes, l)` takes $\ell n$ bits and produces a polynomial in $R_q$
   - `cbd(beta, eta)` takes $\eta \cdot n / 4$ bytes and produces a polynomial in $R_q$ with coefficents taken from a centered binomial distribution
-- `Polynomial`
+- `PolynomialKyber`
   - `self.encode(l)` takes the polynomial and returns a length $\ell n / 8$ bytearray
   
 #### Example
 
 ```python
->>> R = PolynomialRing(11, 8)
->>> f = R.random_element()
->>> # If we do not specify `l` then it is computed for us (minimal value)
->>> f_bytes = f.encode()
->>> f_bytes.hex()
-'06258910'
->>> R.decode(f_bytes) == f
-True
->>> # We can also set `l` ourselves
->>> f_bytes = f.encode(l=10)
->>> f_bytes.hex()
-'00180201408024010000'
->>> R.decode(f_bytes, l=10) == f
-True
+TODO
 ```
 
 Lastly, we define a `self.compress(d)` and `self.decompress(d)` method for
@@ -175,14 +162,7 @@ function on every polynomial.
 #### Example
 
 ```python
->>> R = PolynomialRing(11, 8)
->>> f = R.random_element()
->>> f
-9 + 3*x + 5*x^2 + 2*x^3 + 9*x^4 + 10*x^5 + 6*x^6 + x^7
->>> f.compress(1)
-x + x^2 + x^6
->>> f.decompress(1)
-6*x + 6*x^2 + 6*x^6
+TODO
 ```
 
 **Note**: compression is lossy! We do not get the same polynomial back 
@@ -256,45 +236,6 @@ lets revisit the ring from the previous example:
 [        2 + 6*x^4 + x^5]
 ```
 
-We also carry through `Matrix.encode()` and 
-`Module.decode(bytes, n_rows, n_cols)` 
-which simply use the above functions defined for polynomials and run for each
-element.
+### TODO
 
-#### Example
-
-We can see how encoding / decoding a vector works in the following example.
-Note that we can swap the rows/columns to decode bytes into the transpose
-when working with a vector.
-
-```python
->>> R = PolynomialRing(11, 8)
->>> M = Module(R)
->>> v = M([R.random_element() for _ in range(2)])
->>> v_bytes = v.encode()
->>> v_bytes.hex()
-'d'
->>> M.decode(v_bytes, 1, 2) == v
-True
->>> v_bytes = v.encode(l=10)
->>> v_bytes.hex()
-'a014020100103004000040240a03009030080200'
->>> M.decode(v_bytes, 1, 2, l=10) == v
-True
->>> M.decode(v_bytes, 2, 1, l=10) == v.transpose()
-True
->>> # We can also compress and decompress elements of the module
->>> v
-[5 + 10*x + 4*x^2 + 2*x^3 + 8*x^4 + 3*x^5 + 2*x^6, 2 + 9*x + 5*x^2 + 3*x^3 + 9*x^4 + 3*x^5 + x^6 + x^7]
->>> v.compress(1)
-[1 + x^2 + x^4 + x^5, x^2 + x^3 + x^5]
->>> v.decompress(1)
-[6 + 6*x^2 + 6*x^4 + 6*x^5, 6*x^2 + 6*x^3 + 6*x^5]
-```
-
-## Baby Kyber
-
-A great resource for learning Kyber is available at
-[Approachable Cryptography](https://cryptopedia.dev/posts/kyber/).
-
-We include code corresponding to their example in `baby_kyber.py`.
+Explain the extra functions available in `ModuleKyber` and `MatrixKyber`.

@@ -1,25 +1,30 @@
-import random
-from utils import bytes_to_bits, bitstring_to_bytes, compress, decompress
+from polynomials_generic import PolynomialRing, Polynomial
+from utils import bytes_to_bits, bitstring_to_bytes
 
-class PolynomialRing:
+class PolynomialRingKyber(PolynomialRing):
     """
     Initialise the polynomial ring:
         
-        R = GF(q) / (X^n + 1) 
+        R = GF(3329) / (X^256 + 1) 
     """
-    def __init__(self, q, n, ntt_helper=None):
-        self.q = q
-        self.n = n
-        self.element = PolynomialRing.Polynomial
-        self.ntt_helper = ntt_helper
+    def __init__(self):
+        self.q = 3329
+        self.n = 256
+        self.element = PolynomialKyber
+        self.element_ntt = PolynomialKyberNTT
 
-    def gen(self, is_ntt=False):
-        return self([0,1], is_ntt=is_ntt)
+        root_of_unity = 17
+        self.ntt_zetas  = [pow(root_of_unity, self.br(i,7), 3329)  for i in range(128)]
+        self.ntt_f = pow(128, -1, 3329)
 
-    def random_element(self, is_ntt=False):
-        coefficients = [random.randint(0, self.q - 1) for _ in range(self.n)]
-        return self(coefficients, is_ntt=is_ntt)
-        
+    @staticmethod
+    def br(i, k):
+        """
+        bit reversal of an unsigned k-bit integer
+        """
+        bin_i = bin(i & (2**k - 1))[2:].zfill(k)
+        return int(bin_i[::-1], 2)
+
     def parse(self, input_bytes, is_ntt=False):
         """
         Algorithm 1 (Parse)
@@ -33,11 +38,11 @@ class PolynomialRing:
             d1 = input_bytes[i] + 256*(input_bytes[i+1] % 16)
             d2 = (input_bytes[i+1] // 16) + 16*input_bytes[i+2]
             
-            if d1 < self.q:
+            if d1 < 3329:
                 coefficients[j] = d1
                 j = j + 1
             
-            if d2 < self.q and j < self.n:
+            if d2 < 3329 and j < self.n:
                 coefficients[j] = d2
                 j = j + 1
                 
@@ -52,10 +57,10 @@ class PolynomialRing:
         Expects a byte array of length (eta * deg / 4)
         For Kyber, this is 64 eta.
         """
-        assert (self.n >> 2)*eta == len(input_bytes)
-        coefficients = [0 for _ in range(self.n)]
+        assert 64*eta == len(input_bytes)
+        coefficients = [0 for _ in range(256)]
         list_of_bits = bytes_to_bits(input_bytes)
-        for i in range(self.n):
+        for i in range(256):
             a = sum(list_of_bits[2*i*eta + j]       for j in range(eta))
             b = sum(list_of_bits[2*i*eta + eta + j] for j in range(eta))
             coefficients[i] = a-b
@@ -68,272 +73,190 @@ class PolynomialRing:
         decode: B^32l -> R_q
         """
         if l is None:
-            l, check = divmod(8*len(input_bytes), self.n)
+            l, check = divmod(8*len(input_bytes), 256)
             if check != 0:
                 raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
         else:
-            if self.n*l != len(input_bytes)*8:
-                raise ValueError(f"input bytes must be a multiple of (polynomial degree) / 8, {self.n*l = }, {len(input_bytes)*8 = }")
-        coefficients = [0 for _ in range(self.n)]
+            if 256*l != len(input_bytes)*8:
+                raise ValueError(f"input bytes must be a multiple of (polynomial degree) / 8, {256*l = }, {len(input_bytes)*8 = }")
+        coefficients = [0 for _ in range(256)]
         list_of_bits = bytes_to_bits(input_bytes)
-        for i in range(self.n):
+        for i in range(256):
             coefficients[i] = sum(list_of_bits[i*l + j] << j for j in range(l))
         return self(coefficients, is_ntt=is_ntt)
-            
+
     def __call__(self, coefficients, is_ntt=False):
+        if not is_ntt:
+            element = self.element
+        else:
+            element = self.element_ntt
+
         if isinstance(coefficients, int):
-            return self.element(self, [coefficients], is_ntt)
+            return element(self, [coefficients])
         if not isinstance(coefficients, list):
-            raise TypeError(f"Polynomials should be constructed from a list of integers, of length at most d = {self.n}")
-        return self.element(self, coefficients, is_ntt)
+            raise TypeError(f"Polynomials should be constructed from a list of integers, of length at most d = {256}")
+        return element(self, coefficients)
 
-    def __repr__(self):
-        return f"Univariate Polynomial Ring in x over Finite Field of size {self.q} with modulus x^{self.n} + 1"
+class PolynomialKyber(Polynomial):
+    def __init__(self, parent, coefficients):
+        self.parent = parent
+        self.coeffs = self.parse_coefficients(coefficients)
 
-    class Polynomial:
-        def __init__(self, parent, coefficients, is_ntt=False):
-            self.parent = parent
-            self.coeffs = self.parse_coefficients(coefficients)
-            self.is_ntt = is_ntt
-
-        def is_zero(self):
-            """
-            Return if polynomial is zero: f = 0
-            """
-            return all(c == 0 for c in self.coeffs)
-
-        def is_constant(self):
-            """
-            Return if polynomial is constant: f = c
-            """
-            return all(c == 0 for c in self.coeffs[1:])
-            
-        def parse_coefficients(self, coefficients):
-            """
-            Helper function which right pads with zeros
-            to allow polynomial construction as 
-            f = R([1,1,1])
-            """
-            l = len(coefficients)
-            if l > self.parent.n:
-                raise ValueError(f"Coefficients describe polynomial of degree greater than maximum degree {self.parent.n}")
-            elif l < self.parent.n:
-                coefficients = coefficients + [0 for _ in range (self.parent.n - l)]
-            return coefficients
-            
-        def reduce_coefficients(self):
-            """
-            Reduce all coefficients modulo q
-            """
-            self.coeffs = [c % self.parent.q for c in self.coeffs]
-            return self
- 
-        def encode(self, l=None):
-            """
-            Encode (Inverse of Algorithm 3)
-            """
-            if l is None:
-                l = max(x.bit_length() for x in self.coeffs)
-            bit_string = ''.join(format(c, f'0{l}b')[::-1] for c in self.coeffs)
-            return bitstring_to_bytes(bit_string)
-            
-        def compress(self, d):
-            """
-            Compress the polynomial by compressing each coefficient
-            NOTE: This is lossy compression
-            """
-            self.coeffs = [compress(c, d, self.parent.q) for c in self.coeffs]
-            return self
-            
-        def decompress(self, d):
-            """
-            Decompress the polynomial by decompressing each coefficient
-            NOTE: This as compression is lossy, we have
-            x' = decompress(compress(x)), which x' != x, but is 
-            close in magnitude.
-            """
-            self.coeffs = [decompress(c, d, self.parent.q) for c in self.coeffs ]
-            return self
-                
-        def add_mod_q(self, x, y):
-            """
-            add two coefficients modulo q
-            """
-            tmp = x + y
-            if tmp >= self.parent.q:
-                tmp -= self.parent.q
-            return tmp
-
-        def sub_mod_q(self, x, y):
-            """
-            sub two coefficients modulo q
-            """
-            tmp = x - y
-            if tmp < 0:
-                tmp += self.parent.q
-            return tmp
-            
-        def schoolbook_multiplication(self, other):
-            """
-            Naive implementation of polynomial multiplication
-            suitible for all R_q = F_1[X]/(X^n + 1)
-            """
-            n = self.parent.n
-            a = self.coeffs
-            b = other.coeffs
-            new_coeffs = [0 for _ in range(n)]
-            for i in range(n):
-                for j in range(0, n-i):
-                    new_coeffs[i+j] += (a[i] * b[j])
-            for j in range(1, n):
-                for i in range(n-j, n):
-                    new_coeffs[i+j-n] -= (a[i] * b[j])
-            return [c % self.parent.q for c in new_coeffs]
-        
+    def encode(self, l=None):
         """
-        The next four `Polynomial` methods rely on the parent
-        `PolynomialRing` having a  `ntt_helper` from 
-        ntt_helper.py and are used for NTT speediness.
+        Encode (Inverse of Algorithm 3)
         """
-        def to_ntt(self):
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
-            return self.parent.ntt_helper.to_ntt(self)
+        if l is None:
+            l = max(x.bit_length() for x in self.coeffs)
+        bit_string = ''.join(format(c, f'0{l}b')[::-1] for c in self.coeffs)
+        return bitstring_to_bytes(bit_string)
+    
+    def compress_ele(self, x, d):
+        """
+        Compute round((2^d / q) * x) % 2^d
+        """
+        t = 1 << d
+        y = (t * x + 1664) // 3329 # 1664 = 3329 // 2
+        return y % t
+
+    def decompress_ele(self, x, d):
+        """
+        Compute round((q / 2^d) * x)
+        """
+        t = 1 << (d - 1)
+        y = (3329 * x + t) >> d
+        return y
+
+    def compress(self, d):
+        """
+        Compress the polynomial by compressing each coefficient
+        NOTE: This is lossy compression
+        """
+        self.coeffs = [self.compress_ele(c, d) for c in self.coeffs]
+        return self
         
-        def from_ntt(self):
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform NTT transform when parent element has an NTT Helper")
-            return self.parent.ntt_helper.from_ntt(self)
+    def decompress(self, d):
+        """
+        Decompress the polynomial by decompressing each coefficient
+        NOTE: This as compression is lossy, we have
+        x' = decompress(compress(x)), which x' != x, but is 
+        close in magnitude.
+        """
+        self.coeffs = [self.decompress_ele(c, d) for c in self.coeffs]
+        return self
+
+    def to_ntt(self):
+        """
+        Convert a polynomial to number-theoretic transform (NTT) form.
+        The input is in standard order, the output is in bit-reversed order.
+        """
+        k, l = 1, 128
+        coeffs = self.coeffs
+        zetas = self.parent.ntt_zetas
+        while l >= 2:
+            start = 0
+            while start < 256:
+                zeta = zetas[k]
+                k = k + 1
+                for j in range(start, start + l):
+                    t = zeta * coeffs[j+l]
+                    coeffs[j+l] = coeffs[j] - t
+                    coeffs[j]   = coeffs[j] + t
+                start = l + (j + 1)
+            l = l >> 1
         
-        def ntt_multiplication(self, other):
-            """
-            Number Theoretic Transform multiplication.
-            Only implemented (currently) for n = 256
-            """
-            if self.parent.ntt_helper is None:
-                raise ValueError("Can only perform ntt reduction when parent element has an NTT Helper")
-            if not (self.is_ntt and other.is_ntt):
-                raise ValueError("Can only multiply using NTT if both polynomials are in NTT form")
-            # function in ntt_helper.py
-            new_coeffs = self.parent.ntt_helper.ntt_coefficient_multiplication(self.coeffs, other.coeffs)
-            return self.parent(new_coeffs, is_ntt=True)
+        for j in range(256):
+            coeffs[j] = coeffs[j] % 3329
+        
+        return self.parent(coeffs, is_ntt=True)
 
-        def __neg__(self):
-            """
-            Returns -f, by negating all coefficients
-            """
-            neg_coeffs = [(-x % self.parent.q) for x in self.coeffs]
-            return self.parent(neg_coeffs, is_ntt=self.is_ntt)
+    def from_ntt(self):
+        raise TypeError(f"Polynomial is of type: {type(self)}")
+    
+class PolynomialKyberNTT(PolynomialKyber):
+    def __init__(self, parent, coefficients):
+        self.parent = parent
+        self.coeffs = self.parse_coefficients(coefficients)
 
-        def __add__(self, other):
-            if isinstance(other, PolynomialRing.Polynomial):
-                if self.is_ntt ^ other.is_ntt:                    
-                    raise ValueError("Both or neither polynomials must be in NTT form before multiplication")
-                new_coeffs = [self.add_mod_q(x,y) for x,y in zip(self.coeffs, other.coeffs)]
-            elif isinstance(other, int):
-                new_coeffs = self.coeffs.copy()
-                new_coeffs[0] = self.add_mod_q(new_coeffs[0], other)
-            else:
-                raise NotImplementedError("Polynomials can only be added to each other")
-            return self.parent(new_coeffs, is_ntt=self.is_ntt)
+    def to_ntt(self):
+        raise TypeError(f"Polynomial is of type: {type(self)}")
 
-        def __radd__(self, other):
-            return self.__add__(other)
+    def from_ntt(self):
+        """
+        Convert a polynomial from number-theoretic transform (NTT) form in place
+        The input is in bit-reversed order, the output is in standard order.
+        """            
+        l, l_upper = 2, 128
+        k = l_upper - 1
+        coeffs = self.coeffs
+        zetas = self.parent.ntt_zetas
+        while l <= 128:
+            start = 0
+            while start < 256:
+                zeta = zetas[k]
+                k = k - 1
+                for j in range(start, start+l):
+                    t = coeffs[j]
+                    coeffs[j]   = t + coeffs[j+l]
+                    coeffs[j+l] = coeffs[j+l] - t
+                    coeffs[j+l] = zeta * coeffs[j+l]
+                start = j + l + 1
+            l = l << 1
+        
+        f = self.parent.ntt_f
+        for j in range(256):
+            coeffs[j] = coeffs[j] * f % 3329
+            
+        return self.parent(coeffs, is_ntt=False)
+    
+    @staticmethod
+    def ntt_base_multiplication(a0, a1, b0, b1, zeta):
+        """
+        Base case for ntt multiplication
+        """
+        r0  = (zeta * a1 * b1 + a0 * b0 ) % 3329
+        r1  = (a1 * b0 + a0 * b1 ) % 3329
+        return r0, r1
+        
+    def ntt_coefficient_multiplication(self, f_coeffs, g_coeffs):
+        new_coeffs = []
+        zetas = self.parent.ntt_zetas
+        for i in range(64):
+            r0, r1 = self.ntt_base_multiplication(
+                                f_coeffs[4*i+0], f_coeffs[4*i+1],
+                                g_coeffs[4*i+0], g_coeffs[4*i+1],
+                                zetas[64+i])
+            r2, r3 = self.ntt_base_multiplication(
+                                f_coeffs[4*i+2], f_coeffs[4*i+3],
+                                g_coeffs[4*i+2], g_coeffs[4*i+3],
+                                -zetas[64+i])
+            new_coeffs += [r0, r1, r2, r3]
+        return new_coeffs
 
-        def __iadd__(self, other):
-            self = self + other
-            return self
+    def ntt_multiplication(self, other):
+        """
+        Number Theoretic Transform multiplication.
+        Only implemented (currently) for n = 256
+        """
+        if not isinstance(other, type(self)):
+            raise ValueError
 
-        def __sub__(self, other):
-            if isinstance(other, PolynomialRing.Polynomial):
-                if self.is_ntt ^ other.is_ntt:
-                    raise ValueError("Both or neither polynomials must be in NTT form before multiplication")
-                new_coeffs = [self.sub_mod_q(x,y) for x,y in zip(self.coeffs, other.coeffs)]
-            elif isinstance(other, int):
-                new_coeffs = self.coeffs.copy()
-                new_coeffs[0] = self.sub_mod_q(new_coeffs[0], other)
-            else:
-                raise NotImplementedError("Polynomials can only be subracted from each other")
-            return self.parent(new_coeffs, is_ntt=self.is_ntt)
+        new_coeffs = self.ntt_coefficient_multiplication(self.coeffs, other.coeffs)
+        return new_coeffs
 
-        def __rsub__(self, other):
-            return self.__sub__(other)
+    def __add__(self, other):
+        new_coeffs = self._add_(other)
+        return self.parent(new_coeffs, is_ntt=True)
+    
+    def __sub__(self, other):
+        new_coeffs = self._add_(other)
+        return self.parent(new_coeffs, is_ntt=True)
 
-        def __isub__(self, other):
-            self = self - other
-            return self
-
-        def __mul__(self, other):
-            if isinstance(other, PolynomialRing.Polynomial):
-                if self.is_ntt and other.is_ntt:
-                    return self.ntt_multiplication(other)
-                elif self.is_ntt ^ other.is_ntt:
-                     raise ValueError("Both or neither polynomials must be in NTT form before multiplication")
-                else:
-                    new_coeffs = self.schoolbook_multiplication(other)
-            elif isinstance(other, int):
-                new_coeffs = [(c * other) % self.parent.q for c in self.coeffs]
-            else:
-                raise NotImplementedError("Polynomials can only be multiplied by each other, or scaled by integers")
-            return self.parent(new_coeffs, is_ntt=self.is_ntt)
-
-        def __rmul__(self, other):
-            return self.__mul__(other)
-
-        def __imul__(self, other):
-            self = self * other
-            return self
-
-        def __pow__(self, n):
-            if not isinstance(n, int):
-                raise TypeError("Exponentiation of a polynomial must be done using an integer.")
-
-            # Deal with negative scalar multiplication
-            if n < 0:
-                raise ValueError("Negative powers are not supported for elements of a Polynomial Ring")
-            f = self
-            g = self.parent(1, is_ntt=self.is_ntt)
-            while n > 0:
-                if n % 2 == 1:
-                    g = g * f
-                f = f * f
-                n = n // 2
-            return g
-
-        def __eq__(self, other):
-            if isinstance(other, PolynomialRing.Polynomial):
-                return self.coeffs == other.coeffs and self.is_ntt == other.is_ntt
-            elif isinstance(other, int):
-                if self.is_constant() and (other % self.parent.q) == self.coeffs[0]:
-                    return True
-            return False
-
-        def __getitem__(self, idx):
-            return self.coeffs[idx]
-
-        def __repr__(self):
-            ntt_info = ""
-            if self.is_ntt:
-                ntt_info = " (NTT form)"
-            if self.is_zero():
-                return "0" + ntt_info
-
-            info = []
-            for i,c in enumerate(self.coeffs):
-                if c != 0:
-                    if i == 0:
-                        info.append(f"{c}")
-                    elif i == 1:
-                        if c == 1:
-                            info.append("x")
-                        else:
-                            info.append(f"{c}*x")
-                    else:
-                        if c == 1:
-                            info.append(f"x^{i}")
-                        else:
-                            info.append(f"{c}*x^{i}")
-            return " + ".join(info) + ntt_info
-
-        def __str__(self):
-            return self.__repr__()
+    def __mul__(self, other):
+        if isinstance(other, type(self)):
+            new_coeffs = self.ntt_multiplication(other)
+        elif isinstance(other, int):
+            new_coeffs = [(c * other) % 3329 for c in self.coeffs]
+        else:
+            raise NotImplementedError(f"Polynomials can only be multiplied by each other, or scaled by integers, {type(other) = }, {type(self) = }")
+        return self.parent(new_coeffs, is_ntt=True)

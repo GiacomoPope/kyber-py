@@ -1,8 +1,8 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from polynomials import PolynomialRing
-from modules import Module
-from ntt_helper import NTTHelperKyber
+from polynomials import PolynomialRingKyber
+from modules import ModuleKyber
+
 try:
     from aes256_ctr_drbg import AES256_CTR_DRBG
 except ImportError as e:
@@ -13,25 +13,20 @@ except ImportError as e:
     
 DEFAULT_PARAMETERS = {
     "kyber_512" : {
-        "n" : 256,
         "k" : 2,
-        "q" : 3329,
         "eta_1" : 3,
         "eta_2" : 2,
         "du" : 10,
         "dv" : 4,
     },
     "kyber_768" : {
-        "n" : 256,
         "k" : 3,
-        "q" : 3329,
         "eta_1" : 2,
         "eta_2" : 2,
         "du" : 10,
         "dv" : 4,
     },
     "kyber_1024" : {
-        "n" : 256,
         "k" : 4,
         "q" : 3329,
         "eta_1" : 2,
@@ -43,16 +38,14 @@ DEFAULT_PARAMETERS = {
 
 class Kyber:
     def __init__(self, parameter_set):
-        self.n = parameter_set["n"]
         self.k = parameter_set["k"]
-        self.q = parameter_set["q"]
         self.eta_1 = parameter_set["eta_1"]
         self.eta_2 = parameter_set["eta_2"]
         self.du = parameter_set["du"]
         self.dv = parameter_set["dv"]
         
-        self.R = PolynomialRing(self.q, self.n, ntt_helper=NTTHelperKyber)
-        self.M = Module(self.R)
+        self.R = PolynomialRingKyber()
+        self.M = ModuleKyber()
         
         self.drbg = None
         self.random_bytes = os.urandom
@@ -174,11 +167,11 @@ class Kyber:
         
         # Generate the error vector s ∈ R^k
         s, N = self._generate_error_vector(sigma, self.eta_1, N)
-        s.to_ntt()
+        s = s.to_ntt()
         
         # Generate the error vector e ∈ R^k
         e, N = self._generate_error_vector(sigma, self.eta_1, N)
-        e.to_ntt() 
+        e = e.to_ntt() 
                            
         # Construct the public key
         t = (A @ s) + e
@@ -216,7 +209,7 @@ class Kyber:
         
         # Generate the error vector r ∈ R^k
         r, N = self._generate_error_vector(coins, self.eta_1, N)
-        r.to_ntt()
+        r = r.to_ntt()
         
         # Generate the error vector e1 ∈ R^k
         e1, N = self._generate_error_vector(coins, self.eta_2, N)
@@ -253,7 +246,7 @@ class Kyber:
         
         # Recover the vector u and convert to NTT form
         u = self.M.decode_vector(c, self.k, l=self.du).decompress(self.du)
-        u.to_ntt()
+        u = u.to_ntt()
         
         # Recover the polynomial v
         v = self.R.decode(c2, l=self.dv).decompress(self.dv)

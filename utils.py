@@ -13,23 +13,6 @@ def bitstring_to_bytes(s):
     """
     return bytes([int(s[i:i+8][::-1], 2) for i in range(0, len(s), 8)])
 
-def compress(x, d, q):
-    """
-    Compute round((2^d / q) * x) % 2^d
-    """
-    t = 1 << d
-    q_over_2 = q // 2
-    y = (t * x + q_over_2) // q
-    return y % t
-
-def decompress(x, d, q):
-    """
-    Compute round((q / 2^d) * x)
-    """
-    t = 1 << (d - 1)
-    y = (q * x + t) >> d
-    return y
-    
 def xor_bytes(a, b):
     """
     XOR two byte arrays, assume that they are 
