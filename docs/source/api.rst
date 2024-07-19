@@ -8,7 +8,6 @@ API
    ml_kem
    modules
    modules_generic
-   ntt_helper
    polynomials
    polynomials_generic
    run_kyber
