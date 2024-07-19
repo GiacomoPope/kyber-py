@@ -6,10 +6,12 @@ from modules import ModuleKyber
 try:
     from aes256_ctr_drbg import AES256_CTR_DRBG
 except ImportError as e:
-    print("Error importing AES CTR DRBG. Have you tried installing requirements?")
+    print(
+        "Error importing AES CTR DRBG. Have you tried installing requirements?"
+    )
     print(f"ImportError: {e}\n")
     print("Kyber will work perfectly fine with system randomness")
-    
+
 
 # TODO: we can only allow a user to select one of the following three
 # we should maybe put these into the class and only allow a user to
@@ -46,7 +48,9 @@ class ML_KEM:
         """
         input_bytes = bytes32 + a + b
         if len(input_bytes) != 34:
-            raise ValueError("Input bytes should be one 32 byte array and 2 single bytes.")
+            raise ValueError(
+                "Input bytes should be one 32 byte array and 2 single bytes."
+            )
         return shake_128(input_bytes).digest(length)
 
     # Pseudorandom function described between lines
@@ -55,7 +59,9 @@ class ML_KEM:
     def prf(eta, s, b):
         input_bytes = s + b
         if len(input_bytes) != 33:
-            raise ValueError("Input bytes should be one 32 byte array and one single byte.")
+            raise ValueError(
+                "Input bytes should be one 32 byte array and one single byte."
+            )
         return shake_256(input_bytes).digest(eta * 64)
 
     # Three hash functions described between lines
@@ -156,7 +162,6 @@ class ML_KEM:
         r_vec, N = self.generate_vector(r, self.eta_1, N)
         e1, N = self.generate_vector(r, self.eta_2, N)
         e2, N = self.generate_polynomial(r, self.eta_2, N)
-
 
         r_hat = r_vec.to_ntt()
 

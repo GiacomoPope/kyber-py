@@ -7,6 +7,38 @@ on:
   pull_request:
 
 jobs:
+  code-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 10
+      - name: Verify git status
+        run: |
+          git status
+          git remote -v
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Install build dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Install black
+        run: |
+          pip install black==24.4.2
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Check formatting
+        run: |
+          black --check --line-length 79 .
+
   test:
     runs-on: ${{ matrix.os }}
     strategy:
