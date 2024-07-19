@@ -1,3 +1,6 @@
+[![GitHub CI](https://github.com/GiacomoPope/kyber-py/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/GiacomoPope/kyber-py/actions/workflows/ci.yml)
+[![Documentation Status](https://readthedocs.org/projects/kyber-py/badge/?version=latest)](https://kyber-py.readthedocs.io/en/latest/?badge=latest)
+
 # CRYSTALS-Kyber Python Implementation
 
 This repository contains a pure python implementation of CRYSTALS-Kyber 
