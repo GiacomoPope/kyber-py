@@ -97,7 +97,7 @@ class ML_KEM:
         """ """
         prf_output = self.prf(eta, sigma, bytes([N]))
         p = self.R.cbd(prf_output, eta)
-        return p, N
+        return p, N + 1
 
     def pke_keygen(self):
         """
