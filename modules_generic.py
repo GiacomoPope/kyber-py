@@ -2,7 +2,7 @@ class Module:
     def __init__(self, ring):
         self.ring = ring
         self.matrix = Matrix
-    
+
     def __repr__(self):
         return f"Module over the commutative ring: {self.ring}"
 
@@ -11,27 +11,40 @@ class Module:
 
     def __call__(self, matrix_elements, transpose=False):
         if not isinstance(matrix_elements, list):
-            raise TypeError("elements of a module are matrices, built from elements of the base ring")
+            raise TypeError(
+                "elements of a module are matrices, built from elements of the base ring"
+            )
 
         if isinstance(matrix_elements[0], list):
             for element_list in matrix_elements:
-                if not all(isinstance(aij, self.ring.element) for aij in element_list):
-                    raise TypeError(f"All elements of the matrix must be elements of the ring: {self.ring}")
+                if not all(
+                    isinstance(aij, self.ring.element) for aij in element_list
+                ):
+                    raise TypeError(
+                        f"All elements of the matrix must be elements of the ring: {self.ring}"
+                    )
             return self.matrix(self, matrix_elements, transpose=transpose)
-        
+
         elif isinstance(matrix_elements[0], self.ring.element):
-            if not all(isinstance(aij, self.ring.element) for aij in matrix_elements):
-                raise TypeError(f"All elements of the matrix must be elements of the ring: {self.ring}")
+            if not all(
+                isinstance(aij, self.ring.element) for aij in matrix_elements
+            ):
+                raise TypeError(
+                    f"All elements of the matrix must be elements of the ring: {self.ring}"
+                )
             return self.matrix(self, [matrix_elements], transpose=transpose)
-        
+
         else:
-            raise TypeError("elements of a module are matrices, built from elements of the base ring")
+            raise TypeError(
+                "elements of a module are matrices, built from elements of the base ring"
+            )
 
     def vector(self, elements):
         """
         Construct a vector with the given elements
         """
         return self.matrix(self, [elements], transpose=True)
+
 
 class Matrix:
     def __init__(self, parent, matrix_data, transpose=False):
@@ -70,7 +83,7 @@ class Matrix:
         return
 
     T = property(transpose)
-        
+
     def reduce_coefficients(self):
         """
         Reduce every element in the polynomial
@@ -79,13 +92,15 @@ class Matrix:
         for row in self._data:
             for ele in row:
                 ele.reduce_coefficients()
-        return self 
-            
+        return self
+
     def __getitem__(self, idx):
         """
         matrix[i, j] returns the element on row i, column j
         """
-        assert isinstance(idx, tuple) and len(idx) == 2, "Can't access individual rows"
+        assert (
+            isinstance(idx, tuple) and len(idx) == 2
+        ), "Can't access individual rows"
         if not self._transpose:
             return self._data[idx[0]][idx[1]]
         else:
@@ -95,7 +110,9 @@ class Matrix:
         if self.dim() != other.dim():
             return False
         m, n = self.dim()
-        return all([self[i, j] == other[i, j] for i in range(m) for j in range(n)])
+        return all(
+            [self[i, j] == other[i, j] for i in range(m) for j in range(n)]
+        )
 
     def __add__(self, other):
         if not isinstance(other, type(self)):
@@ -104,9 +121,12 @@ class Matrix:
             raise TypeError("Matrices must have the same base ring")
         if self.dim() != other.dim():
             raise ValueError("Matrices are not of the same dimensions")
-        
+
         m, n = self.dim()
-        return self.parent([[self[i, j] + other[i, j] for j in range(n)] for i in range(m)], False)
+        return self.parent(
+            [[self[i, j] + other[i, j] for j in range(n)] for i in range(m)],
+            False,
+        )
 
     def __radd__(self, other):
         return self.__add__(other)
@@ -124,7 +144,10 @@ class Matrix:
             raise ValueError("Matrices are not of the same dimensions")
 
         m, n = self.dim()
-        return self.parent([[self[i, j] - other[i, j] for j in range(n)] for i in range(m)], False)
+        return self.parent(
+            [[self[i, j] - other[i, j] for j in range(n)] for i in range(m)],
+            False,
+        )
 
     def __rsub__(self, other):
         return self.__sub__(other)
@@ -149,7 +172,10 @@ class Matrix:
 
         return self.parent(
             [
-                [sum(self[i, k] * other[k, j] for k in range(n)) for j in range(l)]
+                [
+                    sum(self[i, k] * other[k, j] for k in range(n))
+                    for j in range(l)
+                ]
                 for i in range(m)
             ]
         )
@@ -170,6 +196,18 @@ class Matrix:
         if m == 1:
             return str(self._data[0])
 
-        max_col_width = [max(len(str(self[i, j])) for i in range(m)) for j in range(n)]
-        info = ']\n['.join([', '.join([f'{str(self[i, j]):>{max_col_width[j]}}' for j in range(n)]) for i in range(m)])
+        max_col_width = [
+            max(len(str(self[i, j])) for i in range(m)) for j in range(n)
+        ]
+        info = "]\n[".join(
+            [
+                ", ".join(
+                    [
+                        f"{str(self[i, j]):>{max_col_width[j]}}"
+                        for j in range(n)
+                    ]
+                )
+                for i in range(m)
+            ]
+        )
         return f"[{info}]"
