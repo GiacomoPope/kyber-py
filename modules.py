@@ -5,43 +5,58 @@ class Module:
     def decode(self, input_bytes, m, n, l=None, is_ntt=False):
         if l is None:
             # Input length must be 32*l*m*n bytes long
-            l, check = divmod(8*len(input_bytes), self.ring.n*m*n)
+            l, check = divmod(8 * len(input_bytes), self.ring.n * m * n)
             if check != 0:
-                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+                raise ValueError(
+                    "input bytes must be a multiple of (polynomial degree) / 8"
+                )
         else:
-            if self.ring.n*l*m*n > len(input_bytes)*8:
+            if self.ring.n * l * m * n > len(input_bytes) * 8:
                 raise ValueError("Byte length is too short for given l")
-        chunk_length = 32*l
-        byte_chunks = [input_bytes[i:i+chunk_length] for i in range(0, len(input_bytes), chunk_length)]
+        chunk_length = 32 * l
+        byte_chunks = [
+            input_bytes[i : i + chunk_length]
+            for i in range(0, len(input_bytes), chunk_length)
+        ]
         matrix = [[0 for _ in range(n)] for _ in range(m)]
         for i in range(m):
             for j in range(n):
-                mij = self.ring.decode(byte_chunks[n*i+j], l=l, is_ntt=is_ntt)
+                mij = self.ring.decode(
+                    byte_chunks[n * i + j], l=l, is_ntt=is_ntt
+                )
                 matrix[i][j] = mij
         return self(matrix)
-    
+
     def decode_vector(self, input_bytes, k, l=None, is_ntt=False):
         if l is None:
             # Input length must be 32*l*k bytes long
-            l, check = divmod(8*len(input_bytes), self.ring.n*k)
+            l, check = divmod(8 * len(input_bytes), self.ring.n * k)
             if check != 0:
-                raise ValueError("input bytes must be a multiple of (polynomial degree) / 8")
+                raise ValueError(
+                    "input bytes must be a multiple of (polynomial degree) / 8"
+                )
         else:
-            if self.ring.n*l*k > len(input_bytes)*8:
+            if self.ring.n * l * k > len(input_bytes) * 8:
                 raise ValueError("Byte length is too short for given l")
-        
-        # Bytes needed to decode a polynomial
-        chunk_length = 32*l
-        
-        # Break input_bytes into blocks of length chunk_length
-        poly_bytes = [input_bytes[i:i+chunk_length] for i in range(0, len(input_bytes), chunk_length)]
 
-        # Encode each chunk of bytes as a polynomial, we iterate only the first k elements in case we've 
+        # Bytes needed to decode a polynomial
+        chunk_length = 32 * l
+
+        # Break input_bytes into blocks of length chunk_length
+        poly_bytes = [
+            input_bytes[i : i + chunk_length]
+            for i in range(0, len(input_bytes), chunk_length)
+        ]
+
+        # Encode each chunk of bytes as a polynomial, we iterate only the first k elements in case we've
         # been sent too many bytes to decode for the vector
-        elements = [self.ring.decode(poly_bytes[i], l=l, is_ntt=is_ntt) for i in range(k)]
+        elements = [
+            self.ring.decode(poly_bytes[i], l=l, is_ntt=is_ntt)
+            for i in range(k)
+        ]
 
         return self.vector(elements)
-    
+
     def __repr__(self):
         return f"Module over the commutative ring: {self.ring}"
 
@@ -50,21 +65,37 @@ class Module:
 
     def __call__(self, matrix_elements, transpose=False):
         if not isinstance(matrix_elements, list):
-            raise TypeError("elements of a module are matrices, built from elements of the base ring")
+            raise TypeError(
+                "elements of a module are matrices, built from elements of "
+                "the base ring"
+            )
 
         if isinstance(matrix_elements[0], list):
             for element_list in matrix_elements:
-                if not all(isinstance(aij, self.ring.element) for aij in element_list):
-                    raise TypeError(f"All elements of the matrix must be elements of the ring: {self.ring}")
+                if not all(
+                    isinstance(aij, self.ring.element) for aij in element_list
+                ):
+                    raise TypeError(
+                        f"All elements of the matrix must be elements of the "
+                        f"ring: {self.ring}"
+                    )
             return Module.Matrix(self, matrix_elements, transpose=transpose)
-        
+
         elif isinstance(matrix_elements[0], self.ring.element):
-            if not all(isinstance(aij, self.ring.element) for aij in matrix_elements):
-                raise TypeError(f"All elements of the matrix must be elements of the ring: {self.ring}")
+            if not all(
+                isinstance(aij, self.ring.element) for aij in matrix_elements
+            ):
+                raise TypeError(
+                    f"All elements of the matrix must be elements of the "
+                    f"ring: {self.ring}"
+                )
             return Module.Matrix(self, [matrix_elements], transpose=transpose)
-        
+
         else:
-            raise TypeError("elements of a module are matrices, built from elements of the base ring")
+            raise TypeError(
+                "elements of a module are matrices, built from elements of "
+                "the base ring"
+            )
 
     def vector(self, elements):
         """
@@ -107,9 +138,9 @@ class Module:
             """
             self._transpose = not self._transpose
             return
-    
+
         T = property(transpose)
-            
+
         def reduce_coefficients(self):
             """
             Reduce every element in the polynomial
@@ -126,36 +157,38 @@ class Module:
                 for ele in row:
                     output += ele.encode(l=l)
             return output
-            
+
         def compress(self, d):
             for row in self._data:
                 for ele in row:
                     ele.compress(d)
             return self
-        
+
         def decompress(self, d):
             for row in self._data:
                 for ele in row:
                     ele.decompress(d)
-            return self    
-    
+            return self
+
         def to_ntt(self):
             for row in self._data:
                 for ele in row:
                     ele.to_ntt()
             return self
-    
+
         def from_ntt(self):
             for row in self._data:
                 for ele in row:
                     ele.from_ntt()
-            return self        
-                    
+            return self
+
         def __getitem__(self, idx):
             """
             matrix[i, j] returns the element on row i, column j
             """
-            assert isinstance(idx, tuple) and len(idx) == 2, "Can't access individual rows"
+            assert (
+                isinstance(idx, tuple) and len(idx) == 2
+            ), "Can't access individual rows"
             if not self._transpose:
                 return self._data[idx[0]][idx[1]]
             else:
@@ -165,7 +198,9 @@ class Module:
             if self.dim() != other.dim():
                 return False
             m, n = self.dim()
-            return all([self[i, j] == other[i, j] for i in range(m) for j in range(n)])
+            return all(
+                [self[i, j] == other[i, j] for i in range(m) for j in range(n)]
+            )
 
         def __add__(self, other):
             if not isinstance(other, Module.Matrix):
@@ -174,9 +209,15 @@ class Module:
                 raise TypeError("Matrices must have the same base ring")
             if self.dim() != other.dim():
                 raise ValueError("Matrices are not of the same dimensions")
-            
+
             m, n = self.dim()
-            return self.parent([[self[i, j] + other[i, j] for j in range(n)] for i in range(m)], False)
+            return self.parent(
+                [
+                    [self[i, j] + other[i, j] for j in range(n)]
+                    for i in range(m)
+                ],
+                False,
+            )
 
         def __radd__(self, other):
             return self.__add__(other)
@@ -194,7 +235,13 @@ class Module:
                 raise ValueError("Matrices are not of the same dimensions")
 
             m, n = self.dim()
-            return self.parent([[self[i, j] - other[i, j] for j in range(n)] for i in range(m)], False)
+            return self.parent(
+                [
+                    [self[i, j] - other[i, j] for j in range(n)]
+                    for i in range(m)
+                ],
+                False,
+            )
 
         def __rsub__(self, other):
             return self.__sub__(other)
@@ -208,7 +255,9 @@ class Module:
             Denoted A @ B
             """
             if not isinstance(other, Module.Matrix):
-                raise TypeError("Can only multiply matrcies with other matrices")
+                raise TypeError(
+                    "Can only multiply matrcies with other matrices"
+                )
             if self.parent != other.parent:
                 raise TypeError("Matricies must have the same base ring")
 
@@ -219,7 +268,10 @@ class Module:
 
             return self.parent(
                 [
-                    [sum(self[i, k] * other[k, j] for k in range(n)) for j in range(l)]
+                    [
+                        sum(self[i, k] * other[k, j] for k in range(n))
+                        for j in range(l)
+                    ]
                     for i in range(m)
                 ]
             )
@@ -238,6 +290,18 @@ class Module:
             if m == 1:
                 return str(self._data[0])
 
-            max_col_width = [max(len(str(self[i, j])) for i in range(m)) for j in range(n)]
-            info = ']\n['.join([', '.join([f'{str(self[i, j]):>{max_col_width[j]}}' for j in range(n)]) for i in range(m)])
+            max_col_width = [
+                max(len(str(self[i, j])) for i in range(m)) for j in range(n)
+            ]
+            info = "]\n[".join(
+                [
+                    ", ".join(
+                        [
+                            f"{str(self[i, j]):>{max_col_width[j]}}"
+                            for j in range(n)
+                        ]
+                    )
+                    for i in range(m)
+                ]
+            )
             return f"[{info}]"
