@@ -5,6 +5,10 @@ following (at the time of writing) the most recent
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 (v3.02)
 
+## A note on ML-KEM
+
+There is a somewhat working implementation of ML-KEM compliant with the NIST spec in this repo, and it is work in progress to allow both kyber and the NIST variant to be used from this repo with full documentation.
+
 ## Disclaimer
 
 :warning: **Under no circumstances should this be used for a cryptographic application.** :warning:
