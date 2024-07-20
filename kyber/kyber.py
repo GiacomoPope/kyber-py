@@ -12,32 +12,6 @@ except ImportError as e:
     print("Kyber will work perfectly fine with system randomness")
 
 
-DEFAULT_PARAMETERS = {
-    "kyber_512": {
-        "k": 2,
-        "eta_1": 3,
-        "eta_2": 2,
-        "du": 10,
-        "dv": 4,
-    },
-    "kyber_768": {
-        "k": 3,
-        "eta_1": 2,
-        "eta_2": 2,
-        "du": 10,
-        "dv": 4,
-    },
-    "kyber_1024": {
-        "k": 4,
-        "q": 3329,
-        "eta_1": 2,
-        "eta_2": 2,
-        "du": 11,
-        "dv": 5,
-    },
-}
-
-
 class Kyber:
     def __init__(self, parameter_set):
         self.k = parameter_set["k"]
@@ -341,9 +315,3 @@ class Kyber:
             return self._kdf(_Kbar + self._h(c), key_length)
         # Decapsulation failed... return random value
         return self._kdf(z + self._h(c), key_length)
-
-
-# Initialise with default parameters for easy import
-Kyber512 = Kyber(DEFAULT_PARAMETERS["kyber_512"])
-Kyber768 = Kyber(DEFAULT_PARAMETERS["kyber_768"])
-Kyber1024 = Kyber(DEFAULT_PARAMETERS["kyber_1024"])
