@@ -10,7 +10,7 @@ following (at the time of writing) the most recent
 
 ## A note on ML-KEM
 
-There is a somewhat working implementation of ML-KEM compliant with the NIST spec in this repo, and it is work in progress to allow both kyber and the NIST variant to be used from this repo with full documentation.
+There is also a ML-KEM implementation passing KAT vectors compliant with the NIST spec in this repo, documentation of ML-KEM is a work in progress.
 
 ## Disclaimer
 
