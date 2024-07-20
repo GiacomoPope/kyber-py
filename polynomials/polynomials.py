@@ -67,7 +67,7 @@ class PolynomialRingKyber(PolynomialRing):
         for i in range(256):
             a = sum(list_of_bits[2 * i * eta + j] for j in range(eta))
             b = sum(list_of_bits[2 * i * eta + eta + j] for j in range(eta))
-            coefficients[i] = a - b
+            coefficients[i] = (a - b) % 3329
         return self(coefficients, is_ntt=is_ntt)
 
     def decode(self, input_bytes, l=None, is_ntt=False):
