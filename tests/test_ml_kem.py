@@ -1,12 +1,14 @@
 import unittest
 from ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
 
+
 def read_kat_data(file_name):
     data_blocks = []
     with open(file_name) as f:
         for _ in range(1000):
             data_blocks.append("".join([next(f) for _ in range(11)]))
     return data_blocks
+
 
 def parse_kat_data(data_blocks):
     parsed_data = {}
@@ -56,9 +58,10 @@ class TestML_KEM(unittest.TestCase):
     def test_ML_KEM256(self):
         self.generic_test_ML_KEM(ML_KEM256, 5)
 
+
 class TestKnownTestValues(unittest.TestCase):
     def generic_test_mlkem_known_answer(self, ML_KEM, filename):
-        
+
         kat_data_blocks = read_kat_data(filename)
         parsed_data = parse_kat_data(kat_data_blocks)
 
@@ -74,24 +77,25 @@ class TestKnownTestValues(unittest.TestCase):
             self.assertEqual(d, _d)
             self.assertEqual(msg, _msg)
 
+            # Reset the seed
+            ML_KEM.set_drbg_seed(seed)
+
             # Assert keygen matches
             ek, dk = ML_KEM.keygen()
-            # TODO: these tests fail
             self.assertEqual(pk, ek)
-            # self.assertEqual(sk, dk)
+            self.assertEqual(sk, dk)
 
-            # # Assert encapsulation matches
-            # K, c = ML_KEM.encaps(pk)
-            # TODO: these tests fail
-            # self.assertEqual(ct, c)
-            # self.assertEqual(ss, K)
+            # Assert encapsulation matches
+            K, c = ML_KEM.encaps(ek)
+            self.assertEqual(ct, c)
+            self.assertEqual(ss, K)
 
             # Assert decapsulation matches
-            _c = ML_KEM.decaps(ct, sk)
+            _c = ML_KEM.decaps(c, dk)
             self.assertEqual(ss, _c)
 
             # Assert decapsulation with faulty ciphertext
-            _c_n = ML_KEM.decaps(ct_n, sk)
+            _c_n = ML_KEM.decaps(ct_n, dk)
             self.assertEqual(ss_n, _c_n)
 
     def test_mlkem_512_known_answer(self):
@@ -108,6 +112,7 @@ class TestKnownTestValues(unittest.TestCase):
     #     return self.generic_test_mlkem__known_answer(
     #         mlkem_1024, "assets/PQCkemKAT_3168.rsp"
     #     )
+
 
 if __name__ == "__main__":
     unittest.main()
