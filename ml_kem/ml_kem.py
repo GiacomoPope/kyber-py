@@ -30,12 +30,37 @@ class ML_KEM:
         self._drbg = AES256_CTR_DRBG(seed)
         self.random_bytes = self._drbg.random_bytes
 
+    def set_drbg_seed(self, seed):
+        """
+        Setting the seed switches the entropy source
+        from os.urandom to AES256 CTR DRBG
+
+        Note: requires pycryptodome for AES impl.
+        (Seemed overkill to code my own AES for Kyber)
+        """
+        self.drbg = AES256_CTR_DRBG(seed)
+        self.random_bytes = self.drbg.random_bytes
+
+    def reseed_drbg(self, seed):
+        """
+        Reseeds the DRBG, errors if a DRBG is not set.
+
+        Note: requires pycryptodome for AES impl.
+        (Seemed overkill to code my own AES for Kyber)
+        """
+        if self.drbg is None:
+            raise Warning(
+                "Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`"
+            )
+        else:
+            self.drbg.reseed(seed)
+
     @staticmethod
-    def xof(bytes32, a, b, length):
+    def xof(bytes32, i, j, length):
         """
         XOF: B^* x B x B -> B*
         """
-        input_bytes = bytes32 + a + b
+        input_bytes = bytes32 + i + j
         if len(input_bytes) != 34:
             raise ValueError(
                 "Input bytes should be one 32 byte array and 2 single bytes."
@@ -106,7 +131,7 @@ class ML_KEM:
 
         N = 0
         s, N = self.generate_vector(sigma, self.eta_1, N)
-        e, N = self.generate_vector(sigma, self.eta_2, N)
+        e, N = self.generate_vector(sigma, self.eta_1, N)
 
         # TODO: we could convert to ntt form as we create the data
         # and skip this call to compute a new Matrix objects

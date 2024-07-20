@@ -13,7 +13,7 @@ except ImportError as e:
 
 
 class Kyber:
-    def __init__(self, parameter_set):
+    def __init__(self, parameter_set, seed=None):
         self.k = parameter_set["k"]
         self.eta_1 = parameter_set["eta_1"]
         self.eta_2 = parameter_set["eta_2"]
@@ -23,8 +23,11 @@ class Kyber:
         self.M = ModuleKyber()
         self.R = self.M.ring
 
-        self.drbg = None
-        self.random_bytes = os.urandom
+        # NIST approved randomness
+        if seed is None:
+            seed = os.urandom(48)
+        self._drbg = AES256_CTR_DRBG(seed)
+        self.random_bytes = self._drbg.random_bytes
 
     def set_drbg_seed(self, seed):
         """
