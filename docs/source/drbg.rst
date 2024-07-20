@@ -1,7 +1,7 @@
-aes256\_ctr\_drbg module
+drbg module
 ========================
 
-.. automodule:: aes256_ctr_drbg
+.. automodule:: drbg
    :members:
    :undoc-members:
    :show-inheritance:
