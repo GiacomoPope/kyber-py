@@ -6,7 +6,7 @@ from ml_kem.ml_kem import ML_KEM
 DEFAULT_PARAMETERS = {
     "ML128": {"k": 2, "eta_1": 3, "eta_2": 2, "du": 10, "dv": 4},
     "ML192": {"k": 3, "eta_1": 2, "eta_2": 2, "du": 10, "dv": 4},
-    "ML256": {"k": 4, "eta_1": 3, "eta_2": 2, "du": 11, "dv": 5},
+    "ML256": {"k": 4, "eta_1": 2, "eta_2": 2, "du": 11, "dv": 5},
 }
 
 ML_KEM128 = ML_KEM(DEFAULT_PARAMETERS["ML128"])

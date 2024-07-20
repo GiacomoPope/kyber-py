@@ -13,7 +13,8 @@ def read_kat_data(file_name):
 def parse_kat_data(data_blocks):
     parsed_data = {}
 
-    # only test the first 100 for now
+    # only test the first 100 for now, running all 1000 is overkill
+    # for us as it's pretty slow (~165 seconds)
     for block in data_blocks[:100]:
         block_data = block.split("\n")[:-1]
         count, z, d, msg, seed, pk, sk, ct_n, ss_n, ct, ss = [
@@ -103,15 +104,15 @@ class TestKnownTestValues(unittest.TestCase):
             ML_KEM128, "assets/kat_MLKEM_512.rsp"
         )
 
-    # def test_mlkem_768_known_answer(self):
-    #     return self.generic_test_mlkem__known_answer(
-    #         mlkem_768, "assets/PQCkemKAT_2400.rsp"
-    #     )
+    def test_mlkem_768_known_answer(self):
+        return self.generic_test_mlkem_known_answer(
+            ML_KEM192, "assets/kat_MLKEM_768.rsp"
+        )
 
-    # def test_mlkem_1024_known_answer(self):
-    #     return self.generic_test_mlkem__known_answer(
-    #         mlkem_1024, "assets/PQCkemKAT_3168.rsp"
-    #     )
+    def test_mlkem_1024_known_answer(self):
+        return self.generic_test_mlkem_known_answer(
+            ML_KEM256, "assets/kat_MLKEM_1024.rsp"
+        )
 
 
 if __name__ == "__main__":
