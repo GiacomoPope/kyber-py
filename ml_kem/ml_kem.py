@@ -12,16 +12,6 @@ except ImportError as e:
     print("Kyber will work perfectly fine with system randomness")
 
 
-# TODO: we can only allow a user to select one of the following three
-# we should maybe put these into the class and only allow a user to
-# select 128, 192 or 256 bit security.
-DEFAULT_PARAMETERS = {
-    "ML128": {"k": 2, "eta_1": 3, "eta_2": 2, "du": 10, "dv": 4},
-    "ML192": {"k": 3, "eta_1": 2, "eta_2": 2, "du": 10, "dv": 4},
-    "ML256": {"k": 4, "eta_1": 3, "eta_2": 2, "du": 11, "dv": 5},
-}
-
-
 class ML_KEM:
     def __init__(self, params, seed=None):
         # ml-kem params
@@ -261,8 +251,3 @@ class ML_KEM:
 
         # Return a shared secret
         return K_prime
-
-
-ML_KEM128 = ML_KEM(DEFAULT_PARAMETERS["ML128"])
-ML_KEM192 = ML_KEM(DEFAULT_PARAMETERS["ML192"])
-ML_KEM256 = ML_KEM(DEFAULT_PARAMETERS["ML256"])
