@@ -1,10 +1,9 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from polynomials import PolynomialRingKyber
-from modules import ModuleKyber
+from modules.modules import ModuleKyber
 
 try:
-    from aes256_ctr_drbg import AES256_CTR_DRBG
+    from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 except ImportError as e:
     print(
         "Error importing AES CTR DRBG. Have you tried installing requirements?"
@@ -47,8 +46,8 @@ class Kyber:
         self.du = parameter_set["du"]
         self.dv = parameter_set["dv"]
 
-        self.R = PolynomialRingKyber()
         self.M = ModuleKyber()
+        self.R = self.M.ring
 
         self.drbg = None
         self.random_bytes = os.urandom

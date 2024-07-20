@@ -1,5 +1,5 @@
-from polynomials import PolynomialRingKyber
-from modules_generic import Module, Matrix
+from polynomials.polynomials import PolynomialRingKyber
+from modules.modules_generic import Module, Matrix
 
 
 class ModuleKyber(Module):

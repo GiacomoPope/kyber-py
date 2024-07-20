@@ -1,5 +1,5 @@
 import os
-from utils import xor_bytes
+from utilities.utils import xor_bytes
 from Crypto.Cipher import AES
 
 
@@ -88,7 +88,7 @@ class AES256_CTR_DRBG:
             if len(additional) > self.seed_length:
                 raise ValueError(
                     f"The additional input must be of length at most: "
-                    f"{self.seed_length}. Input has length {len(seed)}"
+                    f"{self.seed_length}. Input has length {len(additional)}"
                 )
             elif len(additional) < self.seed_length:
                 additional += bytes([0]) * (self.seed_length - len(additional))

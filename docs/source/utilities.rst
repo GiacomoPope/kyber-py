@@ -1,7 +1,7 @@
-utils module
+utilities module
 ============
 
-.. automodule:: utils
+.. automodule:: utilities
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,6 +1,11 @@
+"""
+An alternative way of checking the Kyber KAT
+Does nothing which isn't already checked in test_kyber.py
+"""
+
 from kyber import Kyber512, Kyber768, Kyber1024
 from hashlib import sha256
-from aes256_ctr_drbg import AES256_CTR_DRBG
+from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
 
 def generate_kat_hash(kyber):

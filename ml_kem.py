@@ -1,10 +1,9 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from polynomials import PolynomialRingKyber
-from modules import ModuleKyber
+from modules.modules import ModuleKyber
 
 try:
-    from aes256_ctr_drbg import AES256_CTR_DRBG
+    from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 except ImportError as e:
     print(
         "Error importing AES CTR DRBG. Have you tried installing requirements?"
@@ -32,8 +31,8 @@ class ML_KEM:
         self.du = params["du"]
         self.dv = params["dv"]
 
-        self.R = PolynomialRingKyber()
         self.M = ModuleKyber()
+        self.R = self.M.ring
 
         # NIST approved randomness
         if seed is None:
