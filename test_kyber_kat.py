@@ -34,7 +34,7 @@ def generate_kat_hash(kyber):
     return sha256(file.encode()).digest()
 
 
-def test_kat_file(kyber, kat_file):
+def check_kat_file(kyber, kat_file):
     # Hash the asset file
     with open(kat_file, "rb") as f:
         kat_data = f.read()
@@ -46,6 +46,8 @@ def test_kat_file(kyber, kat_file):
     assert kat_hash_assert == kat_hash_derived
 
 
-test_kat_file(Kyber512, "assets/PQCkemKAT_1632.rsp")
-test_kat_file(Kyber768, "assets/PQCkemKAT_2400.rsp")
-test_kat_file(Kyber1024, "assets/PQCkemKAT_3168.rsp")
+def test_kat_files():
+
+    check_kat_file(Kyber512, "assets/PQCkemKAT_1632.rsp")
+    check_kat_file(Kyber768, "assets/PQCkemKAT_2400.rsp")
+    check_kat_file(Kyber1024, "assets/PQCkemKAT_3168.rsp")
