@@ -1,7 +1,12 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from polynomials import PolynomialRingKyber
+from polynomials import PolynomialRingKyber, Element
 from modules import ModuleKyber
+
+# For type annotations
+from typing import Optional
+from modules import MatrixKyber
+from collections.abc import Buffer
 
 try:
     from aes256_ctr_drbg import AES256_CTR_DRBG
@@ -9,10 +14,11 @@ except ImportError as e:
     print(
         "Error importing AES CTR DRBG. Have you tried installing requirements?"
     )
-    print(f"ImportError: {e}\n")
     print("Kyber will work perfectly fine with system randomness")
+    raise e
 
 
+# TODO: Typing: Change parameter sets to named tuple.
 DEFAULT_PARAMETERS = {
     "kyber_512": {
         "k": 2,
@@ -40,7 +46,7 @@ DEFAULT_PARAMETERS = {
 
 
 class Kyber:
-    def __init__(self, parameter_set):
+    def __init__(self, parameter_set: dict[str, int]) -> None:
         self.k = parameter_set["k"]
         self.eta_1 = parameter_set["eta_1"]
         self.eta_2 = parameter_set["eta_2"]
@@ -50,10 +56,10 @@ class Kyber:
         self.R = PolynomialRingKyber()
         self.M = ModuleKyber()
 
-        self.drbg = None
+        self.drbg: Optional[AES256_CTR_DRBG] = None
         self.random_bytes = os.urandom
 
-    def set_drbg_seed(self, seed):
+    def set_drbg_seed(self, seed: Buffer) -> None:
         """
         Setting the seed switches the entropy source
         from os.urandom to AES256 CTR DRBG
@@ -64,7 +70,7 @@ class Kyber:
         self.drbg = AES256_CTR_DRBG(seed)
         self.random_bytes = self.drbg.random_bytes
 
-    def reseed_drbg(self, seed):
+    def reseed_drbg(self, seed: bytes) -> None:
         """
         Reseeds the DRBG, errors if a DRBG is not set.
 
@@ -79,7 +85,7 @@ class Kyber:
             self.drbg.reseed(seed)
 
     @staticmethod
-    def _xof(bytes32, a, b, length):
+    def _xof(bytes32: bytes, a: bytes, b: bytes, length: int) -> bytes:
         """
         XOF: B^* x B x B -> B*
         """
@@ -91,14 +97,14 @@ class Kyber:
         return shake_128(input_bytes).digest(length)
 
     @staticmethod
-    def _h(input_bytes):
+    def _h(input_bytes: bytes) -> bytes:
         """
         H: B* -> B^32
         """
         return sha3_256(input_bytes).digest()
 
     @staticmethod
-    def _g(input_bytes):
+    def _g(input_bytes: bytes) -> tuple[bytes, bytes]:
         """
         G: B* -> B^32 x B^32
         """
@@ -106,7 +112,7 @@ class Kyber:
         return output[:32], output[32:]
 
     @staticmethod
-    def _prf(s, b, length):
+    def _prf(s: bytes, b: bytes, length: int) -> bytes:
         """
         PRF: B^32 x B -> B^*
         """
@@ -118,26 +124,35 @@ class Kyber:
         return shake_256(input_bytes).digest(length)
 
     @staticmethod
-    def _kdf(input_bytes, length):
+    def _kdf(input_bytes: bytes, length: int) -> bytes:
         """
         KDF: B^* -> B^*
         """
         return shake_256(input_bytes).digest(length)
 
-    def _generate_error_vector(self, sigma, eta, N, is_ntt=False):
+    def _generate_error_vector(self,
+                               sigma: bytes,
+                               eta: int,
+                               N: int,
+                               is_ntt: bool = False,
+                               ) -> tuple[MatrixKyber, int]:
         """
         Helper function which generates a element in the
         module from the Centered Binomial Distribution.
         """
-        elements = [0 for _ in range(self.k)]
+        elements: list[Element] = []
         for i in range(self.k):
             input_bytes = self._prf(sigma, bytes([N]), 64 * eta)
-            elements[i] = self.R.cbd(input_bytes, eta, is_ntt=is_ntt)
+            elements.append(self.R.cbd(input_bytes, eta, is_ntt=is_ntt))
             N += 1
         v = self.M.vector(elements)
         return v, N
 
-    def _generate_matrix_from_seed(self, rho, transpose=False, is_ntt=False):
+    def _generate_matrix_from_seed(self,
+                                   rho: bytes,
+                                   transpose: bool = False,
+                                   is_ntt: bool = False,
+                                   ):
         """
         Helper function which generates a element of size
         k x k from a seed `rho`.
@@ -145,17 +160,18 @@ class Kyber:
         When `transpose` is set to True, the matrix A is
         built as the transpose.
         """
-        A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
+        A_data: list[list[Element]] = []
         for i in range(self.k):
+            A_data.append([])
             for j in range(self.k):
                 input_bytes = self._xof(
                     rho, bytes([j]), bytes([i]), 3 * self.R.n
                 )
-                A_data[i][j] = self.R.parse(input_bytes, is_ntt=is_ntt)
+                A_data[i].append(self.R.parse(input_bytes, is_ntt=is_ntt))
         A_hat = self.M(A_data, transpose=transpose)
         return A_hat
 
-    def _cpapke_keygen(self):
+    def _cpapke_keygen(self) -> tuple[bytes, bytes]:
         """
         Algorithm 4 (Key Generation)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
@@ -196,7 +212,7 @@ class Kyber:
         sk = s.encode(l=12)
         return pk, sk
 
-    def _cpapke_enc(self, pk, m, coins):
+    def _cpapke_enc(self, pk, m, coins) -> bytes:
         """
         Algorithm 5 (Encryption)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
@@ -240,7 +256,7 @@ class Kyber:
 
         return c1 + c2
 
-    def _cpapke_dec(self, sk, c):
+    def _cpapke_dec(self, sk: bytes, c: bytes) -> bytes:
         """
         Algorithm 6 (Decryption)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf

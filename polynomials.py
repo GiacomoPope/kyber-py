@@ -1,6 +1,8 @@
 from polynomials_generic import PolynomialRing, Polynomial
 from utils import bytes_to_bits, bitstring_to_bytes
+from type import Union, Coefficients, Self
 
+Element = Union['PolynomialKyber', 'PolynomialKyberNTT']
 
 class PolynomialRingKyber(PolynomialRing):
     """
@@ -9,7 +11,7 @@ class PolynomialRingKyber(PolynomialRing):
         R = GF(3329) / (X^256 + 1)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.q = 3329
         self.n = 256
         self.element = PolynomialKyber
@@ -29,7 +31,7 @@ class PolynomialRingKyber(PolynomialRing):
         bin_i = bin(i & (2**k - 1))[2:].zfill(k)
         return int(bin_i[::-1], 2)
 
-    def parse(self, input_bytes, is_ntt=False):
+    def parse(self, input_bytes: bytes, is_ntt: bool = False) -> Element:
         """
         Algorithm 1 (Parse)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
@@ -53,7 +55,7 @@ class PolynomialRingKyber(PolynomialRing):
             i = i + 3
         return self(coefficients, is_ntt=is_ntt)
 
-    def cbd(self, input_bytes, eta, is_ntt=False):
+    def cbd(self, input_bytes, eta, is_ntt=False) -> Element:
         """
         Algorithm 2 (Centered Binomial Distribution)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
@@ -70,7 +72,7 @@ class PolynomialRingKyber(PolynomialRing):
             coefficients[i] = a - b
         return self(coefficients, is_ntt=is_ntt)
 
-    def decode(self, input_bytes, l=None, is_ntt=False):
+    def decode(self, input_bytes, l=None, is_ntt=False) -> Element:
         """
         Decode (Algorithm 3)
 
@@ -95,7 +97,9 @@ class PolynomialRingKyber(PolynomialRing):
             )
         return self(coefficients, is_ntt=is_ntt)
 
-    def __call__(self, coefficients, is_ntt=False):
+    def __call__(self,
+                 coefficients: Coefficients,
+                 is_ntt: bool = False) -> Element:
         if not is_ntt:
             element = self.element
         else:
@@ -115,7 +119,7 @@ class PolynomialKyber(Polynomial):
         self.parent = parent
         self.coeffs = self.parse_coefficients(coefficients)
 
-    def encode(self, l=None):
+    def encode(self, l: Optional[int] = None) -> bytes:
         """
         Encode (Inverse of Algorithm 3)
         """
@@ -148,7 +152,7 @@ class PolynomialKyber(Polynomial):
         self.coeffs = [self.compress_ele(c, d) for c in self.coeffs]
         return self
 
-    def decompress(self, d):
+    def decompress(self, d) -> Self:
         """
         Decompress the polynomial by decompressing each coefficient
         NOTE: This as compression is lossy, we have

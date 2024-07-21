@@ -1,3 +1,6 @@
+from typing import Self
+
+
 class Module:
     def __init__(self, ring):
         self.ring = ring
@@ -9,7 +12,7 @@ class Module:
     def __str__(self):
         return f"Module over the commutative ring: {self.ring}"
 
-    def __call__(self, matrix_elements, transpose=False):
+    def __call__(self, matrix_elements, transpose=False) -> 'Matrix':
         if not isinstance(matrix_elements, list):
             raise TypeError(
                 "elements of a module are matrices, built from elements of the base ring"
@@ -84,7 +87,7 @@ class Matrix:
 
     T = property(transpose)
 
-    def reduce_coefficients(self):
+    def reduce_coefficients(self) -> Self:
         """
         Reduce every element in the polynomial
         using the modulus of the PolynomialRing

@@ -1,13 +1,14 @@
 from polynomials import PolynomialRingKyber
 from modules_generic import Module, Matrix
+from type import Self
 
 
 class ModuleKyber(Module):
-    def __init__(self):
+    def __init__(self) -> None:
         self.ring = PolynomialRingKyber()
         self.matrix = MatrixKyber
 
-    def decode_vector(self, input_bytes, k, l=None, is_ntt=False):
+    def decode_vector(self, input_bytes, k, l=None, is_ntt=False) -> Matrix:
         if l is None:
             # Input length must be 32*l*k bytes long
             l, check = divmod(8 * len(input_bytes), self.ring.n * k)
@@ -46,20 +47,20 @@ class MatrixKyber(Matrix):
         if not self.check_dimensions():
             raise ValueError("Inconsistent row lengths in matrix")
 
-    def encode(self, l=None):
+    def encode(self, l=None) -> bytes:
         output = b""
         for row in self._data:
             for ele in row:
                 output += ele.encode(l=l)
         return output
 
-    def compress(self, d):
+    def compress(self, d) -> Self:
         for row in self._data:
             for ele in row:
                 ele.compress(d)
         return self
 
-    def decompress(self, d):
+    def decompress(self, d) -> Self:
         for row in self._data:
             for ele in row:
                 ele.decompress(d)

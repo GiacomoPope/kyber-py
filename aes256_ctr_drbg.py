@@ -1,10 +1,15 @@
 import os
+from typing import Optional
+from collections.abc import Buffer  # ByteString is deprecated
 from utils import xor_bytes
 from Crypto.Cipher import AES
 
 
 class AES256_CTR_DRBG:
-    def __init__(self, seed=None, personalization=b""):
+    def __init__(
+            self,
+            seed: Optional[Buffer] = None,
+            personalization: bytes = b"") -> None:
         self.seed_length = 48
         self.reseed_interval = 2**48
         self.key = bytes([0]) * 32
@@ -29,7 +34,7 @@ class AES256_CTR_DRBG:
             )
         return entropy_input
 
-    def __instantiate(self, personalization=b""):
+    def __instantiate(self, personalization: bytes = b""):
         """
         Combine the input seed and optional personalisation
         string into the seed material for the DRBG
@@ -68,7 +73,7 @@ class AES256_CTR_DRBG:
         self.key = tmp[:32]
         self.V = tmp[32:]
 
-    def reseed(self, additional_information=b""):
+    def reseed(self, additional_information: bytes = b"") -> None:
         """
         Reseed the DRBG for when reseed_ctr hits the
         limit.
