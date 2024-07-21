@@ -165,7 +165,7 @@ class Polynomial:
         return self
 
     def __mul__(self, other):
-        if isinstance(other, Polynomial_generic):
+        if isinstance(other, type(self)):
             new_coeffs = self.schoolbook_multiplication(other)
         elif isinstance(other, int):
             new_coeffs = [(c * other) % self.parent.q for c in self.coeffs]
@@ -203,7 +203,7 @@ class Polynomial:
         return g
 
     def __eq__(self, other):
-        if isinstance(other, Polynomial_generic):
+        if isinstance(other, type(self)):
             return self.coeffs == other.coeffs
         elif isinstance(other, int):
             if (
