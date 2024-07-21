@@ -1,6 +1,6 @@
 from polynomials_generic import PolynomialRing, Polynomial
 from utils import bytes_to_bits, bitstring_to_bytes
-from type import Union, Coefficients, Self
+from type import Union, Coefficients, Self, Optional
 
 Element = Union['PolynomialKyber', 'PolynomialKyberNTT']
 
