@@ -1,6 +1,7 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from modules.modules import ModuleKyber
+from utilities.utils import select_bytes
 
 
 class Kyber:
@@ -326,7 +327,7 @@ class Kyber:
         _c = self._cpapke_enc(pk, _m, _r)
 
         # if decapsulation was successful return K
-        if c == _c:
-            return self._kdf(_Kbar + self._h(c), key_length)
-        # Decapsulation failed... return random value
-        return self._kdf(z + self._h(c), key_length)
+        key = self._kdf(_Kbar + self._h(c), key_length)
+        garbage = self._kdf(z + self._h(c), key_length)
+
+        return select_bytes(garbage, key, c == _c)
