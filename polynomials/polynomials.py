@@ -219,7 +219,7 @@ class PolynomialKyberNTT(PolynomialKyber):
 
         f = self.parent.ntt_f
         for j in range(256):
-            coeffs[j] = coeffs[j] * f % 3329
+            coeffs[j] = (coeffs[j] * f) % 3329
 
         return self.parent(coeffs, is_ntt=False)
 
@@ -228,7 +228,7 @@ class PolynomialKyberNTT(PolynomialKyber):
         """
         Base case for ntt multiplication
         """
-        r0 = (zeta * a1 * b1 + a0 * b0) % 3329
+        r0 = (a0 * b0 + zeta * a1 * b1) % 3329
         r1 = (a1 * b0 + a0 * b1) % 3329
         return r0, r1
 
@@ -271,7 +271,7 @@ class PolynomialKyberNTT(PolynomialKyber):
         return self.parent(new_coeffs, is_ntt=True)
 
     def __sub__(self, other):
-        new_coeffs = self._add_(other)
+        new_coeffs = self._sub_(other)
         return self.parent(new_coeffs, is_ntt=True)
 
     def __mul__(self, other):

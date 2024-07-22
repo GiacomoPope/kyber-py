@@ -76,19 +76,13 @@ class Polynomial:
         """
         add two coefficients modulo q
         """
-        tmp = x + y
-        if tmp >= self.parent.q:
-            tmp -= self.parent.q
-        return tmp
+        return (x + y) % self.parent.q
 
     def sub_mod_q(self, x, y):
         """
         sub two coefficients modulo q
         """
-        tmp = x - y
-        if tmp < 0:
-            tmp += self.parent.q
-        return tmp
+        return (x - y) % self.parent.q
 
     def schoolbook_multiplication(self, other):
         """
