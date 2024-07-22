@@ -2,6 +2,7 @@ import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from modules.modules import ModuleKyber
 
+
 class ML_KEM:
     def __init__(self, params, seed=None):
         # ml-kem params
@@ -30,11 +31,14 @@ class ML_KEM:
         """
         try:
             from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
+
             self.drbg = AES256_CTR_DRBG(seed)
             self.random_bytes = self.drbg.random_bytes
         except ImportError as e:
             print(f"Error importing AES from pycryptodome: {e = }")
-            print("Have you tried installing requirements: pip -r install requirements")
+            print(
+                "Have you tried installing requirements: pip -r install requirements"
+            )
 
     def reseed_drbg(self, seed):
         """
