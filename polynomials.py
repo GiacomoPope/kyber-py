@@ -128,7 +128,7 @@ class PolynomialKyber(Polynomial):
         bit_string = "".join(format(c, f"0{l}b")[::-1] for c in self.coeffs)
         return bitstring_to_bytes(bit_string)
 
-    def compress_ele(self, x, d):
+    def compress_ele(self, x: int, d: int) -> int:
         """
         Compute round((2^d / q) * x) % 2^d
         """
@@ -136,7 +136,7 @@ class PolynomialKyber(Polynomial):
         y = (t * x + 1664) // 3329  # 1664 = 3329 // 2
         return y % t
 
-    def decompress_ele(self, x, d):
+    def decompress_ele(self, x: int, d: int) -> int:
         """
         Compute round((q / 2^d) * x)
         """
@@ -144,7 +144,7 @@ class PolynomialKyber(Polynomial):
         y = (3329 * x + t) >> d
         return y
 
-    def compress(self, d):
+    def compress(self, d: int) -> Self:
         """
         Compress the polynomial by compressing each coefficient
         NOTE: This is lossy compression
@@ -152,7 +152,7 @@ class PolynomialKyber(Polynomial):
         self.coeffs = [self.compress_ele(c, d) for c in self.coeffs]
         return self
 
-    def decompress(self, d) -> Self:
+    def decompress(self, d: int) -> Self:
         """
         Decompress the polynomial by decompressing each coefficient
         NOTE: This as compression is lossy, we have

@@ -1,4 +1,5 @@
 import random
+from type import Self
 
 
 class PolynomialRing:
@@ -8,9 +9,9 @@ class PolynomialRing:
         R = GF(q) / (X^n + 1)
     """
 
-    def __init__(self, q, n):
-        self.q = q
-        self.n = n
+    def __init__(self, q: int, n: int) -> None:
+        self.q: int = q
+        self.n: int = n
         self.element = Polynomial
 
     def gen(self):
@@ -20,7 +21,7 @@ class PolynomialRing:
         coefficients = [random.randint(0, self.q - 1) for _ in range(self.n)]
         return self(coefficients)
 
-    def __call__(self, coefficients):
+    def __call__(self, coefficients: int | list[int]) -> 'Polynomial':
         if isinstance(coefficients, int):
             return self.element(self, [coefficients])
         if not isinstance(coefficients, list):
@@ -29,28 +30,28 @@ class PolynomialRing:
             )
         return self.element(self, coefficients)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Univariate Polynomial Ring in x over Finite Field of size {self.q} with modulus x^{self.n} + 1"
 
 
 class Polynomial:
-    def __init__(self, parent, coefficients):
-        self.parent = parent
+    def __init__(self, parent: PolynomialRing, coefficients) -> None:
+        self.parent: PolynomialRing = parent
         self.coeffs = self.parse_coefficients(coefficients)
 
-    def is_zero(self):
+    def is_zero(self) -> bool:
         """
         Return if polynomial is zero: f = 0
         """
         return all(c == 0 for c in self.coeffs)
 
-    def is_constant(self):
+    def is_constant(self) -> bool:
         """
         Return if polynomial is constant: f = c
         """
         return all(c == 0 for c in self.coeffs[1:])
 
-    def parse_coefficients(self, coefficients):
+    def parse_coefficients(self, coefficients: list[int]) -> list[int]:
         """
         Helper function which right pads with zeros
         to allow polynomial construction as
@@ -65,14 +66,14 @@ class Polynomial:
             coefficients = coefficients + [0 for _ in range(self.parent.n - l)]
         return coefficients
 
-    def reduce_coefficients(self):
+    def reduce_coefficients(self) -> Self:
         """
         Reduce all coefficients modulo q
         """
         self.coeffs = [c % self.parent.q for c in self.coeffs]
         return self
 
-    def add_mod_q(self, x, y):
+    def add_mod_q(self, x: int, y: int) -> int:
         """
         add two coefficients modulo q
         """
@@ -81,7 +82,7 @@ class Polynomial:
             tmp -= self.parent.q
         return tmp
 
-    def sub_mod_q(self, x, y):
+    def sub_mod_q(self, x: int, y: int) -> int:
         """
         sub two coefficients modulo q
         """
@@ -90,14 +91,14 @@ class Polynomial:
             tmp += self.parent.q
         return tmp
 
-    def schoolbook_multiplication(self, other):
+    def schoolbook_multiplication(self, other: 'Polynomial') -> list[int]:
         """
         Naive implementation of polynomial multiplication
-        suitible for all R_q = F_1[X]/(X^n + 1)
+        suitable for all R_q = F_1[X]/(X^n + 1)
         """
-        n = self.parent.n
-        a = self.coeffs
-        b = other.coeffs
+        n: int = self.parent.n
+        a: list[int] = self.coeffs
+        b: list[int] = other.coeffs
         new_coeffs = [0 for _ in range(n)]
         for i in range(n):
             for j in range(0, n - i):
