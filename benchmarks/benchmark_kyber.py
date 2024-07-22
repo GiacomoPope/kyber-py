@@ -5,7 +5,7 @@ from time import time
 
 def profile_kyber(Kyber):
     pk, sk = Kyber.keygen()
-    c, key = Kyber.enc(pk)
+    key, c = Kyber.encaps(pk)
 
     gvars = {}
     lvars = {"Kyber": Kyber, "c": c, "pk": pk, "sk": sk}
@@ -17,13 +17,13 @@ def profile_kyber(Kyber):
         sort=1,
     )
     cProfile.runctx(
-        "[Kyber.enc(pk) for _ in range(100)]",
+        "[Kyber.encaps(pk) for _ in range(100)]",
         globals=gvars,
         locals=lvars,
         sort=1,
     )
     cProfile.runctx(
-        "[Kyber.dec(c, sk) for _ in range(100)]",
+        "[Kyber.decaps(c, sk) for _ in range(100)]",
         globals=gvars,
         locals=lvars,
         sort=1,
@@ -41,11 +41,11 @@ def benchmark_kyber(Kyber, name, count):
         keygen_times.append(time() - t0)
 
         t1 = time()
-        c, key = Kyber.enc(pk)
+        key, c = Kyber.encaps(pk)
         enc_times.append(time() - t1)
 
         t2 = time()
-        dec = Kyber.dec(c, sk)
+        dec = Kyber.decaps(c, sk)
         dec_times.append(time() - t2)
 
     avg_keygen = sum(keygen_times) / count

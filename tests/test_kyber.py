@@ -24,17 +24,16 @@ def parse_kat_data(data):
 
 class TestKyber(unittest.TestCase):
     """
-    Test Kyber levels for internal
-    consistency by generating keypairs
-    and shared secrets.
+    Test Kyber levels for internal consistency by generating keypairs and
+    shared secrets.
     """
 
     def generic_test_kyber(self, Kyber, count):
         for _ in range(count):
             pk, sk = Kyber.keygen()
             for _ in range(count):
-                c, key = Kyber.enc(pk)
-                _key = Kyber.dec(c, sk)
+                key, c = Kyber.encaps(pk)
+                _key = Kyber.decaps(c, sk)
                 self.assertEqual(key, _key)
 
     def test_kyber512(self):
@@ -80,8 +79,8 @@ class TestKyberDeterministic(unittest.TestCase):
         pk, sk = Kyber.keygen()
         for _ in range(count):
             Kyber.set_drbg_seed(seed)
-            c, key = Kyber.enc(pk)
-            _key = Kyber.dec(c, sk)
+            key, c = Kyber.encaps(pk)
+            _key = Kyber.decaps(c, sk)
             # Check key derivation works
             self.assertEqual(key, _key)
             key_output.append(c + key)
@@ -125,12 +124,12 @@ class TestKnownTestValues(unittest.TestCase):
             self.assertEqual(sk, data["sk"])
 
             # Assert encapsulation matches
-            ct, ss = Kyber.enc(pk)
+            ss, ct = Kyber.encaps(pk)
             self.assertEqual(ct, data["ct"])
             self.assertEqual(ss, data["ss"])
 
             # Assert decapsulation matches
-            _ss = Kyber.dec(ct, sk)
+            _ss = Kyber.decaps(ct, sk)
             self.assertEqual(ss, data["ss"])
 
     def test_kyber512_known_answer(self):
