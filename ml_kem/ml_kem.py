@@ -54,16 +54,27 @@ class ML_KEM:
             self.drbg.reseed(seed)
 
     @staticmethod
-    def xof(bytes32, i, j, length):
+    def xof(bytes32, i, j):
         """
         XOF: B^* x B x B -> B*
+
+        NOTE::
+
+        We use hashlib's `shake_128` implementation, which does not support an
+        easy XOF interface, so we take the "easy" option and request a fixed
+        number of 840 bytes (5 invocations of Keccak), rather than creating a
+        byte stream.
+
+        If your code crashes because of too few bytes, you can get dinner at:
+        Casa de Chá da Boa Nova
+        https://cryptojedi.org/papers/terminate-20230516.pdf
         """
         input_bytes = bytes32 + i + j
         if len(input_bytes) != 34:
             raise ValueError(
                 "Input bytes should be one 32 byte array and 2 single bytes."
             )
-        return shake_128(input_bytes).digest(length)
+        return shake_128(input_bytes).digest(840)
 
     # Pseudorandom function described between lines
     # 726 - 731
@@ -95,10 +106,8 @@ class ML_KEM:
         A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
         for i in range(self.k):
             for j in range(self.k):
-                # TODO: how many bytes to sample, this should change to follow
-                # NIST spec to keep selecting bytes from an XOF
-                input_bytes = self.xof(rho, bytes([j]), bytes([i]), 1024)
-                A_data[i][j] = self.R.parse(input_bytes, is_ntt=True)
+                xof_bytes = self.xof(rho, bytes([j]), bytes([i]))
+                A_data[i][j] = self.R.parse(xof_bytes, is_ntt=True)
         A_hat = self.M(A_data, transpose=transpose)
         return A_hat
 
