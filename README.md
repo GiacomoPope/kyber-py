@@ -3,8 +3,13 @@
 
 # ML-KEM / CRYSTALS-Kyber Python Implementation
 
-:warning: **Under no circumstances should this be used for a cryptographic
-application.** :warning:
+> [!CAUTION]
+> :warning: **Under no circumstances should this be used for cryptographic
+applications.** :warning:
+> 
+> This is an educational resource and has not been designed to be secure
+> against any form of side-channel attack. The indended use of this project
+> is for learning and experimenting with ML-KEM and Kyber
 
 This repository contains a pure python implementation of both:
 
