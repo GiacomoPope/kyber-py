@@ -1,6 +1,6 @@
 import os
 from utilities.utils import xor_bytes
-from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 
 
 class AES256_CTR_DRBG:
