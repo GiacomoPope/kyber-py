@@ -82,8 +82,8 @@ use:
 ```python
 >>> from ml_kem import ML_KEM128
 >>> ek, dk = ML_KEM128.keygen()
->>> key, ct = ML_KEM128.encaps(pk)
->>> _key = ML_KEM128.decaps(ct, sk)
+>>> key, ct = ML_KEM128.encaps(ek)
+>>> _key = ML_KEM128.decaps(ct, dk)
 >>> assert key == _key
 ```
 
