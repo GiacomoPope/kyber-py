@@ -276,7 +276,7 @@ class Kyber:
         sk = _sk + pk + self._h(pk) + z
         return pk, sk
 
-    def enc(self, pk, key_length=32):
+    def encaps(self, pk, key_length=32):
         """
         Algorithm 8 (CCA KEM Encapsulation)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
@@ -284,17 +284,22 @@ class Kyber:
         Input:
             pk: Public Key
         Output:
-            c:  Ciphertext
             K:  Shared key
+            c:  Ciphertext
+
+        NOTE::
+
+        We switch the order of the output (c, K) as (K, c) to align encaps output
+        with FIPS 203.
         """
         m = self.random_bytes(32)
         m_hash = self._h(m)
         Kbar, r = self._g(m_hash + self._h(pk))
         c = self._cpapke_enc(pk, m_hash, r)
         K = self._kdf(Kbar + self._h(c), key_length)
-        return c, K
+        return K, c
 
-    def dec(self, c, sk, key_length=32):
+    def decaps(self, c, sk, key_length=32):
         """
         Algorithm 9 (CCA KEM Decapsulation)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf

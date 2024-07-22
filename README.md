@@ -105,16 +105,16 @@ There are three functions exposed on the `Kyber` class which are intended for
 use:
 
 - `Kyber.keygen()`: generate a keypair `(pk, sk)`
-- `Kyber.enc(pk)`: generate a challenge and a shared key `(c, key)`
-- `Kyber.dec(c, sk)`: generate the shared key `key`
+- `Kyber.encaps(pk)`: generate shared key and challenge `(key, c)`
+- `Kyber.decaps(c, sk)`: generate the shared key `key`
 
 #### Example
 
 ```python
 >>> from kyber import Kyber512
 >>> pk, sk = Kyber512.keygen()
->>> c, key = Kyber512.enc(pk)
->>> _key = Kyber512.dec(c, sk)
+>>> key, c = Kyber512.encaps(pk)
+>>> _key = Kyber512.decaps(c, sk)
 >>> assert key == _key
 ```
 
