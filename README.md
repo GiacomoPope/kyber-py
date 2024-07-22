@@ -21,6 +21,9 @@ Standard following the [FIPS 203 (Initial Public
 Draft)](https://csrc.nist.gov/pubs/fips/203/ipd) based off the Kyber submission
 to the NIST post-quantum cryptography project.
 
+The API is not stable, significant changes to it may occur until
+FIPS 203 is finalized.
+
 ## Disclaimer
 
 `kyber-py` has been written as an educational tool. The goal of this project was
