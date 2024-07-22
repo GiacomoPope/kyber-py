@@ -1,11 +1,16 @@
 def bytes_to_bits(input_bytes):
     """
-    Convert bytes to an array of bits
+    FIPS 203: Algorithm 3
 
-    Bytes are converted little endianness following the paper
+    Convert bytes to an array of bits. Bytes are converted little endianness
+    following the paper
     """
-    bit_string = "".join(format(byte, "08b")[::-1] for byte in input_bytes)
-    return list(map(int, list(bit_string)))
+    b = [0 for _ in range(8 * len(input_bytes))]
+    for i, byte in enumerate(input_bytes):
+        for j in range(8):
+            b[8 * i + j] = byte % 2
+            byte //= 2
+    return b
 
 
 def bitstring_to_bytes(s):

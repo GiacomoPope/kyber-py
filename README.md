@@ -98,9 +98,9 @@ The above example would also work with `ML_KEM192` and `ML_KEM256`.
 
 |  Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s |
 |------------|---------:|-----------:|--------:|----------:|--------:|---------:|
-|ML_KEM128    |    4.91ms|      203.76|   7.69ms|     130.08|   12.11ms|    82.56 |
-|ML_KEM192    |    6.93ms|      144.31|  10.89ms|      91.86|   17.10ms|    58.47 |
-|ML_KEM256   |    9.85ms |      101.54|  14.71ms|      67.97|   22.96ms|    43.56 |
+|ML_KEM128    |    3.87ms|      258.47|   6.59ms|     151.79|  10.97ms|    91.15 |
+|ML_KEM192    |    5.85ms|      170.84|   9.67ms|     103.43|  15.83ms|    63.15 |
+|ML_KEM256   |    8.52ms|       117.38|  13.31ms|      75.12|  21.58ms|    46.34 |
 
 All times recorded using a Intel Core i7-9750H CPU and averaged over 1000 runs.
 
@@ -140,9 +140,9 @@ currently only support $q = 3329$ and $n = 256$.
 
 |  Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s |
 |------------|---------:|-----------:|--------:|----------:|--------:|---------:|
-|Kyber512    |    4.82ms|      207.59|   7.10ms|     140.80|  11.65ms|    85.82 |
-|Kyber768    |    6.87ms|      145.60|  10.11ms|      98.92|  16.51ms|    60.58 |
-|Kyber1024   |    9.72ms|      102.91|  13.71ms|      72.94|  22.20ms|    45.05 |
+|Kyber512    |    3.97ms|     252.17|    6.11ms|     163.70|  10.55ms|     94.80 |
+|Kyber768    |    5.94ms|      168.49|   8.88ms|     112.64|  15.10ms|    66.21 |
+|Kyber1024   |    8.52ms|      117.30|  12.17ms|      82.14|  20.48ms|    48.83 |
 
 All times recorded using a Intel Core i7-9750H CPU and averaged over 1000 runs.
 

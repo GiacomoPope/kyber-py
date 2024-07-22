@@ -65,8 +65,8 @@ class PolynomialRingKyber(PolynomialRing):
         coefficients = [0 for _ in range(256)]
         list_of_bits = bytes_to_bits(input_bytes)
         for i in range(256):
-            a = sum(list_of_bits[2 * i * eta + j] for j in range(eta))
-            b = sum(list_of_bits[2 * i * eta + eta + j] for j in range(eta))
+            a = sum(list_of_bits[eta * 2 * i : eta * (2 * i + 1)])
+            b = sum(list_of_bits[eta * (2 * i + 1) : eta * (2 * i + 2)])
             coefficients[i] = (a - b) % 3329
         return self(coefficients, is_ntt=is_ntt)
 
