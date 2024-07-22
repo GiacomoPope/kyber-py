@@ -48,7 +48,7 @@ The KAT files were either downloaded or generated:
    repository](https://github.com/pq-crystals/kyber/) and are included in
    `assets/PQCLkemKAT_*.rsp`
 2. For **ML-KEM**, the KAT files were download from the GitHub repository
-   (post-quantum-cryptography/KAT)[https://github.com/post-quantum-cryptography/KAT/tree/main/MLKEM]
+   [post-quantum-cryptography/KAT](https://github.com/post-quantum-cryptography/KAT/tree/main/MLKEM) and are included in `assets/kat_MLKEM_*.rsp`
 
 **Note**: for Kyber v3.02, there is a discrepancy between the specification and
 reference implementation. To ensure all KATs pass, one has to generate the
@@ -90,8 +90,6 @@ use:
 The above example would also work with `ML_KEM192` and `ML_KEM256`.
 
 #### Benchmarks
-
-Included ere are some approximate benchmarks, although the purpose of this project is not speed, but rather education!
 
 |  Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s |
 |------------|---------:|-----------:|--------:|----------:|--------:|---------:|
@@ -135,8 +133,6 @@ currently only support $q = 3329$ and $n = 256$.
 
 #### Benchmarks
 
-Included ere are some approximate benchmarks, although the purpose of this project is not speed, but rather education!
-
 |  Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s |
 |------------|---------:|-----------:|--------:|----------:|--------:|---------:|
 |Kyber512    |    4.82ms|      207.59|   7.10ms|     140.80|  11.65ms|    85.82 |
@@ -153,14 +149,14 @@ All times recorded using a Intel Core i7-9750H CPU and averaged over 1000 runs.
 
 There are two main things to worry about when implementing Kyber/ML-KEM. The
 first thing to consider is the mathematics, which requires performing linear
-algebra in a module with elements in the ring $R_q = \mathbb{F}_q[X] /(X^n + 1)$
+algebra in a module with elements in the ring $R_q = \mathbb{F}\_q[X] /(X^n + 1)$
 and the second is the sampling, compression and decompression, which links to
 the cryptographic assurance of the protocol.
 
 For those who don't know, a module is a generalisation of a vector space, where
 elements of a matrix are not selected from a field (such as the rationals, or
-element of a finite field $\mathbb{F}_{p^k}$), but rather in a ring (we do not
-require each element in a ring to have a multiplicative inverse). The ring in question for Kyber/ML-KEM is a polynomial ring where polynomials have coefficents in $\mathbb{F}_{q}$ with $q = 3329$ and the polynomial ring has a modulus $X^n + 1$ with $n = 256$ (and so every element of the polynomial ring has at most 256 coefficients).
+element of a finite field $\mathbb{F}\_{p^k}$), but rather in a ring (we do not
+require each element in a ring to have a multiplicative inverse). The ring in question for Kyber/ML-KEM is a polynomial ring where polynomials have coefficents in $\mathbb{F}\_{q}$ with $q = 3329$ and the polynomial ring has a modulus $X^n + 1$ with $n = 256$ (and so every element of the polynomial ring has at most 256 coefficients).
 
 ### Polynomials
 
