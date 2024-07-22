@@ -2,16 +2,6 @@ import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from modules.modules import ModuleKyber
 
-try:
-    from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
-except ImportError as e:
-    print(
-        "Error importing AES CTR DRBG. Have you tried installing requirements?"
-    )
-    print(f"ImportError: {e}\n")
-    print("Kyber will work perfectly fine with system randomness")
-
-
 class Kyber:
     def __init__(self, parameter_set, seed=None):
         self.k = parameter_set["k"]
@@ -23,29 +13,33 @@ class Kyber:
         self.M = ModuleKyber()
         self.R = self.M.ring
 
-        # NIST approved randomness
-        if seed is None:
-            seed = os.urandom(48)
-        self._drbg = AES256_CTR_DRBG(seed)
-        self.random_bytes = self._drbg.random_bytes
+        # Use system randomness by default
+        self.random_bytes = os.urandom
+
+        # If a seed is supplied, use deterministic randomness
+        if seed is not None:
+            self.set_drbg_seed(seed)
 
     def set_drbg_seed(self, seed):
         """
         Setting the seed switches the entropy source
         from os.urandom to AES256 CTR DRBG
 
-        Note: requires pycryptodome for AES impl.
-        (Seemed overkill to code my own AES for Kyber)
+        Note: currently requires pycryptodome for AES impl.
         """
-        self.drbg = AES256_CTR_DRBG(seed)
-        self.random_bytes = self.drbg.random_bytes
+        try:
+            from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
+            self.drbg = AES256_CTR_DRBG(seed)
+            self.random_bytes = self.drbg.random_bytes
+        except ImportError as e:
+            print(f"Error importing AES from pycryptodome: {e = }")
+            print("Have you tried installing requirements: pip -r install requirements")
 
     def reseed_drbg(self, seed):
         """
         Reseeds the DRBG, errors if a DRBG is not set.
 
-        Note: requires pycryptodome for AES impl.
-        (Seemed overkill to code my own AES for Kyber)
+        Note: currently requires pycryptodome for AES impl.
         """
         if self.drbg is None:
             raise Warning(
