@@ -1,6 +1,7 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from modules.modules import ModuleKyber
+from utilities.utils import select_bytes
 
 
 class ML_KEM:
@@ -277,9 +278,5 @@ class ML_KEM:
         K_bar = self.J(z + c)
         c_prime = self.pke_encrypt(ek_pke, m_prime, r_prime)
 
-        # If c != c_prime, return garbage
-        if c != c_prime:
-            K_prime = K_bar
-
-        # Return a shared secret
-        return K_prime
+        # If c != c_prime, return K_bar as garbage
+        return select_bytes(K_bar, K_prime, c == c_prime)
