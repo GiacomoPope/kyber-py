@@ -175,8 +175,8 @@ class Kyber:
         s.reduce_coefficients()
 
         # Encode elements to bytes and return
-        pk = t.encode(l=12) + rho
-        sk = s.encode(l=12)
+        pk = t.encode(12) + rho
+        sk = s.encode(12)
         return pk, sk
 
     def _cpapke_enc(self, pk, m, coins):
@@ -193,10 +193,12 @@ class Kyber:
         """
         N = 0
         rho = pk[-32:]
-        t = self.M.decode_vector(pk, self.k, l=12, is_ntt=True)
+
+        # Decode t vector from public key
+        t = self.M.decode_vector(pk, self.k, 12, is_ntt=True)
 
         # Encode message as polynomial
-        m_poly = self.R.decode(m, l=1).decompress(1)
+        m_poly = self.R.decode(m, 1).decompress(1)
 
         # Generate the matrix A^T ∈ R^(kxk)
         At = self._generate_matrix_from_seed(rho, transpose=True, is_ntt=True)
@@ -218,8 +220,8 @@ class Kyber:
         v = v + e2 + m_poly
 
         # Ciphertext to bytes
-        c1 = u.compress(self.du).encode(l=self.du)
-        c2 = v.compress(self.dv).encode(l=self.dv)
+        c1 = u.compress(self.du).encode(self.du)
+        c2 = v.compress(self.dv).encode(self.dv)
 
         return c1 + c2
 
@@ -239,21 +241,21 @@ class Kyber:
         c2 = c[index:]
 
         # Recover the vector u and convert to NTT form
-        u = self.M.decode_vector(c, self.k, l=self.du).decompress(self.du)
+        u = self.M.decode_vector(c, self.k, self.du).decompress(self.du)
         u = u.to_ntt()
 
         # Recover the polynomial v
-        v = self.R.decode(c2, l=self.dv).decompress(self.dv)
+        v = self.R.decode(c2, self.dv).decompress(self.dv)
 
         # s_transpose (already in NTT form)
-        s = self.M.decode_vector(sk, self.k, l=12, is_ntt=True)
+        s = self.M.decode_vector(sk, self.k, 12, is_ntt=True)
 
         # Recover message as polynomial
         m = s.dot(u).from_ntt()
         m = v - m
 
         # Return message as bytes
-        return m.compress(1).encode(l=1)
+        return m.compress(1).encode(1)
 
     def keygen(self):
         """
@@ -291,8 +293,13 @@ class Kyber:
           We switch the order of the output (c, K) as (K, c) to align encaps
           output with FIPS 203.
         """
+        # Compute random message
         m = self.random_bytes(32)
+
+        # The hash of shame
         m_hash = self._h(m)
+
+        # Compute key K and challenge c
         Kbar, r = self._g(m_hash + self._h(pk))
         c = self._cpapke_enc(pk, m_hash, r)
         K = self._kdf(Kbar + self._h(c), key_length)

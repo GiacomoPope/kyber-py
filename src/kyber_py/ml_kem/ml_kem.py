@@ -188,7 +188,7 @@ class ML_KEM:
 
         u = (A_hat @ r_hat).from_ntt() + e1
 
-        mu = self.R.decode(m, l=1).decompress(1)
+        mu = self.R.decode(m, 1).decompress(1)
         v = t_hat.dot(r_hat).from_ntt() + e2 + mu
 
         # TODO: we could make a compress then encode function
@@ -204,8 +204,8 @@ class ML_KEM:
         n = self.k * self.du * 32
         c1, c2 = c[:n], c[n:]
 
-        u = self.M.decode_vector(c1, self.k, l=self.du).decompress(self.du)
-        v = self.R.decode(c2, l=self.dv).decompress(self.dv)
+        u = self.M.decode_vector(c1, self.k, self.du).decompress(self.du)
+        v = self.R.decode(c2, self.dv).decompress(self.dv)
         s_hat = self.M.decode_vector(dk_pke, self.k, 12, is_ntt=True)
 
         u_hat = u.to_ntt()
