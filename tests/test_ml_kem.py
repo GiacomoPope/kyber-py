@@ -1,7 +1,7 @@
 import unittest
 from itertools import islice
 import pytest
-from kyber_py.ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
+from kyber_py.ml_kem import ML_KEM_512, ML_KEM_768, ML_KEM_1024
 from kyber_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
 
@@ -50,14 +50,14 @@ class TestML_KEM(unittest.TestCase):
                 K_prime = ML_KEM.decaps(c, dk)
                 self.assertEqual(K, K_prime)
 
-    def test_ML_KEM128(self):
-        self.generic_test_ML_KEM(ML_KEM128, 5)
+    def test_ML_KEM_512(self):
+        self.generic_test_ML_KEM(ML_KEM_512, 5)
 
-    def test_ML_KEM192(self):
-        self.generic_test_ML_KEM(ML_KEM192, 5)
+    def test_ML_KEM_768(self):
+        self.generic_test_ML_KEM(ML_KEM_768, 5)
 
-    def test_ML_KEM256(self):
-        self.generic_test_ML_KEM(ML_KEM256, 5)
+    def test_ML_KEM_1024(self):
+        self.generic_test_ML_KEM(ML_KEM_1024, 5)
 
 
 # As there are 1000 KATs in the file, execution of all of them takes
@@ -88,9 +88,9 @@ def data_parse(filename):
     [
         (kem, seed, param)
         for kem, filename in [
-            (ML_KEM128, "assets/kat_MLKEM_512.rsp"),
-            (ML_KEM192, "assets/kat_MLKEM_768.rsp"),
-            (ML_KEM256, "assets/kat_MLKEM_1024.rsp"),
+            (ML_KEM_512, "assets/kat_MLKEM_512.rsp"),
+            (ML_KEM_768, "assets/kat_MLKEM_768.rsp"),
+            (ML_KEM_1024, "assets/kat_MLKEM_1024.rsp"),
         ]
         for seed, param in data_parse(filename)
     ],

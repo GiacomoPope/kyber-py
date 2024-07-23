@@ -1,4 +1,4 @@
-from kyber_py.ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
+from kyber_py.ml_kem import ML_KEM_512, ML_KEM_768, ML_KEM_1024
 import cProfile
 from time import time
 
@@ -68,6 +68,6 @@ if __name__ == "__main__":
         "|  decap  |  decap/s"
     )
     print("-" * 80)
-    benchmark_ml_kem(ML_KEM128, "ML_KEM128", count)
-    benchmark_ml_kem(ML_KEM192, "ML_KEM192", count)
-    benchmark_ml_kem(ML_KEM256, "ML_KEM256", count)
+    benchmark_ml_kem(ML_KEM_512, "ML-KEM-512", count)
+    benchmark_ml_kem(ML_KEM_768, "ML-KEM-768", count)
+    benchmark_ml_kem(ML_KEM_1024, "ML-KEM-1024", count)
