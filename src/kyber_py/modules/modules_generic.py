@@ -6,6 +6,12 @@ class Module:
         self.ring = ring
         self.matrix = Matrix
 
+    def random_element(self, m, n):
+        elements = [
+            [self.ring.random_element() for _ in range(n)] for _ in range(m)
+        ]
+        return self(elements)
+
     def __repr__(self):
         return f"Module over the commutative ring: {self.ring}"
 
@@ -54,19 +60,20 @@ class Matrix:
         self.parent = parent
         self._data = matrix_data
         self._transpose = transpose
-        if not self.check_dimensions():
+        if not self._check_dimensions():
             raise ValueError("Inconsistent row lengths in matrix")
 
     def dim(self):
         """
         Return the dimensions of the matrix with m rows
-        and n columns"""
+        and n columns
+        """
         if not self._transpose:
             return len(self._data), len(self._data[0])
         else:
             return len(self._data[0]), len(self._data)
 
-    def check_dimensions(self):
+    def _check_dimensions(self):
         """
         Ensure that the matrix is rectangular
         """
@@ -115,6 +122,16 @@ class Matrix:
         m, n = self.dim()
         return all(
             [self[i, j] == other[i, j] for i in range(m) for j in range(n)]
+        )
+
+    def __neg__(self):
+        """
+        Returns -self, by negating all elements
+        """
+        m, n = self.dim()
+        return self.parent(
+            [[-self[i, j] for j in range(n)] for i in range(m)],
+            self._transpose,
         )
 
     def __add__(self, other):

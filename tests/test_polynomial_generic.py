@@ -29,7 +29,7 @@ class TestPolynomial(unittest.TestCase):
         self.assertTrue(self.R(1).is_constant())
         self.assertFalse(self.R.gen().is_constant())
 
-    def test_reduce_coefficents(self):
+    def test_reduce_coefficients(self):
         for _ in range(100):
             # Create non-canonical coefficients
             coeffs = [
