@@ -101,9 +101,9 @@ The above example would also work with `ML_KEM192` and `ML_KEM256`.
 
 |  Params    |  keygen  |  keygen/s  |  encap  |  encap/s  |  decap  |  decap/s |
 |------------|---------:|-----------:|--------:|----------:|--------:|---------:|
-|ML_KEM128    |    3.87ms|      258.47|   6.59ms|     151.79|  10.97ms|    91.15 |
-|ML_KEM192    |    5.85ms|      170.84|   9.67ms|     103.43|  15.83ms|    63.15 |
-|ML_KEM256   |    8.52ms|       117.38|  13.31ms|      75.12|  21.58ms|    46.34 |
+|ML-KEM-512  |    3.87ms|      258.47|   6.59ms|     151.79|  10.97ms|    91.15 |
+|ML-KEM-768  |    5.85ms|      170.84|   9.67ms|     103.43|  15.83ms|    63.15 |
+|ML-KEM-1024 |    8.52ms|       117.38|  13.31ms|      75.12|  21.58ms|    46.34 |
 
 All times recorded using a Intel Core i7-9750H CPU and averaged over 1000 runs.
 

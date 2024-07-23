@@ -1,1 +1,1 @@
-from .default_parameters import ML_KEM128, ML_KEM192, ML_KEM256
+from .default_parameters import ML_KEM_512, ML_KEM_768, ML_KEM_1024
