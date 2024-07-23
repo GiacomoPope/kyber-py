@@ -32,8 +32,8 @@ class Kyber:
         try:
             from ..drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
-            self.drbg = AES256_CTR_DRBG(seed)
-            self.random_bytes = self.drbg.random_bytes
+            self._drbg = AES256_CTR_DRBG(seed)
+            self.random_bytes = self._drbg.random_bytes
         except ImportError as e:
             print(f"Error importing AES from pycryptodome: {e = }")
             print(
@@ -46,12 +46,12 @@ class Kyber:
 
         Note: currently requires pycryptodome for AES impl.
         """
-        if self.drbg is None:
+        if self._drbg is None:
             raise Warning(
                 "Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`"
             )
         else:
-            self.drbg.reseed(seed)
+            self._drbg.reseed(seed)
 
     @staticmethod
     def _xof(bytes32, i, j):
