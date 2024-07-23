@@ -53,7 +53,7 @@ class TestPolynomial(unittest.TestCase):
                 randint(-2 * self.R.q, 3 * self.R.q) for _ in range(self.R.n)
             ]
             f = self.R(coeffs).reduce_coefficients()
-            self.assertTrue(all([c < self.R.q for c in f.coeffs]))
+            self.assertTrue(all([0 <= c < self.R.q for c in f.coeffs]))
 
     def test_equality(self):
         for _ in range(100):
@@ -76,6 +76,10 @@ class TestPolynomial(unittest.TestCase):
     def test_sub_failure(self):
         f1 = self.R.random_element()
         self.assertRaises(NotImplementedError, lambda: f1 - "a")
+
+    def test_mul_failure(self):
+        f1 = self.R.random_element()
+        self.assertRaises(NotImplementedError, lambda: f1 * "a")
 
     def test_pow_failure(self):
         f1 = self.R.random_element()
