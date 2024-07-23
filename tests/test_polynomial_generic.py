@@ -16,9 +16,26 @@ class TestPolynomialRing(unittest.TestCase):
             self.assertEqual(len(f.coeffs), self.R.n)
             self.assertTrue(all([c < self.R.q for c in f.coeffs]))
 
+    def test_non_list_error(self):
+        self.assertRaises(TypeError, lambda: self.R("1"))
+
+    def test_long_list_error(self):
+        self.assertRaises(ValueError, lambda: self.R([0] * (self.R.n + 1)))
+
+    def test_string_format(self):
+        self.assertEqual(
+            str(self.R),
+            "Univariate Polynomial Ring in x over Finite Field of size 11 with modulus x^5 + 1",
+        )
+
 
 class TestPolynomial(unittest.TestCase):
     R = PolynomialRing(11, 5)
+
+    def test_getitem(self):
+        x = self.R.gen()
+        self.assertEqual(x[0], 0)
+        self.assertEqual(x[1], 1)
 
     def test_is_zero(self):
         self.assertTrue(self.R(0).is_zero())
@@ -36,7 +53,37 @@ class TestPolynomial(unittest.TestCase):
                 randint(-2 * self.R.q, 3 * self.R.q) for _ in range(self.R.n)
             ]
             f = self.R(coeffs).reduce_coefficients()
-            self.assertTrue(all([c < self.R.q for c in f.coeffs]))
+            self.assertTrue(all([0 <= c < self.R.q for c in f.coeffs]))
+
+    def test_equality(self):
+        for _ in range(100):
+            f1 = self.R.random_element()
+            f2 = -f1
+            self.assertEqual(f1, f1)
+            if f1.is_zero():
+                self.assertTrue(f1 == f2)
+            else:
+                self.assertFalse(f1 == f2)
+
+        self.assertTrue(self.R(0) == 0)
+        self.assertTrue(self.R(1) == self.R.q + 1)
+        self.assertTrue(self.R(self.R.q - 1) == -1)
+
+    def test_add_failure(self):
+        f1 = self.R.random_element()
+        self.assertRaises(NotImplementedError, lambda: f1 + "a")
+
+    def test_sub_failure(self):
+        f1 = self.R.random_element()
+        self.assertRaises(NotImplementedError, lambda: f1 - "a")
+
+    def test_mul_failure(self):
+        f1 = self.R.random_element()
+        self.assertRaises(NotImplementedError, lambda: f1 * "a")
+
+    def test_pow_failure(self):
+        f1 = self.R.random_element()
+        self.assertRaises(TypeError, lambda: f1 ** "a")
 
     def test_add_polynomials(self):
         zero = self.R(0)
@@ -49,6 +96,10 @@ class TestPolynomial(unittest.TestCase):
             self.assertEqual(f1 + f2, f2 + f1)
             self.assertEqual(f1 + (f2 + f3), (f1 + f2) + f3)
 
+            f2 = f1
+            f2 += f1
+            self.assertEqual(f1 + f1, f2)
+
     def test_sub_polynomials(self):
         zero = self.R(0)
         for _ in range(100):
@@ -58,8 +109,14 @@ class TestPolynomial(unittest.TestCase):
 
             self.assertEqual(f1 - zero, f1)
             self.assertEqual(f3 - f3, zero)
+            self.assertEqual(f3 - 0, f3)
+            self.assertEqual(0 - f3, -f3)
             self.assertEqual(f1 - f2, -(f2 - f1))
             self.assertEqual(f1 - (f2 - f3), (f1 - f2) + f3)
+
+            f2 = f1
+            f2 -= f1
+            self.assertEqual(f2, zero)
 
     def test_mul_polynomials(self):
         zero = self.R(0)
@@ -73,6 +130,12 @@ class TestPolynomial(unittest.TestCase):
             self.assertEqual(f1 * one, f1)
             self.assertEqual(f1 * f2, f2 * f1)
             self.assertEqual(f1 * (f2 * f3), (f1 * f2) * f3)
+            self.assertEqual(2 * f1, f1 + f1)
+            self.assertEqual(2 * f1, f1 * 2)
+
+            f2 = f1
+            f2 *= f2
+            self.assertEqual(f1 * f1, f2)
 
     def test_pow_polynomials(self):
         one = self.R(1)
@@ -84,6 +147,14 @@ class TestPolynomial(unittest.TestCase):
             self.assertEqual(f1 * f1, f1**2)
             self.assertEqual(f1 * f1 * f1, f1**3)
             self.assertRaises(ValueError, lambda: f1 ** (-1))
+
+    def test_print(self):
+        self.assertEqual(str(self.R(0)), "0")
+        self.assertEqual(str(self.R(1)), "1")
+        self.assertEqual(str(self.R.gen()), "x")
+        self.assertEqual(
+            str(self.R([1, 2, 3, 4, 5])), "1 + 2*x + 3*x^2 + 4*x^3 + 5*x^4"
+        )
 
 
 if __name__ == "__main__":
