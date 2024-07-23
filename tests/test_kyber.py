@@ -1,5 +1,7 @@
 import unittest
 import os
+from itertools import islice
+import pytest
 from kyber_py.kyber import Kyber512, Kyber768, Kyber1024
 from kyber_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
@@ -97,55 +99,56 @@ class TestKyberDeterministic(unittest.TestCase):
         self.generic_test_kyber_deterministic(Kyber1024, 5)
 
 
-class TestKnownTestValues(unittest.TestCase):
-    def generic_test_kyber_known_answer(self, Kyber, filename):
-        # Set DRBG to generate seeds
-        entropy_input = bytes([i for i in range(48)])
-        rng = AES256_CTR_DRBG(entropy_input)
+def data_parse(filename):
+    # Set DRBG to generate seeds
+    entropy_input = bytes([i for i in range(48)])
+    rng = AES256_CTR_DRBG(entropy_input)
 
-        with open(filename) as f:
-            kat_data = f.read()
-            parsed_data = parse_kat_data(kat_data)
+    with open(filename) as f:
+        kat_data = f.read()
+        parsed_data = parse_kat_data(kat_data)
 
-        for count in range(100):
-            # Obtain the kat data for the count
-            data = parsed_data[count]
+    return [(rng.random_bytes(48), i) for i in parsed_data.values()]
 
-            # Set the seed and check it matches the KAT
-            seed = rng.random_bytes(48)
-            self.assertEqual(seed, data["seed"])
 
-            # Seed DRBG with KAT seed
-            Kyber.set_drbg_seed(seed)
+@pytest.mark.parametrize(
+    "Kyber, seed, data",
+    [
+        (kem, seed, param)
+        for kem, filename in [
+            (Kyber512, "assets/PQCkemKAT_1632.rsp"),
+            (Kyber768, "assets/PQCkemKAT_2400.rsp"),
+            (Kyber1024, "assets/PQCkemKAT_3168.rsp"),
+        ]
+        for seed, param in data_parse(filename)
+    ],
+    ids=[
+        f"{kem}-test-{num}"
+        for kem in ["Kyber512", "Kyber768", "Kyber1024"]
+        for num in range(100)
+    ],
+)
+def test_generic_kyber_known_answer(Kyber, seed, data):
 
-            # Assert keygen matches
-            pk, sk = Kyber.keygen()
-            self.assertEqual(pk, data["pk"])
-            self.assertEqual(sk, data["sk"])
+    # Set the seed and check it matches the KAT
+    assert seed == data["seed"]
 
-            # Assert encapsulation matches
-            ss, ct = Kyber.encaps(pk)
-            self.assertEqual(ct, data["ct"])
-            self.assertEqual(ss, data["ss"])
+    # Seed DRBG with KAT seed
+    Kyber.set_drbg_seed(seed)
 
-            # Assert decapsulation matches
-            _ss = Kyber.decaps(ct, sk)
-            self.assertEqual(ss, data["ss"])
+    # Assert keygen matches
+    pk, sk = Kyber.keygen()
+    assert pk == data["pk"]
+    assert sk == data["sk"]
 
-    def test_kyber512_known_answer(self):
-        return self.generic_test_kyber_known_answer(
-            Kyber512, "assets/PQCkemKAT_1632.rsp"
-        )
+    # Assert encapsulation matches
+    ss, ct = Kyber.encaps(pk)
+    assert ct == data["ct"]
+    assert ss == data["ss"]
 
-    def test_kyber768_known_answer(self):
-        return self.generic_test_kyber_known_answer(
-            Kyber768, "assets/PQCkemKAT_2400.rsp"
-        )
-
-    def test_kyber1024_known_answer(self):
-        return self.generic_test_kyber_known_answer(
-            Kyber1024, "assets/PQCkemKAT_3168.rsp"
-        )
+    # Assert decapsulation matches
+    _ss = Kyber.decaps(ct, sk)
+    assert ss == data["ss"]
 
 
 if __name__ == "__main__":
