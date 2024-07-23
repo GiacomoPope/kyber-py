@@ -145,9 +145,6 @@ class Matrix:
             False,
         )
 
-    def __radd__(self, other):
-        return self.__add__(other)
-
     def __iadd__(self, other):
         self = self + other
         return self
@@ -165,9 +162,6 @@ class Matrix:
             [[self[i, j] - other[i, j] for j in range(n)] for i in range(m)],
             False,
         )
-
-    def __rsub__(self, other):
-        return self.__sub__(other)
 
     def __isub__(self, other):
         self = self - other
