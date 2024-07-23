@@ -1,7 +1,7 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from modules.modules import ModuleKyber
-from utilities.utils import select_bytes
+from ..modules.modules import ModuleKyber
+from ..utilities.utils import select_bytes
 
 
 class ML_KEM:
@@ -31,7 +31,7 @@ class ML_KEM:
         Note: currently requires pycryptodome for AES impl.
         """
         try:
-            from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
+            from ..drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
             self.drbg = AES256_CTR_DRBG(seed)
             self.random_bytes = self.drbg.random_bytes
@@ -59,12 +59,11 @@ class ML_KEM:
         """
         XOF: B^* x B x B -> B*
 
-        NOTE::
-
-        We use hashlib's `shake_128` implementation, which does not support an
-        easy XOF interface, so we take the "easy" option and request a fixed
-        number of 840 bytes (5 invocations of Keccak), rather than creating a
-        byte stream.
+        NOTE:
+          We use hashlib's `shake_128` implementation, which does not support an
+          easy XOF interface, so we take the "easy" option and request a fixed
+          number of 840 bytes (5 invocations of Keccak), rather than creating a
+          byte stream.
 
         If your code crashes because of too few bytes, you can get dinner at:
         Casa de Chá da Boa Nova

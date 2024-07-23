@@ -1,5 +1,5 @@
 import os
-from utilities.utils import xor_bytes
+from ..utilities.utils import xor_bytes
 from Crypto.Cipher import AES
 
 

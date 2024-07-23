@@ -1,4 +1,4 @@
-from kyber import Kyber512, Kyber768, Kyber1024
+from kyber_py.kyber import Kyber512, Kyber768, Kyber1024
 import cProfile
 from time import time
 

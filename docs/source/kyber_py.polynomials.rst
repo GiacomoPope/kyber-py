@@ -1,21 +1,21 @@
-kyber\-py.polynomials package
+kyber\_py.polynomials package
 =============================
 
 Submodules
 ----------
 
-kyber\-py.polynomials.polynomials module
+kyber\_py.polynomials.polynomials module
 ----------------------------------------
 
-.. automodule:: kyber-py.polynomials.polynomials
+.. automodule:: kyber_py.polynomials.polynomials
    :members:
    :undoc-members:
    :show-inheritance:
 
-kyber\-py.polynomials.polynomials\_generic module
+kyber\_py.polynomials.polynomials\_generic module
 -------------------------------------------------
 
-.. automodule:: kyber-py.polynomials.polynomials_generic
+.. automodule:: kyber_py.polynomials.polynomials_generic
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ kyber\-py.polynomials.polynomials\_generic module
 Module contents
 ---------------
 
-.. automodule:: kyber-py.polynomials
+.. automodule:: kyber_py.polynomials
    :members:
    :undoc-members:
    :show-inheritance:

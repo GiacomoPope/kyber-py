@@ -1,5 +1,5 @@
-from polynomials.polynomials_generic import PolynomialRing, Polynomial
-from utilities.utils import bytes_to_bits, bitstring_to_bytes
+from .polynomials_generic import PolynomialRing, Polynomial
+from ..utilities.utils import bytes_to_bits, bitstring_to_bytes
 
 
 class PolynomialRingKyber(PolynomialRing):
