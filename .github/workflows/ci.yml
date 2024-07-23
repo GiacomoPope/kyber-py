@@ -109,9 +109,9 @@ jobs:
       - name: Display installed python package versions
         run: |
           pip list || :
-      - name: Install pytest
+      - name: Install test requirements
         run: |
-          pip install pytest
+          pip install pytest coverage coveralls
       - name: Install build dependencies
         run: |
           pip install -r requirements.txt
@@ -120,47 +120,29 @@ jobs:
           pip list || :
       - name: Run unit tests
         run: |
-          pytest
-
+          coverage run --branch -m pytest
+      - name: Print collected coverage
+        run: |
+          coverage report
+      - name: Publish coverage to Coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.name }}
+          COVERALLS_PARALLEL: true
+          COVERALLS_SERVICE_NAME: github
+        run: |
+          coveralls
   coveralls:
+    name: Indicate completion to coveralls
+    needs: test
     runs-on: ubuntu-latest
+    container: python:3-slim
     steps:
-
-    - uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Display Python version
-      run: python -c "import sys; print(sys.version)"
-    
-    - name: Display installed python package versions
+    - name: Install coveralls
       run: |
-        pip list || :
-    
-    - name: Install coverage
-      run: |
-        pip install coverage
-
-    - name: Install pytest
-      run: |
-        pip install pytest
-    
-    - name: Install build dependencies
-      run: |
-        pip install -r requirements.txt
-    
-    - name: Display installed python package versions
-      run: |
-        pip list || :
-
-    - name: Run unit tests with coverage
-      run: |
-        coverage run -m pytest
-  
-    - name: Report Coveralls
-      run: curl -sL https://coveralls.io/coveralls-linux.tar.gz | tar -xz && ./coveralls
+        pip3 install --upgrade coveralls
+    - name: Report to Coveralls
       env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_SERVICE_NAME: github
+      run: coveralls --finish
