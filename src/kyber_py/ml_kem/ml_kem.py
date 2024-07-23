@@ -33,8 +33,8 @@ class ML_KEM:
         try:
             from ..drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
-            self.drbg = AES256_CTR_DRBG(seed)
-            self.random_bytes = self.drbg.random_bytes
+            self._drbg = AES256_CTR_DRBG(seed)
+            self.random_bytes = self._drbg.random_bytes
         except ImportError as e:
             print(f"Error importing AES from pycryptodome: {e = }")
             print(
@@ -47,15 +47,15 @@ class ML_KEM:
 
         Note: currently requires pycryptodome for AES impl.
         """
-        if self.drbg is None:
+        if self._drbg is None:
             raise Warning(
                 "Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`"
             )
         else:
-            self.drbg.reseed(seed)
+            self._drbg.reseed(seed)
 
     @staticmethod
-    def xof(bytes32, i, j):
+    def _xof(bytes32, i, j):
         """
         XOF: B^* x B x B -> B*
 
@@ -79,7 +79,7 @@ class ML_KEM:
     # Pseudorandom function described between lines
     # 726 - 731
     @staticmethod
-    def prf(eta, s, b):
+    def _prf(eta, s, b):
         input_bytes = s + b
         if len(input_bytes) != 33:
             raise ValueError(
@@ -90,55 +90,55 @@ class ML_KEM:
     # Three hash functions described between lines
     # 741 - 750
     @staticmethod
-    def H(s):
+    def _H(s):
         return sha3_256(s).digest()
 
     @staticmethod
-    def J(s):
+    def _J(s):
         return shake_256(s).digest(32)
 
     @staticmethod
-    def G(s):
+    def _G(s):
         h = sha3_512(s).digest()
         return h[:32], h[32:]
 
-    def generate_matrix(self, rho, transpose=False):
+    def _generate_matrix(self, rho, transpose=False):
         A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
         for i in range(self.k):
             for j in range(self.k):
-                xof_bytes = self.xof(rho, bytes([j]), bytes([i]))
+                xof_bytes = self._xof(rho, bytes([j]), bytes([i]))
                 A_data[i][j] = self.R.parse(xof_bytes, is_ntt=True)
         A_hat = self.M(A_data, transpose=transpose)
         return A_hat
 
-    def generate_vector(self, sigma, eta, N):
+    def _generate_vector(self, sigma, eta, N):
         elements = [0 for _ in range(self.k)]
         for i in range(self.k):
-            prf_output = self.prf(eta, sigma, bytes([N]))
+            prf_output = self._prf(eta, sigma, bytes([N]))
             elements[i] = self.R.cbd(prf_output, eta)
             N += 1
         v = self.M.vector(elements)
         return v, N
 
-    def generate_polynomial(self, sigma, eta, N):
+    def _generate_polynomial(self, sigma, eta, N):
         """ """
-        prf_output = self.prf(eta, sigma, bytes([N]))
+        prf_output = self._prf(eta, sigma, bytes([N]))
         p = self.R.cbd(prf_output, eta)
         return p, N + 1
 
-    def pke_keygen(self):
+    def _pke_keygen(self):
         """
         Algorithm 12
         """
         d = self.random_bytes(32)
-        rho, sigma = self.G(d)
+        rho, sigma = self._G(d)
 
         # Generate A_hat from seed rho
-        A_hat = self.generate_matrix(rho)
+        A_hat = self._generate_matrix(rho)
 
         N = 0
-        s, N = self.generate_vector(sigma, self.eta_1, N)
-        e, N = self.generate_vector(sigma, self.eta_1, N)
+        s, N = self._generate_vector(sigma, self.eta_1, N)
+        e, N = self._generate_vector(sigma, self.eta_1, N)
 
         # TODO: we could convert to ntt form as we create the data
         # and skip this call to compute a new Matrix objects
@@ -154,7 +154,7 @@ class ML_KEM:
 
         return (ek_pke, dk_pke)
 
-    def pke_encrypt(self, ek_pke, m, r):
+    def _pke_encrypt(self, ek_pke, m, r):
         """
         Algorithm 13
         """
@@ -177,12 +177,12 @@ class ML_KEM:
         ), "Modulus check failed, t_hat does not encode correctly"
 
         # Generate A_hat^T from seed rho
-        A_hat = self.generate_matrix(rho, transpose=True)
+        A_hat = self._generate_matrix(rho, transpose=True)
 
         N = 0
-        r_vec, N = self.generate_vector(r, self.eta_1, N)
-        e1, N = self.generate_vector(r, self.eta_2, N)
-        e2, N = self.generate_polynomial(r, self.eta_2, N)
+        r_vec, N = self._generate_vector(r, self.eta_1, N)
+        e1, N = self._generate_vector(r, self.eta_2, N)
+        e2, N = self._generate_polynomial(r, self.eta_2, N)
 
         r_hat = r_vec.to_ntt()
 
@@ -197,7 +197,7 @@ class ML_KEM:
 
         return c1 + c2
 
-    def pke_decrypt(self, dk_pke, c):
+    def _pke_decrypt(self, dk_pke, c):
         """
         Algorithm 14
         """
@@ -219,10 +219,10 @@ class ML_KEM:
         Algorithm 15
         """
         z = self.random_bytes(32)
-        ek_pke, dk_pke = self.pke_keygen()
+        ek_pke, dk_pke = self._pke_keygen()
 
         ek = ek_pke
-        dk = dk_pke + ek + self.H(ek) + z
+        dk = dk_pke + ek + self._H(ek) + z
 
         return (ek, dk)
 
@@ -241,10 +241,10 @@ class ML_KEM:
 
         # Create random tokens
         m = self.random_bytes(32)
-        K, r = self.G(m + self.H(ek))
+        K, r = self._G(m + self._H(ek))
 
         # Perform the underlying pke encryption
-        c = self.pke_encrypt(ek, m, r)
+        c = self._pke_encrypt(ek, m, r)
 
         return (K, c)
 
@@ -270,12 +270,12 @@ class ML_KEM:
         z = dk[768 * self.k + 64 :]
 
         # Decrypt the ciphertext
-        m_prime = self.pke_decrypt(dk_pke, c)
+        m_prime = self._pke_decrypt(dk_pke, c)
 
         # Re-encrypt the recovered message
-        K_prime, r_prime = self.G(m_prime + h)
-        K_bar = self.J(z + c)
-        c_prime = self.pke_encrypt(ek_pke, m_prime, r_prime)
+        K_prime, r_prime = self._G(m_prime + h)
+        K_bar = self._J(z + c)
+        c_prime = self._pke_encrypt(ek_pke, m_prime, r_prime)
 
         # If c != c_prime, return K_bar as garbage
         return select_bytes(K_bar, K_prime, c == c_prime)
