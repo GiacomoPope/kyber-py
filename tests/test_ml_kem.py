@@ -1,4 +1,6 @@
 import unittest
+from itertools import islice
+import pytest
 from kyber_py.ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
 from kyber_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
@@ -58,74 +60,82 @@ class TestML_KEM(unittest.TestCase):
         self.generic_test_ML_KEM(ML_KEM256, 5)
 
 
-class TestKnownTestValues(unittest.TestCase):
-    def generic_test_mlkem_known_answer(self, ML_KEM, filename):
-        # Set DRBG to generate seeds
-        # https://github.com/post-quantum-cryptography/KAT/tree/main/MLKEM
-        entropy_input = bytes.fromhex(
-            "60496cd0a12512800a79161189b055ac3996ad24e578d3c5fc57c1e60fa2eb4e550d08e51e9db7b67f1a616681d9182d"
-        )
-        rng = AES256_CTR_DRBG(entropy_input)
+# As there are 1000 KATs in the file, execution of all of them takes
+# a lot of time, run just 100
+KEM_LIMIT = 100
 
-        # Parse the KAT file data
-        kat_data_blocks = read_kat_data(filename)
-        parsed_data = parse_kat_data(kat_data_blocks)
 
-        # Only test the first 100 for now, running all 1000 is overkill
-        # for us as it's pretty slow (~165 seconds)
-        for count in range(100):
-            # Obtain the kat data for the count
-            data = parsed_data[count]
+def data_parse(filename):
+    # Set DRBG to generate seeds
+    # https://github.com/post-quantum-cryptography/KAT/tree/main/MLKEM
+    entropy_input = bytes.fromhex(
+        "60496cd0a12512800a79161189b055ac3996ad24e578d3c5fc57c1"
+        "e60fa2eb4e550d08e51e9db7b67f1a616681d9182d"
+    )
+    rng = AES256_CTR_DRBG(entropy_input)
 
-            # Set the seed and check it matches the KAT
-            seed = rng.random_bytes(48)
-            self.assertEqual(seed, data["seed"])
+    # Parse the KAT file data
+    kat_data_blocks = read_kat_data(filename)
+    parsed_data = parse_kat_data(kat_data_blocks)
+    return [
+        (rng.random_bytes(48), i)
+        for i in islice(parsed_data.values(), KEM_LIMIT)
+    ]
 
-            # Check that the three chunks of 32 random bytes match
-            ML_KEM.set_drbg_seed(seed)
 
-            z = ML_KEM.random_bytes(32)
-            d = ML_KEM.random_bytes(32)
-            msg = ML_KEM.random_bytes(32)
-            self.assertEqual(z, data["z"])
-            self.assertEqual(d, data["d"])
-            self.assertEqual(msg, data["msg"])
+@pytest.mark.parametrize(
+    "ML_KEM, seed, kat_vals",
+    [
+        (kem, seed, param)
+        for kem, filename in [
+            (ML_KEM128, "assets/kat_MLKEM_512.rsp"),
+            (ML_KEM192, "assets/kat_MLKEM_768.rsp"),
+            (ML_KEM256, "assets/kat_MLKEM_1024.rsp"),
+        ]
+        for seed, param in data_parse(filename)
+    ],
+    ids=[
+        f"{kem}-test-{num}"
+        for kem in ["ML-KEM-512", "ML-KEM-768", "ML-KEM-1024"]
+        for num in range(KEM_LIMIT)
+    ],
+)
+def test_mlkem_known_answer(ML_KEM, seed, kat_vals):
+    data = kat_vals
 
-            # Reset the seed
-            ML_KEM.set_drbg_seed(seed)
+    # Set the seed and check it matches the KAT
+    assert seed == data["seed"]
 
-            # Assert keygen matches
-            ek, dk = ML_KEM.keygen()
-            self.assertEqual(ek, data["pk"])
-            self.assertEqual(dk, data["sk"])
+    # Check that the three chunks of 32 random bytes match
+    ML_KEM.set_drbg_seed(seed)
 
-            # Assert encapsulation matches
-            K, c = ML_KEM.encaps(ek)
-            self.assertEqual(K, data["ss"])
-            self.assertEqual(c, data["ct"])
+    z = ML_KEM.random_bytes(32)
+    d = ML_KEM.random_bytes(32)
+    msg = ML_KEM.random_bytes(32)
+    assert z == data["z"]
+    assert d == data["d"]
+    assert msg == data["msg"]
 
-            # Assert decapsulation matches
-            _K = ML_KEM.decaps(c, dk)
-            self.assertEqual(_K, data["ss"])
+    # Reset the seed
+    ML_KEM.set_drbg_seed(seed)
 
-            # Assert decapsulation with faulty ciphertext
-            ss_n = ML_KEM.decaps(data["ct_n"], dk)
-            self.assertEqual(ss_n, data["ss_n"])
+    # Assert keygen matches
+    ek, dk = ML_KEM.keygen()
+    assert ek == data["pk"]
+    assert dk == data["sk"]
 
-    def test_mlkem_512_known_answer(self):
-        return self.generic_test_mlkem_known_answer(
-            ML_KEM128, "assets/kat_MLKEM_512.rsp"
-        )
+    # Assert encapsulation matches
+    K, c = ML_KEM.encaps(ek)
+    assert K == data["ss"]
+    assert c == data["ct"]
 
-    def test_mlkem_768_known_answer(self):
-        return self.generic_test_mlkem_known_answer(
-            ML_KEM192, "assets/kat_MLKEM_768.rsp"
-        )
+    # Assert decapsulation matches
+    _K = ML_KEM.decaps(c, dk)
+    assert _K == data["ss"]
 
-    def test_mlkem_1024_known_answer(self):
-        return self.generic_test_mlkem_known_answer(
-            ML_KEM256, "assets/kat_MLKEM_1024.rsp"
-        )
+    # Assert decapsulation with faulty ciphertext
+    ss_n = ML_KEM.decaps(data["ct_n"], dk)
+    assert ss_n == data["ss_n"]
 
 
 if __name__ == "__main__":
