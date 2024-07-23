@@ -7,6 +7,41 @@ on:
   pull_request:
 
 jobs:
+  docs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+      - name: Verify git status
+        run: |
+          git status
+          git remote -v
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Install build dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Install docs dependencies
+        run: |
+          pip install Sphinx -r docs/requirements.txt
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Check docs
+        run: |
+          pushd docs
+          # -W for turn warnings into errors
+          # --keep-going to not abort on first error
+          # -n for nitpicky
+          make html SPHINXOPTS="-W --keep-going -n"
   code-format:
     runs-on: ubuntu-latest
     steps:
@@ -17,7 +52,7 @@ jobs:
         run: |
           git status
           git remote -v
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"

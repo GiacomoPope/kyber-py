@@ -59,12 +59,11 @@ class ML_KEM:
         """
         XOF: B^* x B x B -> B*
 
-        NOTE::
-
-        We use hashlib's `shake_128` implementation, which does not support an
-        easy XOF interface, so we take the "easy" option and request a fixed
-        number of 840 bytes (5 invocations of Keccak), rather than creating a
-        byte stream.
+        NOTE:
+          We use hashlib's `shake_128` implementation, which does not support an
+          easy XOF interface, so we take the "easy" option and request a fixed
+          number of 840 bytes (5 invocations of Keccak), rather than creating a
+          byte stream.
 
         If your code crashes because of too few bytes, you can get dinner at:
         Casa de Chá da Boa Nova
