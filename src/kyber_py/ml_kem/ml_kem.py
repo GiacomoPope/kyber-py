@@ -1,3 +1,7 @@
+"""
+The implementation of ML-KEM from FIPS 203-ipd
+"""
+
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
 from ..modules.modules import ModuleKyber
@@ -6,6 +10,13 @@ from ..utilities.utils import select_bytes
 
 class ML_KEM:
     def __init__(self, params, seed=None):
+        """
+        Initialise the ML-KEM with specified lattice parameters.
+
+        :param dict params: the lattice parameters
+        :param bytes seed: the optional seed for a DRBG, must be unique and
+          unpredictable
+        """
         # ml-kem params
         self.k = params["k"]
         self.eta_1 = params["eta_1"]
@@ -25,10 +36,17 @@ class ML_KEM:
 
     def set_drbg_seed(self, seed):
         """
-        Setting the seed switches the entropy source
-        from os.urandom to AES256 CTR DRBG
+        Change entropy source to a DRBG and seed it with provided value.
 
-        Note: currently requires pycryptodome for AES impl.
+        Setting the seed switches the entropy source
+        from :func:`os.urandom()` to an AES256 CTR DRBG.
+
+        Not recommended, exists mostly for testing against official KATs.
+
+        Note:
+          currently requires pycryptodome for AES impl.
+
+        :param bytes seed: random bytes to seed the DRBG with
         """
         try:
             from ..drbg.aes256_ctr_drbg import AES256_CTR_DRBG
@@ -45,7 +63,10 @@ class ML_KEM:
         """
         Reseeds the DRBG, errors if a DRBG is not set.
 
-        Note: currently requires pycryptodome for AES impl.
+        Note:
+          currently requires pycryptodome for AES impl.
+
+        :param bytes seed: random bytes to use as a new seed of the DRBG
         """
         if self._drbg is None:
             raise Warning(
@@ -60,14 +81,14 @@ class ML_KEM:
         XOF: B^* x B x B -> B*
 
         NOTE:
-          We use hashlib's `shake_128` implementation, which does not support an
-          easy XOF interface, so we take the "easy" option and request a fixed
-          number of 840 bytes (5 invocations of Keccak), rather than creating a
-          byte stream.
+          We use hashlib's ``shake_128`` implementation, which does not support
+          an easy XOF interface, so we take the "easy" option and request a
+          fixed number of 840 bytes (5 invocations of Keccak), rather than
+          creating a byte stream.
 
-        If your code crashes because of too few bytes, you can get dinner at:
-        Casa de Chá da Boa Nova
-        https://cryptojedi.org/papers/terminate-20230516.pdf
+          If your code crashes because of too few bytes, you can get dinner at:
+          Casa de Chá da Boa Nova
+          https://cryptojedi.org/papers/terminate-20230516.pdf
         """
         input_bytes = bytes32 + i + j
         if len(input_bytes) != 34:
@@ -216,7 +237,12 @@ class ML_KEM:
 
     def keygen(self):
         """
-        Algorithm 15
+        Generate a pair or encapsulation key and decapsulation keys.
+
+        Algorithm 15 in FIPS 203-ipd
+
+        :return: Tuple with encapsulation key and decapsulation key.
+        :rtype: tuple(bytes, bytes)
         """
         z = self.random_bytes(32)
         ek_pke, dk_pke = self._pke_keygen()
@@ -228,7 +254,13 @@ class ML_KEM:
 
     def encaps(self, ek):
         """
-        Algorithm 16
+        Generate a random key, encapsulate it, return both it and ciphertext.
+
+        Algorithm 16 in FIPS 203-ipd
+
+        :param bytes ek: byte-encoded encapsulation key
+        :return: a random key and an encapsulation of it
+        :rtype: tuple(bytes, bytes)
         """
         # NOTE: ML-KEM requires input validation before returning the result of
         # encapsulation. These are performed by the following two checks:
@@ -250,7 +282,14 @@ class ML_KEM:
 
     def decaps(self, c, dk):
         """
-        Algorithm 17
+        Decapsulate a key from a ciphertext using a decapsulation key.
+
+        Algorithm 17 in FIPS 203-ipd
+
+        :param bytes c: ciphertext with an encapsulated key
+        :param bytes dk: decapsulation key
+        :return: decapsulated key
+        :rtype: bytes
         """
         # NOTE: ML-KEM requires input validation before returning the result of
         # decapsulation. These are performed by the following two checks:
