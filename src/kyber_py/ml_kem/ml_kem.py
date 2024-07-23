@@ -38,10 +38,11 @@ class ML_KEM:
         """
         Change entropy source to a DRBG and seed it with provided value.
 
-        Setting the seed switches the entropy source
-        from :func:`os.urandom()` to an AES256 CTR DRBG.
+        Setting the seed switches the entropy source from :func:`os.urandom()`
+        to an AES256 CTR DRBG.
 
-        Not recommended, exists mostly for testing against official KATs.
+        Used for both deterministic versions of ML-KEM as well as testing
+        alignment with the KAT vectors
 
         Note:
           currently requires pycryptodome for AES impl.
@@ -97,10 +98,12 @@ class ML_KEM:
             )
         return shake_128(input_bytes).digest(840)
 
-    # Pseudorandom function described between lines
-    # 726 - 731
     @staticmethod
     def _prf(eta, s, b):
+        """
+        Pseudorandom function described between lines 726 - 731 of in FIPS
+        203-ipd
+        """
         input_bytes = s + b
         if len(input_bytes) != 33:
             raise ValueError(
@@ -109,7 +112,7 @@ class ML_KEM:
         return shake_256(input_bytes).digest(eta * 64)
 
     # Three hash functions described between lines
-    # 741 - 750
+    # 741 - 750 in FIPS 203-ipd
     @staticmethod
     def _H(s):
         return sha3_256(s).digest()
@@ -123,7 +126,14 @@ class ML_KEM:
         h = sha3_512(s).digest()
         return h[:32], h[32:]
 
-    def _generate_matrix(self, rho, transpose=False):
+    def _generate_matrix_from_seed(self, rho, transpose=False):
+        """
+        Helper function which generates a element of size
+        k x k from a seed `rho`.
+
+        When `transpose` is set to True, the matrix A is
+        built as the transpose.
+        """
         A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
         for i in range(self.k):
             for j in range(self.k):
@@ -132,7 +142,11 @@ class ML_KEM:
         A_hat = self.M(A_data, transpose=transpose)
         return A_hat
 
-    def _generate_vector(self, sigma, eta, N):
+    def _generate_error_vector(self, sigma, eta, N):
+        """
+        Helper function which generates a element in the
+        module from the Centered Binomial Distribution.
+        """
         elements = [0 for _ in range(self.k)]
         for i in range(self.k):
             prf_output = self._prf(eta, sigma, bytes([N]))
@@ -155,15 +169,17 @@ class ML_KEM:
         rho, sigma = self._G(d)
 
         # Generate A_hat from seed rho
-        A_hat = self._generate_matrix(rho)
+        A_hat = self._generate_matrix_from_seed(rho)
 
+        # Set counter for PRF
         N = 0
-        s, N = self._generate_vector(sigma, self.eta_1, N)
-        e, N = self._generate_vector(sigma, self.eta_1, N)
 
-        # TODO: we could convert to ntt form as we create the data
-        # and skip this call to compute a new Matrix objects
+        # Generate the error vector s ∈ R^k
+        s, N = self._generate_error_vector(sigma, self.eta_1, N)
         s_hat = s.to_ntt()
+
+        # Generate the error vector e ∈ R^k
+        e, N = self._generate_error_vector(sigma, self.eta_1, N)
         e_hat = e.to_ntt()
 
         # Compute public value (in NTT form)
@@ -198,16 +214,16 @@ class ML_KEM:
         ), "Modulus check failed, t_hat does not encode correctly"
 
         # Generate A_hat^T from seed rho
-        A_hat = self._generate_matrix(rho, transpose=True)
+        A_hat_T = self._generate_matrix_from_seed(rho, transpose=True)
 
         N = 0
-        r_vec, N = self._generate_vector(r, self.eta_1, N)
-        e1, N = self._generate_vector(r, self.eta_2, N)
+        r_vec, N = self._generate_error_vector(r, self.eta_1, N)
+        e1, N = self._generate_error_vector(r, self.eta_2, N)
         e2, N = self._generate_polynomial(r, self.eta_2, N)
 
         r_hat = r_vec.to_ntt()
 
-        u = (A_hat @ r_hat).from_ntt() + e1
+        u = (A_hat_T @ r_hat).from_ntt() + e1
 
         mu = self.R.decode(m, 1).decompress(1)
         v = t_hat.dot(r_hat).from_ntt() + e2 + mu
@@ -237,7 +253,7 @@ class ML_KEM:
 
     def keygen(self):
         """
-        Generate a pair or encapsulation key and decapsulation keys.
+        Generate a public encapsulation key and private decapsulation key.
 
         Algorithm 15 in FIPS 203-ipd
 
@@ -317,4 +333,7 @@ class ML_KEM:
         c_prime = self._pke_encrypt(ek_pke, m_prime, r_prime)
 
         # If c != c_prime, return K_bar as garbage
+        # WARNING: for proper implementations, it is absolutely
+        # vital that the selection between the key and garbage is
+        # performed in constant time
         return select_bytes(K_bar, K_prime, c == c_prime)
