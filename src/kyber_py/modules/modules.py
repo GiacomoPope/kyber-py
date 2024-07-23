@@ -35,7 +35,7 @@ class MatrixKyber(Matrix):
         self.parent = parent
         self._data = matrix_data
         self._transpose = transpose
-        if not self.check_dimensions():
+        if not self._check_dimensions():
             raise ValueError("Inconsistent row lengths in matrix")
 
     def encode(self, d):
