@@ -70,30 +70,30 @@ class PolynomialRingKyber(PolynomialRing):
             coefficients[i] = (a - b) % 3329
         return self(coefficients, is_ntt=is_ntt)
 
-    def decode(self, input_bytes, l=None, is_ntt=False):
+    def decode(self, input_bytes, d, is_ntt=False):
         """
         Decode (Algorithm 3)
 
         decode: B^32l -> R_q
         """
-        if l is None:
-            l, check = divmod(8 * len(input_bytes), 256)
-            if check != 0:
-                raise ValueError(
-                    "input bytes must be a multiple of (polynomial degree) / 8"
-                )
+        # Ensure the value d is set correctly
+        if 256 * d != len(input_bytes) * 8:
+            raise ValueError(
+                f"input bytes must be a multiple of (polynomial degree) / 8, {256*d = }, {len(input_bytes)*8 = }"
+            )
+
+        # Set the modulus
+        if d == 12:
+            m = 3329
         else:
-            if 256 * l != len(input_bytes) * 8:
-                raise ValueError(
-                    f"input bytes must be a multiple of (polynomial degree) / 8, {256*l = }, {len(input_bytes)*8 = }"
-                )
-        coefficients = [0 for _ in range(256)]
+            m = 2**d
+
+        # Parse the bits into coefficents of the polynomial
+        coeffs = [0 for _ in range(256)]
         list_of_bits = bytes_to_bits(input_bytes)
         for i in range(256):
-            coefficients[i] = sum(
-                list_of_bits[i * l + j] << j for j in range(l)
-            )
-        return self(coefficients, is_ntt=is_ntt)
+            coeffs[i] = sum(list_of_bits[i * d + j] << j for j in range(d)) % m
+        return self(coeffs, is_ntt=is_ntt)
 
     def __call__(self, coefficients, is_ntt=False):
         if not is_ntt:
@@ -115,13 +115,11 @@ class PolynomialKyber(Polynomial):
         self.parent = parent
         self.coeffs = self.parse_coefficients(coefficients)
 
-    def encode(self, l=None):
+    def encode(self, d):
         """
         Encode (Inverse of Algorithm 3)
         """
-        if l is None:
-            l = max(x.bit_length() for x in self.coeffs)
-        bit_string = "".join(format(c, f"0{l}b")[::-1] for c in self.coeffs)
+        bit_string = "".join(format(c, f"0{d}b")[::-1] for c in self.coeffs)
         return bitstring_to_bytes(bit_string)
 
     def compress_ele(self, x, d):
