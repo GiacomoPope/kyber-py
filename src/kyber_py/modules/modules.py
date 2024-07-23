@@ -7,20 +7,13 @@ class ModuleKyber(Module):
         self.ring = PolynomialRingKyber()
         self.matrix = MatrixKyber
 
-    def decode_vector(self, input_bytes, k, l=None, is_ntt=False):
-        if l is None:
-            # Input length must be 32*l*k bytes long
-            l, check = divmod(8 * len(input_bytes), self.ring.n * k)
-            if check != 0:
-                raise ValueError(
-                    "input bytes must be a multiple of (polynomial degree) / 8"
-                )
-        else:
-            if self.ring.n * l * k > len(input_bytes) * 8:
-                raise ValueError("Byte length is too short for given l")
+    def decode_vector(self, input_bytes, k, d, is_ntt=False):
+
+        if self.ring.n * d * k > len(input_bytes) * 8:
+            raise ValueError("Byte length is too short for given l")
 
         # Bytes needed to decode a polynomial
-        chunk_length = 32 * l
+        chunk_length = 32 * d
 
         # Break input_bytes into blocks of length chunk_length
         poly_bytes = [
@@ -31,8 +24,7 @@ class ModuleKyber(Module):
         # Encode each chunk of bytes as a polynomial, we iterate only the first k elements in case we've
         # been sent too many bytes to decode for the vector
         elements = [
-            self.ring.decode(poly_bytes[i], l=l, is_ntt=is_ntt)
-            for i in range(k)
+            self.ring.decode(poly_bytes[i], d, is_ntt=is_ntt) for i in range(k)
         ]
 
         return self.vector(elements)
@@ -46,11 +38,11 @@ class MatrixKyber(Matrix):
         if not self.check_dimensions():
             raise ValueError("Inconsistent row lengths in matrix")
 
-    def encode(self, l=None):
+    def encode(self, d):
         output = b""
         for row in self._data:
             for ele in row:
-                output += ele.encode(l=l)
+                output += ele.encode(d)
         return output
 
     def compress(self, d):
