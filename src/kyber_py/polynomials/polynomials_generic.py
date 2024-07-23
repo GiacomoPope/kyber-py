@@ -154,7 +154,7 @@ class Polynomial:
         return self.parent(new_coeffs)
 
     def __rsub__(self, other):
-        return self.__sub__(other)
+        return -self.__sub__(other)
 
     def __isub__(self, other):
         self = self - other
