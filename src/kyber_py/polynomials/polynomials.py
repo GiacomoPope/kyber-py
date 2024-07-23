@@ -113,7 +113,7 @@ class PolynomialRingKyber(PolynomialRing):
 class PolynomialKyber(Polynomial):
     def __init__(self, parent, coefficients):
         self.parent = parent
-        self.coeffs = self.parse_coefficients(coefficients)
+        self.coeffs = self._parse_coefficients(coefficients)
 
     def encode(self, d):
         """
@@ -188,7 +188,7 @@ class PolynomialKyber(Polynomial):
 class PolynomialKyberNTT(PolynomialKyber):
     def __init__(self, parent, coefficients):
         self.parent = parent
-        self.coeffs = self.parse_coefficients(coefficients)
+        self.coeffs = self._parse_coefficients(coefficients)
 
     def to_ntt(self):
         raise TypeError(f"Polynomial is of type: {type(self)}")
