@@ -1,13 +1,13 @@
-kyber\-py.utilities package
+kyber\_py.utilities package
 ===========================
 
 Submodules
 ----------
 
-kyber\-py.utilities.utils module
+kyber\_py.utilities.utils module
 --------------------------------
 
-.. automodule:: kyber-py.utilities.utils
+.. automodule:: kyber_py.utilities.utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ kyber\-py.utilities.utils module
 Module contents
 ---------------
 
-.. automodule:: kyber-py.utilities
+.. automodule:: kyber_py.utilities
    :members:
    :undoc-members:
    :show-inheritance:

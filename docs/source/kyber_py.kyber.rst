@@ -1,21 +1,21 @@
-kyber\-py.kyber package
+kyber\_py.kyber package
 =======================
 
 Submodules
 ----------
 
-kyber\-py.kyber.default\_parameters module
+kyber\_py.kyber.default\_parameters module
 ------------------------------------------
 
-.. automodule:: kyber-py.kyber.default_parameters
+.. automodule:: kyber_py.kyber.default_parameters
    :members:
    :undoc-members:
    :show-inheritance:
 
-kyber\-py.kyber.kyber module
+kyber\_py.kyber.kyber module
 ----------------------------
 
-.. automodule:: kyber-py.kyber.kyber
+.. automodule:: kyber_py.kyber.kyber
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ kyber\-py.kyber.kyber module
 Module contents
 ---------------
 
-.. automodule:: kyber-py.kyber
+.. automodule:: kyber_py.kyber
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,6 +1,6 @@
 import unittest
-from ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
-from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
+from kyber_py.ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
+from kyber_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
 
 def read_kat_data(file_name):

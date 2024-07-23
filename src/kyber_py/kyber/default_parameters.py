@@ -1,4 +1,4 @@
-from kyber.kyber import Kyber
+from .kyber import Kyber
 
 DEFAULT_PARAMETERS = {
     "kyber_512": {

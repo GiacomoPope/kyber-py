@@ -88,7 +88,7 @@ use:
 #### Example
 
 ```python
->>> from ml_kem import ML_KEM128
+>>> from kyber_py.ml_kem import ML_KEM128
 >>> ek, dk = ML_KEM128.keygen()
 >>> key, ct = ML_KEM128.encaps(ek)
 >>> _key = ML_KEM128.decaps(ct, dk)
@@ -119,7 +119,7 @@ use:
 #### Example
 
 ```python
->>> from kyber import Kyber512
+>>> from kyber_py.kyber import Kyber512
 >>> pk, sk = Kyber512.keygen()
 >>> key, c = Kyber512.encaps(pk)
 >>> _key = Kyber512.decaps(c, sk)
@@ -180,7 +180,7 @@ ring $R_{11} = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
 #### Example
 
 ```python
->>> from polynomials.polynomials_generic import PolynomialRing
+>>> from kyber_py.polynomials.polynomials_generic import PolynomialRing
 >>> R = PolynomialRing(11, 8)
 >>> x = R.gen()
 >>> f = 3*x**3 + 4*x**7

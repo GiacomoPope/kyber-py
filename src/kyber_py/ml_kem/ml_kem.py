@@ -1,7 +1,7 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from modules.modules import ModuleKyber
-from utilities.utils import select_bytes
+from ..modules.modules import ModuleKyber
+from ..utilities.utils import select_bytes
 
 
 class ML_KEM:
@@ -31,7 +31,7 @@ class ML_KEM:
         Note: currently requires pycryptodome for AES impl.
         """
         try:
-            from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
+            from ..drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
             self.drbg = AES256_CTR_DRBG(seed)
             self.random_bytes = self.drbg.random_bytes

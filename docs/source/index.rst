@@ -14,7 +14,7 @@ for cryptographic exchange of keys.
    :maxdepth: 2
    :caption: Contents:
 
-   api
+   modules
 
 
 
