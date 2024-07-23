@@ -1,7 +1,7 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from modules.modules import ModuleKyber
-from utilities.utils import select_bytes
+from ..modules.modules import ModuleKyber
+from ..utilities.utils import select_bytes
 
 
 class Kyber:
@@ -30,7 +30,7 @@ class Kyber:
         Note: currently requires pycryptodome for AES impl.
         """
         try:
-            from drbg.aes256_ctr_drbg import AES256_CTR_DRBG
+            from ..drbg.aes256_ctr_drbg import AES256_CTR_DRBG
 
             self.drbg = AES256_CTR_DRBG(seed)
             self.random_bytes = self.drbg.random_bytes
@@ -289,9 +289,8 @@ class Kyber:
             c:  Ciphertext
 
         NOTE::
-
-        We switch the order of the output (c, K) as (K, c) to align encaps output
-        with FIPS 203.
+          We switch the order of the output (c, K) as (K, c) to align encaps
+          output with FIPS 203.
         """
         m = self.random_bytes(32)
         m_hash = self._h(m)

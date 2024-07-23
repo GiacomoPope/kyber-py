@@ -1,21 +1,21 @@
-kyber\-py.modules package
+kyber\_py.modules package
 =========================
 
 Submodules
 ----------
 
-kyber\-py.modules.modules module
+kyber\_py.modules.modules module
 --------------------------------
 
-.. automodule:: kyber-py.modules.modules
+.. automodule:: kyber_py.modules.modules
    :members:
    :undoc-members:
    :show-inheritance:
 
-kyber\-py.modules.modules\_generic module
+kyber\_py.modules.modules\_generic module
 -----------------------------------------
 
-.. automodule:: kyber-py.modules.modules_generic
+.. automodule:: kyber_py.modules.modules_generic
    :members:
    :undoc-members:
    :show-inheritance:
@@ -23,7 +23,7 @@ kyber\-py.modules.modules\_generic module
 Module contents
 ---------------
 
-.. automodule:: kyber-py.modules
+.. automodule:: kyber_py.modules
    :members:
    :undoc-members:
    :show-inheritance:

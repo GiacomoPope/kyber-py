@@ -1,4 +1,4 @@
-from ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
+from kyber_py.ml_kem import ML_KEM128, ML_KEM192, ML_KEM256
 import cProfile
 from time import time
 

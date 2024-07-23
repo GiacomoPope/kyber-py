@@ -1,4 +1,4 @@
-from ml_kem.ml_kem import ML_KEM
+from .ml_kem import ML_KEM
 
 # TODO: we can only allow a user to select one of the following three
 # we should maybe put these into the class and only allow a user to

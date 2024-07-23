@@ -1,13 +1,13 @@
-kyber\-py.drbg package
+kyber\_py.drbg package
 ======================
 
 Submodules
 ----------
 
-kyber\-py.drbg.aes256\_ctr\_drbg module
+kyber\_py.drbg.aes256\_ctr\_drbg module
 ---------------------------------------
 
-.. automodule:: kyber-py.drbg.aes256_ctr_drbg
+.. automodule:: kyber_py.drbg.aes256_ctr_drbg
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ kyber\-py.drbg.aes256\_ctr\_drbg module
 Module contents
 ---------------
 
-.. automodule:: kyber-py.drbg
+.. automodule:: kyber_py.drbg
    :members:
    :undoc-members:
    :show-inheritance:
