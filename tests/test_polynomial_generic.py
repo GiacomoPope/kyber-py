@@ -92,8 +92,9 @@ class TestPolynomial(unittest.TestCase):
             self.assertEqual(f1 + f2, f2 + f1)
             self.assertEqual(f1 + (f2 + f3), (f1 + f2) + f3)
 
-            f1 += zero
-            self.assertEqual(f1, f1)
+            f2 = f1
+            f2 += zero
+            self.assertEqual(f1, f2)
 
     def test_sub_polynomials(self):
         zero = self.R(0)
@@ -109,8 +110,9 @@ class TestPolynomial(unittest.TestCase):
             self.assertEqual(f1 - f2, -(f2 - f1))
             self.assertEqual(f1 - (f2 - f3), (f1 - f2) + f3)
 
-            f1 -= zero
-            self.assertEqual(f1, f1)
+            f2 = f1
+            f2 -= zero
+            self.assertEqual(f1, f2)
 
     def test_mul_polynomials(self):
         zero = self.R(0)
@@ -127,8 +129,9 @@ class TestPolynomial(unittest.TestCase):
             self.assertEqual(2 * f1, f1 + f1)
             self.assertEqual(2 * f1, f1 * 2)
 
-            f1 *= one
-            self.assertEqual(f1, f1)
+            f2 = f1
+            f2 *= one
+            self.assertEqual(f1, f2)
 
     def test_pow_polynomials(self):
         one = self.R(1)
