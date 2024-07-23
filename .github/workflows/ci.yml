@@ -7,6 +7,60 @@ on:
   pull_request:
 
 jobs:
+  benchmark-kyber:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+      - name: Verify git status
+        run: |
+          git status
+          git remote -v
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Install build dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Run kyber benchmark
+        run: PYTHONPATH=src python benchmarks/benchmark_kyber.py
+  benchmark-ml-kem:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+      - name: Verify git status
+        run: |
+          git status
+          git remote -v
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Install build dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Display installed python package versions
+        run: |
+          pip list || :
+      - name: Run ML-KEM benchmark
+        run: PYTHONPATH=src python benchmarks/benchmark_ml_kem.py
   docs-check:
     runs-on: ubuntu-latest
     steps:
