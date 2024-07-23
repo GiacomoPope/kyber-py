@@ -109,9 +109,9 @@ jobs:
       - name: Display installed python package versions
         run: |
           pip list || :
-      - name: Install pytest
+      - name: Install test requirements
         run: |
-          pip install pytest
+          pip install pytest coverage coveralls
       - name: Install build dependencies
         run: |
           pip install -r requirements.txt
@@ -120,4 +120,29 @@ jobs:
           pip list || :
       - name: Run unit tests
         run: |
-          pytest
+          coverage run --branch -m pytest
+      - name: Print collected coverage
+        run: |
+          coverage report
+      - name: Publish coverage to Coveralls
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.name }}
+          COVERALLS_PARALLEL: true
+          COVERALLS_SERVICE_NAME: github
+        run: |
+          coveralls
+  coveralls:
+    name: Indicate completion to coveralls
+    needs: test
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Install coveralls
+      run: |
+        pip3 install --upgrade coveralls
+    - name: Report to Coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        COVERALLS_SERVICE_NAME: github
+      run: coveralls --finish
