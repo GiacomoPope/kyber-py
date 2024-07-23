@@ -36,7 +36,7 @@ class PolynomialRing:
 class Polynomial:
     def __init__(self, parent, coefficients):
         self.parent = parent
-        self.coeffs = self.parse_coefficients(coefficients)
+        self.coeffs = self._parse_coefficients(coefficients)
 
     def is_zero(self):
         """
@@ -50,7 +50,7 @@ class Polynomial:
         """
         return all(c == 0 for c in self.coeffs[1:])
 
-    def parse_coefficients(self, coefficients):
+    def _parse_coefficients(self, coefficients):
         """
         Helper function which right pads with zeros
         to allow polynomial construction as
@@ -72,19 +72,19 @@ class Polynomial:
         self.coeffs = [c % self.parent.q for c in self.coeffs]
         return self
 
-    def add_mod_q(self, x, y):
+    def _add_mod_q(self, x, y):
         """
         add two coefficients modulo q
         """
         return (x + y) % self.parent.q
 
-    def sub_mod_q(self, x, y):
+    def _sub_mod_q(self, x, y):
         """
         sub two coefficients modulo q
         """
         return (x - y) % self.parent.q
 
-    def schoolbook_multiplication(self, other):
+    def _schoolbook_multiplication(self, other):
         """
         Naive implementation of polynomial multiplication
         suitible for all R_q = F_1[X]/(X^n + 1)
@@ -111,11 +111,12 @@ class Polynomial:
     def _add_(self, other):
         if isinstance(other, type(self)):
             new_coeffs = [
-                self.add_mod_q(x, y) for x, y in zip(self.coeffs, other.coeffs)
+                self._add_mod_q(x, y)
+                for x, y in zip(self.coeffs, other.coeffs)
             ]
         elif isinstance(other, int):
             new_coeffs = self.coeffs.copy()
-            new_coeffs[0] = self.add_mod_q(new_coeffs[0], other)
+            new_coeffs[0] = self._add_mod_q(new_coeffs[0], other)
         else:
             raise NotImplementedError(
                 "Polynomials can only be added to each other"
@@ -136,11 +137,12 @@ class Polynomial:
     def _sub_(self, other):
         if isinstance(other, type(self)):
             new_coeffs = [
-                self.sub_mod_q(x, y) for x, y in zip(self.coeffs, other.coeffs)
+                self._sub_mod_q(x, y)
+                for x, y in zip(self.coeffs, other.coeffs)
             ]
         elif isinstance(other, int):
             new_coeffs = self.coeffs.copy()
-            new_coeffs[0] = self.sub_mod_q(new_coeffs[0], other)
+            new_coeffs[0] = self._sub_mod_q(new_coeffs[0], other)
         else:
             raise NotImplementedError(
                 "Polynomials can only be subtracted from each other"
@@ -160,7 +162,7 @@ class Polynomial:
 
     def __mul__(self, other):
         if isinstance(other, type(self)):
-            new_coeffs = self.schoolbook_multiplication(other)
+            new_coeffs = self._schoolbook_multiplication(other)
         elif isinstance(other, int):
             new_coeffs = [(c * other) % self.parent.q for c in self.coeffs]
         else:
