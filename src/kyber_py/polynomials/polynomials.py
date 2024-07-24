@@ -1,3 +1,4 @@
+from ..utilities.utils import bit_count
 from .polynomials_generic import PolynomialRing, Polynomial
 
 
@@ -67,8 +68,8 @@ class PolynomialRingKyber(PolynomialRing):
         mask2 = (1 << 2 * eta) - 1
         for i in range(256):
             x = b_int & mask2
-            a = (x & mask).bit_count()
-            b = ((x >> eta) & mask).bit_count()
+            a = bit_count(x & mask)
+            b = bit_count((x >> eta) & mask)
             b_int >>= 2 * eta
             coefficients[i] = (a - b) % 3329
         return self(coefficients, is_ntt=is_ntt)

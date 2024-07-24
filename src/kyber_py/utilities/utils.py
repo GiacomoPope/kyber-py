@@ -1,3 +1,17 @@
+def bit_count(x):
+    """
+    Count the number of bits in x
+
+    Method to support old python as `x.bit_count()`
+    was released in Python 3.10 and we currently
+    support Python 3.9
+    """
+    try:
+        return x.bit_count()
+    except AttributeError:
+        return bin(x).count("1")
+
+
 def xor_bytes(a, b):
     """
     XOR two byte arrays, assume that they are
