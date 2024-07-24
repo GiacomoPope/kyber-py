@@ -90,14 +90,14 @@ use:
 #### Example
 
 ```python
->>> from kyber_py.ml_kem import ML_KEM128
->>> ek, dk = ML_KEM128.keygen()
->>> key, ct = ML_KEM128.encaps(ek)
->>> _key = ML_KEM128.decaps(ct, dk)
+>>> from kyber_py.ml_kem import ML_KEM_512
+>>> ek, dk = ML_KEM_512.keygen()
+>>> key, ct = ML_KEM_512.encaps(ek)
+>>> _key = ML_KEM_512.decaps(ct, dk)
 >>> assert key == _key
 ```
 
-The above example would also work with `ML_KEM192` and `ML_KEM256`.
+The above example would also work with `ML_KEM_768` and `ML_KEM_1024`.
 
 #### Benchmarks
 
