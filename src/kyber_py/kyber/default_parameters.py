@@ -24,8 +24,30 @@ DEFAULT_PARAMETERS = {
         "dv": 5,
     },
 }
+"""
+Lattice parameters for the Kyber key exchange.
+
+To be used for initialisation of :py:obj:`.Kyber` objects.
+"""
 
 # Initialise with default parameters for easy import
 Kyber512 = Kyber(DEFAULT_PARAMETERS["kyber_512"])
+"""
+Key exchange object that uses Kyber512 parameters internally.
+
+Provides about 128 bit level of security.
+"""
+
 Kyber768 = Kyber(DEFAULT_PARAMETERS["kyber_768"])
+"""
+Key exchange object that uses Kyber768 parameters internally.
+
+Provides about 192 bit level of security.
+"""
+
 Kyber1024 = Kyber(DEFAULT_PARAMETERS["kyber_1024"])
+"""
+Key exchange object that uses Kyber1024 parameters internally.
+
+Provides about 256 bit level of security.
+"""
