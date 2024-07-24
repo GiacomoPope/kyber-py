@@ -1,5 +1,5 @@
 from polynomials.polynomials_generic import PolynomialRing, Polynomial
-from utilities.utils import bytes_to_bits, bitstring_to_bytes
+from utilities.utils import Bytes, Bits
 
 
 class PolynomialRingKyber(PolynomialRing):
@@ -62,8 +62,10 @@ class PolynomialRingKyber(PolynomialRing):
         For Kyber, this is 64 eta.
         """
         assert 64 * eta == len(input_bytes)
+
+        input_bytes = Bytes(input_bytes)
         coefficients = [0 for _ in range(256)]
-        list_of_bits = bytes_to_bits(input_bytes)
+        list_of_bits = input_bytes.bits()
         for i in range(256):
             a = sum(list_of_bits[eta * 2 * i : eta * (2 * i + 1)])
             b = sum(list_of_bits[eta * (2 * i + 1) : eta * (2 * i + 2)])
@@ -76,6 +78,7 @@ class PolynomialRingKyber(PolynomialRing):
 
         decode: B^32l -> R_q
         """
+        input_bytes = Bytes(input_bytes)
         if l is None:
             l, check = divmod(8 * len(input_bytes), 256)
             if check != 0:
@@ -88,7 +91,7 @@ class PolynomialRingKyber(PolynomialRing):
                     f"input bytes must be a multiple of (polynomial degree) / 8, {256*l = }, {len(input_bytes)*8 = }"
                 )
         coefficients = [0 for _ in range(256)]
-        list_of_bits = bytes_to_bits(input_bytes)
+        list_of_bits = input_bytes.bits()
         for i in range(256):
             coefficients[i] = sum(
                 list_of_bits[i * l + j] << j for j in range(l)
@@ -122,7 +125,8 @@ class PolynomialKyber(Polynomial):
         if l is None:
             l = max(x.bit_length() for x in self.coeffs)
         bit_string = "".join(format(c, f"0{l}b")[::-1] for c in self.coeffs)
-        return bitstring_to_bytes(bit_string)
+        bit_string = Bits(bit_string)
+        return bit_string.bytes()
 
     def compress_ele(self, x, d):
         """
