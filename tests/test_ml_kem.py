@@ -136,7 +136,3 @@ def test_mlkem_known_answer(ML_KEM, seed, kat_vals):
     # Assert decapsulation with faulty ciphertext
     ss_n = ML_KEM.decaps(data["ct_n"], dk)
     assert ss_n == data["ss_n"]
-
-
-if __name__ == "__main__":
-    unittest.main()

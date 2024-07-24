@@ -29,11 +29,7 @@ class ModuleKyber(Module):
 
 class MatrixKyber(Matrix):
     def __init__(self, parent, matrix_data, transpose=False):
-        self.parent = parent
-        self._data = matrix_data
-        self._transpose = transpose
-        if not self._check_dimensions():
-            raise ValueError("Inconsistent row lengths in matrix")
+        super().__init__(parent, matrix_data, transpose=transpose)
 
     def encode(self, d):
         output = b""

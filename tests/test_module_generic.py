@@ -182,7 +182,3 @@ class TestMatrix(unittest.TestCase):
         su = "[1 + 2*x, 3 + 4*x + 5*x^2 + 6*x^3]"
         self.assertEqual(str(A), sA)
         self.assertEqual(str(u), su)
-
-
-if __name__ == "__main__":
-    unittest.main()
