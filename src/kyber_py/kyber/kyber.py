@@ -295,7 +295,7 @@ class Kyber:
 
         :param bytes pk: byte-encoded public key
         :param int key_length: length of secret key, default value 32
-        :return: a random key and an public of it
+        :return: a random key and a ciphertext of it
         :rtype: tuple(bytes, bytes)
         """
         # Compute random message
