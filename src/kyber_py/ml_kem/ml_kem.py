@@ -49,7 +49,7 @@ class ML_KEM:
 
             self._drbg = AES256_CTR_DRBG(seed)
             self.random_bytes = self._drbg.random_bytes
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             print(f"Error importing AES from pycryptodome: {e = }")
             raise Warning(
                 "Cannot set DRBG seed due to missing dependencies, try installing requirements: pip -r install requirements"
@@ -173,9 +173,21 @@ class ML_KEM:
     def _pke_encrypt(self, ek_pke, m, r):
         """
         Algorithm 13
+
+        As well as performing the usual pke encryption, the FIPS document
+        requires two additional checks.
+
+        1. Type Check: The ek_pke is of the expected length
+        2. Modulus Check: That t_hat has been canonically encoded
         """
+        # These should always hold, as encaps() generates m, r and
+        # _pke_encrypt should never be called directly by a user
         assert len(m) == 32
         assert len(r) == 32
+
+        # First check if the encap key has the right length
+        if len(ek_pke) != 384 * self.k + 32:
+            raise ValueError("Type check failed, ek_pke has the wrong length")
 
         # Unpack ek
         t_hat_bytes, rho = ek_pke[:-32], ek_pke[-32:]
@@ -183,11 +195,7 @@ class ML_KEM:
         # Compute Polynomial from bytes
         t_hat = self.M.decode_vector(t_hat_bytes, self.k, 12, is_ntt=True)
 
-        # NOTE:
-        # Perform the input validation checks for ML-KEM
-        if len(ek_pke) != 384 * self.k + 32:
-            raise ValueError("Type check failed, ek_pke has the wrong length")
-
+        # Next check that t_hat has been canonically encoded
         if t_hat.encode(12) != t_hat_bytes:
             raise ValueError(
                 "Modulus check failed, t_hat does not encode correctly"

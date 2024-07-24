@@ -60,14 +60,16 @@ class TestPolynomial(unittest.TestCase):
             f1 = self.R.random_element()
             f2 = -f1
             self.assertEqual(f1, f1)
+            # We don't cover the case of f1 being zero, as it's incredibly unlikely to happen
             if f1.is_zero():
-                self.assertTrue(f1 == f2)
+                self.assertTrue(f1 == f2)  # pragma: no cover
             else:
                 self.assertFalse(f1 == f2)
 
         self.assertTrue(self.R(0) == 0)
         self.assertTrue(self.R(1) == self.R.q + 1)
         self.assertTrue(self.R(self.R.q - 1) == -1)
+        self.assertTrue(self.R(0) != 1)
         self.assertFalse(self.R(self.R.q - 1) == "a")
 
     def test_add_failure(self):

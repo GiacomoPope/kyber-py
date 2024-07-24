@@ -69,7 +69,8 @@ class AES256_CTR_DRBG:
         self.V = tmp[32:]
 
     def random_bytes(self, num_bytes, additional=None):
-        if self.reseed_ctr >= self.reseed_interval:
+        # We don't cover this in coverage as we would need to run the counter 2^48 times
+        if self.reseed_ctr >= self.reseed_interval:  # pragma: no cover
             raise Warning("The DRBG has been exhausted! Reseed!")
 
         # Set the optional additional information

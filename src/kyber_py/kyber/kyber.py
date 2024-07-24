@@ -44,7 +44,7 @@ class Kyber:
 
             self._drbg = AES256_CTR_DRBG(seed)
             self.random_bytes = self._drbg.random_bytes
-        except ImportError as e:
+        except ImportError as e:  # pragma: no cover
             print(f"Error importing AES from pycryptodome: {e = }")
             raise Warning(
                 "Cannot set DRBG seed due to missing dependencies, try installing requirements: pip -r install requirements"
