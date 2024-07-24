@@ -1,3 +1,4 @@
+[![License MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://github.com/GiacomoPope/kyber-py/blob/main/LICENSE)
 [![GitHub CI](https://github.com/GiacomoPope/kyber-py/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/GiacomoPope/kyber-py/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/kyber-py/badge/?version=latest)](https://kyber-py.readthedocs.io/en/latest/?badge=latest)
 [![Coverage Status](https://coveralls.io/repos/github/GiacomoPope/kyber-py/badge.svg?branch=main)](https://coveralls.io/github/GiacomoPope/kyber-py?branch=main)
