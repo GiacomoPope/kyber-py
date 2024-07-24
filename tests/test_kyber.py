@@ -34,8 +34,15 @@ class TestKyber(unittest.TestCase):
             pk, sk = Kyber.keygen()
             for _ in range(count):
                 key, c = Kyber.encaps(pk)
+
+                # Correct decaps works
                 _key = Kyber.decaps(c, sk)
                 self.assertEqual(key, _key)
+
+                # Incorrect ct does not work
+                _bad_ct = bytes([0] * len(c))
+                _bad = Kyber.decaps(_bad_ct, sk)
+                self.assertNotEqual(key, _bad)
 
     def test_kyber512(self):
         self.generic_test_kyber(Kyber512, 5)
@@ -45,6 +52,12 @@ class TestKyber(unittest.TestCase):
 
     def test_kyber1024(self):
         self.generic_test_kyber(Kyber1024, 5)
+
+    def test_xof_failure(self):
+        self.assertRaises(ValueError, lambda: Kyber512._xof(b"1", b"2", b"3"))
+
+    def test_prf_failure(self):
+        self.assertRaises(ValueError, lambda: Kyber512._prf(b"1", b"2", 32))
 
 
 class TestKyberDeterministic(unittest.TestCase):

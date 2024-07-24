@@ -46,25 +46,9 @@ class Kyber:
             self.random_bytes = self._drbg.random_bytes
         except ImportError as e:
             print(f"Error importing AES from pycryptodome: {e = }")
-            print(
-                "Have you tried installing requirements: pip -r install requirements"
-            )
-
-    def reseed_drbg(self, seed):
-        """
-        Reseeds the DRBG, errors if a DRBG is not set.
-
-        Note:
-          currently requires pycryptodome for AES impl.
-
-        :param bytes seed: random bytes to use as a new seed of the DRBG
-        """
-        if self._drbg is None:
             raise Warning(
-                "Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`"
+                "Cannot set DRBG seed due to missing dependencies, try installing requirements: pip -r install requirements"
             )
-        else:
-            self._drbg.reseed(seed)
 
     @staticmethod
     def _xof(bytes32, i, j):

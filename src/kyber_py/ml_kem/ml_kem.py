@@ -51,25 +51,9 @@ class ML_KEM:
             self.random_bytes = self._drbg.random_bytes
         except ImportError as e:
             print(f"Error importing AES from pycryptodome: {e = }")
-            print(
-                "Have you tried installing requirements: pip -r install requirements"
-            )
-
-    def reseed_drbg(self, seed):
-        """
-        Reseeds the DRBG, errors if a DRBG is not set.
-
-        Note:
-          currently requires pycryptodome for AES impl.
-
-        :param bytes seed: random bytes to use as a new seed of the DRBG
-        """
-        if self._drbg is None:
             raise Warning(
-                "Cannot reseed DRBG without first initialising. Try using `set_drbg_seed`"
+                "Cannot set DRBG seed due to missing dependencies, try installing requirements: pip -r install requirements"
             )
-        else:
-            self._drbg.reseed(seed)
 
     @staticmethod
     def _xof(bytes32, i, j):
@@ -201,12 +185,13 @@ class ML_KEM:
 
         # NOTE:
         # Perform the input validation checks for ML-KEM
-        assert (
-            len(ek_pke) == 384 * self.k + 32
-        ), "Type check failed, ek_pke has the wrong length"
-        assert (
-            t_hat.encode(12) == t_hat_bytes
-        ), "Modulus check failed, t_hat does not encode correctly"
+        if len(ek_pke) != 384 * self.k + 32:
+            raise ValueError("Type check failed, ek_pke has the wrong length")
+
+        if t_hat.encode(12) != t_hat_bytes:
+            raise ValueError(
+                "Modulus check failed, t_hat does not encode correctly"
+            )
 
         # Generate A_hat^T from seed rho
         A_hat_T = self._generate_matrix_from_seed(rho, transpose=True)
@@ -286,8 +271,14 @@ class ML_KEM:
         m = self.random_bytes(32)
         K, r = self._G(m + self._H(ek))
 
-        # Perform the underlying pke encryption
-        c = self._pke_encrypt(ek, m, r)
+        # Perform the underlying pke encryption, raises a ValueError if
+        # ek fails either the TypeCheck or ModulusCheck
+        try:
+            c = self._pke_encrypt(ek, m, r)
+        except ValueError as e:
+            raise ValueError(
+                f"Valildation of encapsulation key failed: {e = }"
+            )
 
         return (K, c)
 
@@ -325,6 +316,10 @@ class ML_KEM:
         # Re-encrypt the recovered message
         K_prime, r_prime = self._G(m_prime + h)
         K_bar = self._J(z + c)
+
+        # Here the public encapsulation key is read from the private
+        # key and so we never expect this to fail the TypeCheck or
+        # ModulusCheck
         c_prime = self._pke_encrypt(ek_pke, m_prime, r_prime)
 
         # If c != c_prime, return K_bar as garbage
