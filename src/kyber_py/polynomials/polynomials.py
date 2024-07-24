@@ -1,5 +1,4 @@
 from .polynomials_generic import PolynomialRing, Polynomial
-from ..utilities.utils import bytes_to_bits, bitstring_to_bytes
 
 
 class PolynomialRingKyber(PolynomialRing):
@@ -63,10 +62,14 @@ class PolynomialRingKyber(PolynomialRing):
         """
         assert 64 * eta == len(input_bytes)
         coefficients = [0 for _ in range(256)]
-        list_of_bits = bytes_to_bits(input_bytes)
+        b_int = int.from_bytes(input_bytes, "little")
+        mask = (1 << eta) - 1
+        mask2 = (1 << 2 * eta) - 1
         for i in range(256):
-            a = sum(list_of_bits[eta * 2 * i : eta * (2 * i + 1)])
-            b = sum(list_of_bits[eta * (2 * i + 1) : eta * (2 * i + 2)])
+            x = b_int & mask2
+            a = (x & mask).bit_count()
+            b = ((x >> eta) & mask).bit_count()
+            b_int >>= 2 * eta
             coefficients[i] = (a - b) % 3329
         return self(coefficients, is_ntt=is_ntt)
 
@@ -86,27 +89,15 @@ class PolynomialRingKyber(PolynomialRing):
         if d == 12:
             m = 3329
         else:
-            m = 2**d
+            m = 1 << d
 
-        # Helper values
-        tmp, idx = 0, 0
-        bit_index = 0
-        mask = (1 << d) - 1
         coeffs = [0 for _ in range(256)]
+        b_int = int.from_bytes(input_bytes, "little")
+        mask = (1 << d) - 1
+        for i in range(256):
+            coeffs[i] = (b_int & mask) % m
+            b_int >>= d
 
-        # Iterate through all bytes
-        for b in input_bytes:
-            tmp |= b << bit_index
-            bit_index += 8
-
-            while bit_index >= d:
-                # Set the coefficient
-                coeffs[idx] = (tmp & mask) % m
-
-                # Update helpers
-                bit_index -= d
-                tmp >>= d
-                idx += 1
         return self(coeffs, is_ntt=is_ntt)
 
     def __call__(self, coefficients, is_ntt=False):
@@ -133,8 +124,12 @@ class PolynomialKyber(Polynomial):
         """
         Encode (Inverse of Algorithm 3)
         """
-        bit_string = "".join(format(c, f"0{d}b")[::-1] for c in self.coeffs)
-        return bitstring_to_bytes(bit_string)
+        t = 0
+        for i in range(255):
+            t |= self.coeffs[256 - i - 1]
+            t <<= d
+        t |= self.coeffs[0]
+        return t.to_bytes(32 * d, "little")
 
     def _compress_ele(self, x, d):
         """
