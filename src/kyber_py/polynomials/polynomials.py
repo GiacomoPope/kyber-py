@@ -17,12 +17,12 @@ class PolynomialRingKyber(PolynomialRing):
 
         root_of_unity = 17
         self.ntt_zetas = [
-            pow(root_of_unity, self.br(i, 7), 3329) for i in range(128)
+            pow(root_of_unity, self._br(i, 7), 3329) for i in range(128)
         ]
         self.ntt_f = pow(128, -1, 3329)
 
     @staticmethod
-    def br(i, k):
+    def _br(i, k):
         """
         bit reversal of an unsigned k-bit integer
         """
@@ -105,7 +105,7 @@ class PolynomialRingKyber(PolynomialRing):
             return element(self, [coefficients])
         if not isinstance(coefficients, list):
             raise TypeError(
-                f"Polynomials should be constructed from a list of integers, of length at most d = {256}"
+                f"Polynomials should be constructed from a list of integers, of length at most n = {256}"
             )
         return element(self, coefficients)
 
@@ -122,7 +122,7 @@ class PolynomialKyber(Polynomial):
         bit_string = "".join(format(c, f"0{d}b")[::-1] for c in self.coeffs)
         return bitstring_to_bytes(bit_string)
 
-    def compress_ele(self, x, d):
+    def _compress_ele(self, x, d):
         """
         Compute round((2^d / q) * x) % 2^d
         """
@@ -130,7 +130,7 @@ class PolynomialKyber(Polynomial):
         y = (t * x + 1664) // 3329  # 1664 = 3329 // 2
         return y % t
 
-    def decompress_ele(self, x, d):
+    def _decompress_ele(self, x, d):
         """
         Compute round((q / 2^d) * x)
         """
@@ -143,7 +143,7 @@ class PolynomialKyber(Polynomial):
         Compress the polynomial by compressing each coefficient
         NOTE: This is lossy compression
         """
-        self.coeffs = [self.compress_ele(c, d) for c in self.coeffs]
+        self.coeffs = [self._compress_ele(c, d) for c in self.coeffs]
         return self
 
     def decompress(self, d):
@@ -153,7 +153,7 @@ class PolynomialKyber(Polynomial):
         x' = decompress(compress(x)), which x' != x, but is
         close in magnitude.
         """
-        self.coeffs = [self.decompress_ele(c, d) for c in self.coeffs]
+        self.coeffs = [self._decompress_ele(c, d) for c in self.coeffs]
         return self
 
     def to_ntt(self):
@@ -182,7 +182,7 @@ class PolynomialKyber(Polynomial):
         return self.parent(coeffs, is_ntt=True)
 
     def from_ntt(self):
-        raise TypeError(f"Polynomial is of type: {type(self)}")
+        raise TypeError(f"Polynomial not in the NTT domain: {type(self) = }")
 
 
 class PolynomialKyberNTT(PolynomialKyber):
@@ -191,7 +191,9 @@ class PolynomialKyberNTT(PolynomialKyber):
         self.coeffs = self._parse_coefficients(coefficients)
 
     def to_ntt(self):
-        raise TypeError(f"Polynomial is of type: {type(self)}")
+        raise TypeError(
+            f"Polynomial is already in the NTT domain: {type(self) = }"
+        )
 
     def from_ntt(self):
         """
@@ -222,7 +224,7 @@ class PolynomialKyberNTT(PolynomialKyber):
         return self.parent(coeffs, is_ntt=False)
 
     @staticmethod
-    def ntt_base_multiplication(a0, a1, b0, b1, zeta):
+    def _ntt_base_multiplication(a0, a1, b0, b1, zeta):
         """
         Base case for ntt multiplication
         """
@@ -230,18 +232,18 @@ class PolynomialKyberNTT(PolynomialKyber):
         r1 = (a1 * b0 + a0 * b1) % 3329
         return r0, r1
 
-    def ntt_coefficient_multiplication(self, f_coeffs, g_coeffs):
+    def _ntt_coefficient_multiplication(self, f_coeffs, g_coeffs):
         new_coeffs = []
         zetas = self.parent.ntt_zetas
         for i in range(64):
-            r0, r1 = self.ntt_base_multiplication(
+            r0, r1 = self._ntt_base_multiplication(
                 f_coeffs[4 * i + 0],
                 f_coeffs[4 * i + 1],
                 g_coeffs[4 * i + 0],
                 g_coeffs[4 * i + 1],
                 zetas[64 + i],
             )
-            r2, r3 = self.ntt_base_multiplication(
+            r2, r3 = self._ntt_base_multiplication(
                 f_coeffs[4 * i + 2],
                 f_coeffs[4 * i + 3],
                 g_coeffs[4 * i + 2],
@@ -251,15 +253,12 @@ class PolynomialKyberNTT(PolynomialKyber):
             new_coeffs += [r0, r1, r2, r3]
         return new_coeffs
 
-    def ntt_multiplication(self, other):
+    def _ntt_multiplication(self, other):
         """
         Number Theoretic Transform multiplication.
         Only implemented (currently) for n = 256
         """
-        if not isinstance(other, type(self)):
-            raise ValueError
-
-        new_coeffs = self.ntt_coefficient_multiplication(
+        new_coeffs = self._ntt_coefficient_multiplication(
             self.coeffs, other.coeffs
         )
         return new_coeffs
@@ -274,7 +273,7 @@ class PolynomialKyberNTT(PolynomialKyber):
 
     def __mul__(self, other):
         if isinstance(other, type(self)):
-            new_coeffs = self.ntt_multiplication(other)
+            new_coeffs = self._ntt_multiplication(other)
         elif isinstance(other, int):
             new_coeffs = [(c * other) % 3329 for c in self.coeffs]
         else:

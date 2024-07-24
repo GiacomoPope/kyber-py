@@ -1,6 +1,5 @@
 import unittest
 import os
-from itertools import islice
 import pytest
 from kyber_py.kyber import Kyber512, Kyber768, Kyber1024
 from kyber_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
@@ -143,13 +142,9 @@ def test_generic_kyber_known_answer(Kyber, seed, data):
 
     # Assert encapsulation matches
     ss, ct = Kyber.encaps(pk)
-    assert ct == data["ct"]
     assert ss == data["ss"]
+    assert ct == data["ct"]
 
     # Assert decapsulation matches
     _ss = Kyber.decaps(ct, sk)
-    assert ss == data["ss"]
-
-
-if __name__ == "__main__":
-    unittest.main()
+    assert _ss == data["ss"]
