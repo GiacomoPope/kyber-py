@@ -59,6 +59,37 @@ class TestML_KEM(unittest.TestCase):
     def test_ML_KEM_1024(self):
         self.generic_test_ML_KEM(ML_KEM_1024, 5)
 
+    def test_encaps_type_check_failure(self):
+        """
+        Send an ecaps key of the wrong length
+        """
+        self.assertRaises(ValueError, lambda: ML_KEM_512.encaps(b"1"))
+
+    def test_encaps_modulus_check_failure(self):
+        """
+        We create a vector of polynomials with non-canonical values for
+        coefficents to fail the modulus check
+        """
+        (ek, _) = ML_KEM_512.keygen()
+        rho = ek[-32:]
+
+        bad_f_hat = ML_KEM_512.R([3329] * 256)
+        bad_t_hat = ML_KEM_512.M.vector([bad_f_hat, bad_f_hat])
+        bad_t_hat_bytes = bad_t_hat.encode(12)
+
+        bad_ek = bad_t_hat_bytes + rho
+
+        self.assertEqual(len(bad_ek), len(ek))
+        self.assertRaises(ValueError, lambda: ML_KEM_512.encaps(bad_ek))
+
+    def test_xof_failure(self):
+        self.assertRaises(
+            ValueError, lambda: ML_KEM_512._xof(b"1", b"2", b"3")
+        )
+
+    def test_prf_failure(self):
+        self.assertRaises(ValueError, lambda: ML_KEM_512._prf(2, b"1", b"2"))
+
 
 # As there are 1000 KATs in the file, execution of all of them takes
 # a lot of time, run just 100
