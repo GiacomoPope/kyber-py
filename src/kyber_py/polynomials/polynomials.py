@@ -88,11 +88,25 @@ class PolynomialRingKyber(PolynomialRing):
         else:
             m = 2**d
 
-        # Parse the bits into coefficents of the polynomial
+        # Helper values
+        tmp, idx = 0, 0
+        bit_index = 0
+        mask = (1 << d) - 1
         coeffs = [0 for _ in range(256)]
-        list_of_bits = bytes_to_bits(input_bytes)
-        for i in range(256):
-            coeffs[i] = sum(list_of_bits[i * d + j] << j for j in range(d)) % m
+
+        # Iterate through all bytes
+        for b in input_bytes:
+            tmp |= b << bit_index
+            bit_index += 8
+
+            while bit_index >= d:
+                # Set the coefficient
+                coeffs[idx] = (tmp & mask) % m
+
+                # Update helpers
+                bit_index -= d
+                tmp >>= d
+                idx += 1
         return self(coeffs, is_ntt=is_ntt)
 
     def __call__(self, coefficients, is_ntt=False):

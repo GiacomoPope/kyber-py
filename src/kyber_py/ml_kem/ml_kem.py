@@ -187,7 +187,9 @@ class ML_KEM:
 
         # First check if the encap key has the right length
         if len(ek_pke) != 384 * self.k + 32:
-            raise ValueError("Type check failed, ek_pke has the wrong length")
+            raise ValueError(
+                f"Type check failed, ek_pke has the wrong length, expected {384 * self.k + 32} bytes and received {len(ek_pke)} b"
+            )
 
         # Unpack ek
         t_hat_bytes, rho = ek_pke[:-32], ek_pke[-32:]
