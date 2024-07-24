@@ -68,15 +68,6 @@ class AES256_CTR_DRBG:
         self.key = tmp[:32]
         self.V = tmp[32:]
 
-    def reseed(self, additional_information=b""):
-        """
-        Reseed the DRBG for when reseed_ctr hits the
-        limit.
-        """
-        seed_material = self.__instantiate(additional_information)
-        self.ctr_drbg_update(seed_material)
-        self.reseed_ctr = 1
-
     def random_bytes(self, num_bytes, additional=None):
         if self.reseed_ctr >= self.reseed_interval:
             raise Warning("The DRBG has been exhausted! Reseed!")
