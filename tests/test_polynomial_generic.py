@@ -68,6 +68,7 @@ class TestPolynomial(unittest.TestCase):
         self.assertTrue(self.R(0) == 0)
         self.assertTrue(self.R(1) == self.R.q + 1)
         self.assertTrue(self.R(self.R.q - 1) == -1)
+        self.assertFalse(self.R(self.R.q - 1) == "a")
 
     def test_add_failure(self):
         f1 = self.R.random_element()
@@ -153,9 +154,5 @@ class TestPolynomial(unittest.TestCase):
         self.assertEqual(str(self.R(1)), "1")
         self.assertEqual(str(self.R.gen()), "x")
         self.assertEqual(
-            str(self.R([1, 2, 3, 4, 5])), "1 + 2*x + 3*x^2 + 4*x^3 + 5*x^4"
+            str(self.R([1, 2, 3, 4, 1])), "1 + 2*x + 3*x^2 + 4*x^3 + x^4"
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

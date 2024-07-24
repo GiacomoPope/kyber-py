@@ -9,13 +9,11 @@ from ..utilities.utils import select_bytes
 
 
 class ML_KEM:
-    def __init__(self, params, seed=None):
+    def __init__(self, params):
         """
         Initialise the ML-KEM with specified lattice parameters.
 
         :param dict params: the lattice parameters
-        :param bytes seed: the optional seed for a DRBG, must be unique and
-          unpredictable
         """
         # ml-kem params
         self.k = params["k"]
@@ -27,12 +25,9 @@ class ML_KEM:
         self.M = ModuleKyber()
         self.R = self.M.ring
 
-        # Use system randomness by default
+        # Use system randomness by default, for deterministic randomness
+        # use the method `set_drbg_seed()`
         self.random_bytes = os.urandom
-
-        # If a seed is supplied, use deterministic randomness
-        if seed is not None:
-            self.set_drbg_seed(seed)
 
     def set_drbg_seed(self, seed):
         """

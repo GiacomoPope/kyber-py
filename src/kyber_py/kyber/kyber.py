@@ -5,13 +5,11 @@ from ..utilities.utils import select_bytes
 
 
 class Kyber:
-    def __init__(self, parameter_set, seed=None):
+    def __init__(self, parameter_set):
         """
         Initialise Kyber with specified lattice parameters.
 
         :param dict params: the lattice parameters
-        :param bytes seed: the optional seed for a DRBG, must be unique and
-          unpredictable
         """
         self.k = parameter_set["k"]
         self.eta_1 = parameter_set["eta_1"]
@@ -22,12 +20,9 @@ class Kyber:
         self.M = ModuleKyber()
         self.R = self.M.ring
 
-        # Use system randomness by default
+        # Use system randomness by default, for deterministic randomness
+        # use the method `set_drbg_seed()`
         self.random_bytes = os.urandom
-
-        # If a seed is supplied, use deterministic randomness
-        if seed is not None:
-            self.set_drbg_seed(seed)
 
     def set_drbg_seed(self, seed):
         """
