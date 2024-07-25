@@ -205,7 +205,7 @@ have made a child class `PolynomialRingKyber(PolynomialRing)` which has the
 following additional methods:
 
 - `PolynomialRingKyber`
-  - `parse(bytes)` takes $3n$ bytes and produces a random polynomial in $R_q$
+  - `ntt_sample(bytes)` takes $3n$ bytes and produces a random polynomial in $R_q$
   - `decode(bytes, l)` takes $\ell n$ bits and produces a polynomial in $R_q$
   - `cbd(beta, eta)` takes $\eta \cdot n / 4$ bytes and produces a polynomial in
     $R_q$ with coefficents taken from a centered binomial distribution
