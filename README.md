@@ -27,6 +27,11 @@ to the NIST post-quantum cryptography project.
 The API is not stable, significant changes to it may occur until
 FIPS 203 is finalized.
 
+**Note**: This project accompanies
+[`dilithium-py`](https://github.com/GiacomoPope/dilithium-py) which is a
+pure-python implementation of CRYSTALS-Dilithium and ML-DSA and shares a lot of
+the lower-level code of this implementation. 
+
 ## Disclaimer
 
 `kyber-py` has been written as an educational tool. The goal of this project was
