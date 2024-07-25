@@ -157,6 +157,7 @@ class PolynomialKyber(Polynomial):
     def compress(self, d):
         """
         Compress the polynomial by compressing each coefficient
+
         NOTE: This is lossy compression
         """
         self.coeffs = [self._compress_ele(c, d) for c in self.coeffs]
@@ -165,6 +166,7 @@ class PolynomialKyber(Polynomial):
     def decompress(self, d):
         """
         Decompress the polynomial by decompressing each coefficient
+
         NOTE: This as compression is lossy, we have
         x' = decompress(compress(x)), which x' != x, but is
         close in magnitude.
@@ -198,6 +200,9 @@ class PolynomialKyber(Polynomial):
         return self.parent(coeffs, is_ntt=True)
 
     def from_ntt(self):
+        """
+        Not supported, raises a ``TypeError``
+        """
         raise TypeError(f"Polynomial not in the NTT domain: {type(self) = }")
 
 
@@ -207,6 +212,9 @@ class PolynomialKyberNTT(PolynomialKyber):
         self.coeffs = self._parse_coefficients(coefficients)
 
     def to_ntt(self):
+        """
+        Not supported, raises a ``TypeError``
+        """
         raise TypeError(
             f"Polynomial is already in the NTT domain: {type(self) = }"
         )
@@ -249,6 +257,10 @@ class PolynomialKyberNTT(PolynomialKyber):
         return r0, r1
 
     def _ntt_coefficient_multiplication(self, f_coeffs, g_coeffs):
+        """
+        Given the coefficients of two polynomials compute the coefficients of
+        their product
+        """
         new_coeffs = []
         zetas = self.parent.ntt_zetas
         for i in range(64):
@@ -272,7 +284,6 @@ class PolynomialKyberNTT(PolynomialKyber):
     def _ntt_multiplication(self, other):
         """
         Number Theoretic Transform multiplication.
-        Only implemented (currently) for n = 256
         """
         new_coeffs = self._ntt_coefficient_multiplication(
             self.coeffs, other.coeffs
