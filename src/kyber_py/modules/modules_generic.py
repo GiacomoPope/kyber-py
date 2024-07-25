@@ -1,9 +1,19 @@
 class Module:
     def __init__(self, ring):
+        """
+        Initialise a module over the ring ``ring``.
+        """
         self.ring = ring
         self.matrix = Matrix
 
     def random_element(self, m, n):
+        """
+        Generate a random element of the module of dimension m x n
+
+        :param int m: the number of rows in the matrix
+        :param int m: the number of columns in tge matrix
+        :return: an element of the module with dimension `m times n`
+        """
         elements = [
             [self.ring.random_element() for _ in range(n)] for _ in range(m)
         ]
@@ -47,7 +57,10 @@ class Module:
 
     def vector(self, elements):
         """
-        Construct a vector with the given elements
+        Construct a vector given a list of elements of the module's ring
+
+        :param list: a list of elements of the ring
+        :return: a vector of the module
         """
         return self.matrix(self, [elements], transpose=True)
 
@@ -64,6 +77,9 @@ class Matrix:
         """
         Return the dimensions of the matrix with m rows
         and n columns
+
+        :return: the dimension of the matrix ``(m, n)``
+        :rtype: tuple(int, int)
         """
         if not self._transpose:
             return len(self._data), len(self._data[0])
@@ -78,13 +94,13 @@ class Matrix:
 
     def transpose(self):
         """
-        Swap rows and columns of self
+        Return a matrix with the rows and columns of swapped
         """
         return self.parent(self._data, not self._transpose)
 
     def transpose_self(self):
         """
-        Transpose in place
+        Swap the rows and columns of the matrix in place
         """
         self._transpose = not self._transpose
         return
@@ -193,7 +209,7 @@ class Matrix:
 
     def dot(self, other):
         """
-        Inner product
+        Compute the inner product of two vectors
         """
         if not isinstance(other, type(self)):
             raise TypeError("Can only perform dot product with other matrices")

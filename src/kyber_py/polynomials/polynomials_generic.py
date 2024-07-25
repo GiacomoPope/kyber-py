@@ -14,9 +14,16 @@ class PolynomialRing:
         self.element = Polynomial
 
     def gen(self):
+        """
+        Return the generator `x` of the polynomial ring
+        """
         return self([0, 1])
 
     def random_element(self):
+        """
+        Compute a random element of the polynomial ring with coefficients in the
+        canonical range: ``[0, q-1]``
+        """
         coefficients = [random.randint(0, self.q - 1) for _ in range(self.n)]
         return self(coefficients)
 
