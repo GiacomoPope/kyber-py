@@ -29,10 +29,13 @@ class PolynomialRingKyber(PolynomialRing):
         bin_i = bin(i & (2**k - 1))[2:].zfill(k)
         return int(bin_i[::-1], 2)
 
-    def parse(self, input_bytes, is_ntt=False):
+    def ntt_sample(self, input_bytes):
         """
         Algorithm 1 (Parse)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
+
+        Algorithm 6 (Sample NTT)
+        FIPS 203-ipd
 
         Parse: B^* -> R
         """
@@ -51,12 +54,15 @@ class PolynomialRingKyber(PolynomialRing):
                 j = j + 1
 
             i = i + 3
-        return self(coefficients, is_ntt=is_ntt)
+        return self(coefficients, is_ntt=True)
 
     def cbd(self, input_bytes, eta, is_ntt=False):
         """
         Algorithm 2 (Centered Binomial Distribution)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
+
+        Algorithm 6 (Sample Poly CBD)
+        FIPS 203-ipd
 
         Expects a byte array of length (eta * deg / 4)
         For Kyber, this is 64 eta.

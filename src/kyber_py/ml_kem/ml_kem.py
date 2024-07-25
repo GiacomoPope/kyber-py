@@ -117,7 +117,7 @@ class ML_KEM:
         for i in range(self.k):
             for j in range(self.k):
                 xof_bytes = self._xof(rho, bytes([j]), bytes([i]))
-                A_data[i][j] = self.R.parse(xof_bytes, is_ntt=True)
+                A_data[i][j] = self.R.ntt_sample(xof_bytes)
         A_hat = self.M(A_data, transpose=transpose)
         return A_hat
 
