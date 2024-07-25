@@ -11,7 +11,7 @@
 applications.** :warning:
 > 
 > This is an educational resource and has not been designed to be secure
-> against any form of side-channel attack. The indended use of this project
+> against any form of side-channel attack. The intended use of this project
 > is for learning and experimenting with ML-KEM and Kyber
 
 This repository contains a pure python implementation of both:
@@ -72,7 +72,7 @@ the
 
 Originally this project was planned to have zero dependencies, however to make this work
 pass the KATs, we needed a deterministic CSRNG. The reference implementation uses
-AES256 CTR DRBG. I have implemented this in [`aes256_ctr_drbg.py`](aes256_ctr_drbg.py). 
+AES256 CTR DRBG. I have implemented this in [`aes256_ctr_drbg.py`](src/kyber_py/drbg/aes256_ctr_drbg.py). 
 However, I have not implemented AES itself, instead I import this from `pycryptodome`. If this dependency is too annoying, then please make an issue and we can have a pure-python AES included into the repo.
 
 To install dependencies, run `pip -r install requirements`.
@@ -167,11 +167,11 @@ the cryptographic assurance of the protocol.
 For those who don't know, a module is a generalisation of a vector space, where
 elements of a matrix are not selected from a field (such as the rationals, or
 element of a finite field $\mathbb{F}\_{p^k}$), but rather in a ring (we do not
-require each element in a ring to have a multiplicative inverse). The ring in question for Kyber/ML-KEM is a polynomial ring where polynomials have coefficents in $\mathbb{F}\_{q}$ with $q = 3329$ and the polynomial ring has a modulus $X^n + 1$ with $n = 256$ (and so every element of the polynomial ring has at most 256 coefficients).
+require each element in a ring to have a multiplicative inverse). The ring in question for Kyber/ML-KEM is a polynomial ring where polynomials have coefficients in $\mathbb{F}\_{q}$ with $q = 3329$ and the polynomial ring has a modulus $X^n + 1$ with $n = 256$ (and so every element of the polynomial ring has at most 256 coefficients).
 
 ### Polynomials
 
-To help with experimenting with these polynomial rings themselves, the file [`polynomials_generic.py`](polynomials/polynomials_generic.py) has an implementation of the univariate polynomial ring
+To help with experimenting with these polynomial rings themselves, the file [`polynomials_generic.py`](src/kyber_py/polynomials/polynomials_generic.py) has an implementation of the univariate polynomial ring
 
 $$
 R_q = \mathbb{F}_q[X] /(X^n + 1) 
@@ -245,8 +245,8 @@ specification for more information.
 ### Modules
 
 Building on `polynomials_generic.py` we also include a file
-[`modules_generic.py`](modules/modules_generic.py) which has all of the
-functions needed to perform linear algebra given a ring.
+[`modules_generic.py`](src/kyber_py/modules/modules_generic.py) which has all of
+the functions needed to perform linear algebra given a ring.
 
 Note that `Matrix` allows elements of the module to be of size $m \times n$ but
 for Kyber, we only need vectors of length $k$ and square matrices of size $k
