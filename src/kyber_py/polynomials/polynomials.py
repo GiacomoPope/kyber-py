@@ -68,16 +68,14 @@ class PolynomialRingKyber(PolynomialRing):
         For Kyber, this is 64 eta.
         """
         assert 64 * eta == len(input_bytes)
-        coefficients = [0 for _ in range(256)]
         b_int = int.from_bytes(input_bytes, "little")
         mask = (1 << eta) - 1
         mask2 = (1 << 2 * eta) - 1
-        for i in range(256):
-            x = b_int & mask2
-            a = bit_count(x & mask)
-            b = bit_count((x >> eta) & mask)
-            b_int >>= 2 * eta
-            coefficients[i] = (a - b) % 3329
+        coefficients = [
+            (bit_count(x & mask) - bit_count((x >> eta) & mask)) % 3329
+            for x in
+            ((b_int >> 2 * eta * i) & mask2 for i in range(256))
+        ]
         return self(coefficients, is_ntt=is_ntt)
 
     def decode(self, input_bytes, d, is_ntt=False):
