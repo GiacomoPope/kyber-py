@@ -1,14 +1,20 @@
-def bit_count(x):
-    """
-    Count the number of bits in x
+import sys
 
-    Method to support old python as `x.bit_count()`
-    was released in Python 3.10 and we currently
-    support Python 3.9
-    """
-    try:
+# int.bit_count() was only made available in 3.10
+if sys.version_info >= (3, 10):
+
+    def bit_count(x: int) -> int:
+        """
+        Count the number of bits in x
+        """
         return x.bit_count()
-    except AttributeError:
+
+else:
+
+    def bit_count(x: int) -> int:
+        """
+        Count the number of bits in x
+        """
         return bin(x).count("1")
 
 
