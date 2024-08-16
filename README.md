@@ -17,8 +17,8 @@ applications.** :warning:
 This repository contains a pure python implementation of both:
 
 1. **ML-KEM**: The NIST Module-Lattice-Based Key-Encapsulation Mechanism
-Standard following the [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final)
-to the NIST post-quantum cryptography project.
+Standard following [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final)
+from the NIST post-quantum cryptography project.
 2. **CRYSTALS-Kyber**: following (at the time of writing) the most recent
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 (v3.02)
