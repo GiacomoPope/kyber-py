@@ -16,20 +16,16 @@ applications.** :warning:
 
 This repository contains a pure python implementation of both:
 
-1. **CRYSTALS-Kyber**: following (at the time of writing) the most recent
+1. **ML-KEM**: The NIST Module-Lattice-Based Key-Encapsulation Mechanism
+Standard following the [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final)
+to the NIST post-quantum cryptography project.
+2. **CRYSTALS-Kyber**: following (at the time of writing) the most recent
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf)
 (v3.02)
-2. **ML-KEM**: The NIST Module-Lattice-Based Key-Encapsulation Mechanism
-Standard following the [FIPS 203 (Initial Public
-Draft)](https://csrc.nist.gov/pubs/fips/203/ipd) based off the Kyber submission
-to the NIST post-quantum cryptography project.
-
-The API is not stable, significant changes to it may occur until
-FIPS 203 is finalized.
 
 **Note**: This project accompanies
 [`dilithium-py`](https://github.com/GiacomoPope/dilithium-py) which is a
-pure-python implementation of CRYSTALS-Dilithium and ML-DSA and shares a lot of
+pure-python implementation of ML-DSA and CRYSTALS-Dilithium and shares a lot of
 the lower-level code of this implementation. 
 
 ## Disclaimer
@@ -39,8 +35,8 @@ to learn about how Kyber works, and to try and create a clean, well commented
 implementation which people can learn from.
 
 This code is not constant time, or written to be performant. Rather, it was
-written so that the python code closely follows Algorithms 1-9 in the original
-[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf).
+written so that the python code closely follows the Kyber specification
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf) and [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final). To cryptographic guarantees are made of this work.
 
 ## History of this Repository
 
@@ -64,7 +60,7 @@ The KAT files were either downloaded or generated:
    repository](https://github.com/pq-crystals/kyber/) and are included in
    `assets/PQCLkemKAT_*.rsp`
 2. For **ML-KEM**, the KAT files were download from the GitHub repository
-   [post-quantum-cryptography/KAT](https://github.com/post-quantum-cryptography/KAT/tree/main/MLKEM) and are included in `assets/kat_MLKEM_*.rsp`
+   [usnistgov/ACVP-Server/](https://github.com/usnistgov/ACVP-Server/releases/tag/v1.1.0.35) release 1.1.0.35, and are included in `assets/ML-KEM-*` directories.
 
 **Note**: for Kyber v3.02, there is a discrepancy between the specification and
 reference implementation. To ensure all KATs pass, one has to generate the
@@ -91,7 +87,7 @@ use:
 
 - `ML_KEM.keygen()`: generate a keypair `(ek, dk)`
 - `ML_KEM.encaps(ek)`: generate a key and ciphertext pair `(key, ct)`
-- `ML_KEM.decaps(ct, dk)`: generate the shared key `key`
+- `ML_KEM.decaps(dk, ct)`: generate the shared key `key`
 
 #### Example
 
@@ -99,7 +95,7 @@ use:
 >>> from kyber_py.ml_kem import ML_KEM_512
 >>> ek, dk = ML_KEM_512.keygen()
 >>> key, ct = ML_KEM_512.encaps(ek)
->>> _key = ML_KEM_512.decaps(ct, dk)
+>>> _key = ML_KEM_512.decaps(dk, ct)
 >>> assert key == _key
 ```
 
@@ -122,7 +118,7 @@ use:
 
 - `Kyber.keygen()`: generate a keypair `(pk, sk)`
 - `Kyber.encaps(pk)`: generate shared key and challenge `(key, c)`
-- `Kyber.decaps(c, sk)`: generate the shared key `key`
+- `Kyber.decaps(sk, c)`: generate the shared key `key`
 
 #### Example
 
@@ -130,7 +126,7 @@ use:
 >>> from kyber_py.kyber import Kyber512
 >>> pk, sk = Kyber512.keygen()
 >>> key, c = Kyber512.encaps(pk)
->>> _key = Kyber512.decaps(c, sk)
+>>> _key = Kyber512.decaps(sk, c)
 >>> assert key == _key
 ```
 
@@ -157,7 +153,7 @@ currently only support $q = 3329$ and $n = 256$.
 
 All times recorded using a Intel Core i7-9750H CPU and averaged over 1000 runs.
 
-## Documentation (under active development)
+## Documentation
 
 - https://kyber-py.readthedocs.io/en/latest/
 
@@ -242,10 +238,6 @@ function on every polynomial.
 **Note**: compression is lossy! We do not get the same polynomial back by
 computing `f.compress(d).decompress(d)`. They are however *close*. See the
 specification for more information.
-
-### Number Theoretic Transform
-
-**TODO**: it would be good to write something more detailed here.
 
 ### Modules
 

@@ -1,38 +1,6 @@
 import unittest
-from itertools import islice
-import pytest
+import json
 from kyber_py.ml_kem import ML_KEM_512, ML_KEM_768, ML_KEM_1024
-from kyber_py.drbg.aes256_ctr_drbg import AES256_CTR_DRBG
-
-
-def read_kat_data(file_name):
-    data_blocks = []
-    with open(file_name) as f:
-        for _ in range(1000):
-            data_blocks.append("".join([next(f) for _ in range(11)]))
-    return data_blocks
-
-
-def parse_kat_data(data_blocks):
-    parsed_data = {}
-    for block in data_blocks:
-        block_data = block.split("\n")[:-1]
-        count, z, d, msg, seed, pk, sk, ct_n, ss_n, ct, ss = [
-            line.split(" = ")[-1] for line in block_data
-        ]
-        parsed_data[int(count)] = {
-            "z": bytes.fromhex(z),
-            "d": bytes.fromhex(d),
-            "msg": bytes.fromhex(msg),
-            "seed": bytes.fromhex(seed),
-            "pk": bytes.fromhex(pk),
-            "sk": bytes.fromhex(sk),
-            "ct_n": bytes.fromhex(ct_n),
-            "ss_n": bytes.fromhex(ss_n),
-            "ct": bytes.fromhex(ct),
-            "ss": bytes.fromhex(ss),
-        }
-    return parsed_data
 
 
 class TestML_KEM(unittest.TestCase):
@@ -47,7 +15,7 @@ class TestML_KEM(unittest.TestCase):
             (ek, dk) = ML_KEM.keygen()
             for _ in range(count):
                 (K, c) = ML_KEM.encaps(ek)
-                K_prime = ML_KEM.decaps(c, dk)
+                K_prime = ML_KEM.decaps(dk, c)
                 self.assertEqual(K, K_prime)
 
     def test_ML_KEM_512(self):
@@ -90,80 +58,89 @@ class TestML_KEM(unittest.TestCase):
     def test_prf_failure(self):
         self.assertRaises(ValueError, lambda: ML_KEM_512._prf(2, b"1", b"2"))
 
+    def test_decaps_ct_type_check_failure(self):
+        """
+        Send a ciphertext of the wrong length
+        """
+        ek, dk = ML_KEM_512.keygen()
+        K, c = ML_KEM_512.encaps(ek)
+        self.assertRaises(ValueError, lambda: ML_KEM_512.decaps(dk, b"1"))
 
-# As there are 1000 KATs in the file, execution of all of them takes
-# a lot of time, run just 100
-KEM_LIMIT = 100
+    def test_decaps_dk_type_check_failure(self):
+        """
+        Send a ciphertext of the wrong length
+        """
+        ek, dk = ML_KEM_512.keygen()
+        K, c = ML_KEM_512.encaps(ek)
+        self.assertRaises(ValueError, lambda: ML_KEM_512.decaps(b"1", c))
+
+    def test_decaps_hash_check_failure(self):
+        """
+        Send a ciphertext of the wrong length
+        """
+        ek, dk = ML_KEM_512.keygen()
+        K, c = ML_KEM_512.encaps(ek)
+        dk_bad = b"0" * len(dk)
+        self.assertRaises(ValueError, lambda: ML_KEM_512.decaps(dk_bad, c))
 
 
-def data_parse(filename):
-    # Set DRBG to generate seeds
-    # https://github.com/post-quantum-cryptography/KAT/tree/main/MLKEM
-    entropy_input = bytes.fromhex(
-        "60496cd0a12512800a79161189b055ac3996ad24e578d3c5fc57c1"
-        "e60fa2eb4e550d08e51e9db7b67f1a616681d9182d"
-    )
-    rng = AES256_CTR_DRBG(entropy_input)
+class TestML_KEM_KAT(unittest.TestCase):
+    """
+    Test ML_KEM levels for internal
+    consistency by generating key pairs
+    and shared secrets.
+    """
 
-    # Parse the KAT file data
-    kat_data_blocks = read_kat_data(filename)
-    parsed_data = parse_kat_data(kat_data_blocks)
-    return [
-        (rng.random_bytes(48), i)
-        for i in islice(parsed_data.values(), KEM_LIMIT)
-    ]
+    def generic_keygen_kat(self, ML_KEM, index):
+        with open("assets/ML-KEM-keyGen-FIPS203/internalProjection.json") as f:
+            data = json.load(f)
+        kat_data = data["testGroups"][index]["tests"]
 
+        for test in kat_data:
+            d_kat = bytes.fromhex(test["d"])
+            z_kat = bytes.fromhex(test["z"])
+            ek_kat = bytes.fromhex(test["ek"])
+            dk_kat = bytes.fromhex(test["dk"])
 
-@pytest.mark.parametrize(
-    "ML_KEM, seed, kat_vals",
-    [
-        (kem, seed, param)
-        for kem, filename in [
-            (ML_KEM_512, "assets/kat_MLKEM_512.rsp"),
-            (ML_KEM_768, "assets/kat_MLKEM_768.rsp"),
-            (ML_KEM_1024, "assets/kat_MLKEM_1024.rsp"),
-        ]
-        for seed, param in data_parse(filename)
-    ],
-    ids=[
-        f"{kem}-test-{num}"
-        for kem in ["ML-KEM-512", "ML-KEM-768", "ML-KEM-1024"]
-        for num in range(KEM_LIMIT)
-    ],
-)
-def test_mlkem_known_answer(ML_KEM, seed, kat_vals):
-    data = kat_vals
+            ek, dk = ML_KEM._keygen_internal(d_kat, z_kat)
+            self.assertEqual(ek, ek_kat)
+            self.assertEqual(dk, dk_kat)
 
-    # Set the seed and check it matches the KAT
-    assert seed == data["seed"]
+    def generic_encap_decap_kat(self, ML_KEM, index):
+        with open(
+            "assets/ML-KEM-encapDecap-FIPS203/internalProjection.json"
+        ) as f:
+            data = json.load(f)
+        kat_data = data["testGroups"][index]["tests"]
 
-    # Check that the three chunks of 32 random bytes match
-    ML_KEM.set_drbg_seed(seed)
+        for test in kat_data:
+            ek_kat = bytes.fromhex(test["ek"])
+            dk_kat = bytes.fromhex(test["dk"])
+            c_kat = bytes.fromhex(test["c"])
+            k_kat = bytes.fromhex(test["k"])
+            m_kat = bytes.fromhex(test["m"])
 
-    z = ML_KEM.random_bytes(32)
-    d = ML_KEM.random_bytes(32)
-    msg = ML_KEM.random_bytes(32)
-    assert z == data["z"]
-    assert d == data["d"]
-    assert msg == data["msg"]
+            K, c = ML_KEM._encaps_internal(ek_kat, m_kat)
+            self.assertEqual(K, k_kat)
+            self.assertEqual(c, c_kat)
 
-    # Reset the seed
-    ML_KEM.set_drbg_seed(seed)
+            K_prime = ML_KEM.decaps(dk_kat, c_kat)
+            self.assertEqual(K_prime, k_kat)
 
-    # Assert keygen matches
-    ek, dk = ML_KEM.keygen()
-    assert ek == data["pk"]
-    assert dk == data["sk"]
+    def test_ML_KEM_512_keygen(self):
+        self.generic_keygen_kat(ML_KEM_512, 0)
 
-    # Assert encapsulation matches
-    K, c = ML_KEM.encaps(ek)
-    assert K == data["ss"]
-    assert c == data["ct"]
+    def test_ML_KEM_768_keygen(self):
+        self.generic_keygen_kat(ML_KEM_768, 1)
 
-    # Assert decapsulation matches
-    _K = ML_KEM.decaps(c, dk)
-    assert _K == data["ss"]
+    def test_ML_KEM_1024_keygen(self):
+        self.generic_keygen_kat(ML_KEM_1024, 2)
 
-    # Assert decapsulation with faulty ciphertext
-    ss_n = ML_KEM.decaps(data["ct_n"], dk)
-    assert ss_n == data["ss_n"]
+    def test_ML_KEM_512_encap_decap(self):
+        self.generic_encap_decap_kat(ML_KEM_512, 0)
+
+    def test_ML_KEM_768_encap_decap(self):
+        self.generic_encap_decap_kat(ML_KEM_768, 1)
+
+    def test_ML_KEM_1024_encap_decap(self):
+        self.generic_encap_decap_kat(ML_KEM_1024, 2)

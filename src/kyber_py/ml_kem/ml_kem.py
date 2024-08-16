@@ -1,5 +1,6 @@
 """
-The implementation of ML-KEM from FIPS 203-ipd
+Implementation of ML-KEM following FIPS 203
+https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf
 """
 
 import os
@@ -11,7 +12,7 @@ from ..utilities.utils import select_bytes
 class ML_KEM:
     def __init__(self, params):
         """
-        Initialise the ML-KEM with specified lattice parameters.
+        Initialise the ML-KEM with specified lattice parameters
 
         :param dict params: the lattice parameters
         """
@@ -39,7 +40,7 @@ class ML_KEM:
         Used for both deterministic versions of ML-KEM as well as testing
         alignment with the KAT vectors
 
-        Note:
+        NOTE:
           currently requires pycryptodome for AES impl.
 
         :param bytes seed: random bytes to seed the DRBG with
@@ -58,7 +59,7 @@ class ML_KEM:
     @staticmethod
     def _xof(bytes32, i, j):
         """
-        XOF: B^* x B x B -> B*
+        eXtendable-Output Function (XOF) described in 4.9 of FIPS 203 (page 19)
 
         NOTE:
           We use hashlib's ``shake_128`` implementation, which does not support
@@ -80,8 +81,7 @@ class ML_KEM:
     @staticmethod
     def _prf(eta, s, b):
         """
-        Pseudorandom function described between lines 726 - 731 of in FIPS
-        203-ipd
+        Pseudorandom function described in 4.3 of FIPS 203 (page 18)
         """
         input_bytes = s + b
         if len(input_bytes) != 33:
@@ -90,18 +90,25 @@ class ML_KEM:
             )
         return shake_256(input_bytes).digest(eta * 64)
 
-    # Three hash functions described between lines
-    # 741 - 750 in FIPS 203-ipd
     @staticmethod
     def _H(s):
+        """
+        Hash function described in 4.4 of FIPS 203 (page 18)
+        """
         return sha3_256(s).digest()
 
     @staticmethod
     def _J(s):
+        """
+        Hash function described in 4.4 of FIPS 203 (page 18)
+        """
         return shake_256(s).digest(32)
 
     @staticmethod
     def _G(s):
+        """
+        Hash function described in 4.5 of FIPS 203 (page 18)
+        """
         h = sha3_512(s).digest()
         return h[:32], h[32:]
 
@@ -135,17 +142,26 @@ class ML_KEM:
         return v, N
 
     def _generate_polynomial(self, sigma, eta, N):
-        """ """
+        """
+        Helper function which generates a element in the
+        polynomial ring from the Centered Binomial Distribution.
+        """
         prf_output = self._prf(eta, sigma, bytes([N]))
         p = self.R.cbd(prf_output, eta)
         return p, N + 1
 
-    def _pke_keygen(self):
+    def _k_pke_keygen(self, d):
         """
-        Algorithm 12
+        Use randomness to generate an encryption key and a corresponding
+        decryption key following Algorithm 13 (FIPS 203)
+
+        :return: Tuple with encryption key and decryption key.
+        :rtype: tuple(bytes, bytes)
         """
-        d = self.random_bytes(32)
-        rho, sigma = self._G(d)
+        # Expand 32 + 1 bytes to two 32-byte seeds. Note that the
+        # inclusion of the lattice parameter here is for domain
+        # separation between different parameter sets
+        rho, sigma = self._G(d + bytes([self.k]))
 
         # Generate A_hat from seed rho
         A_hat = self._generate_matrix_from_seed(rho)
@@ -155,13 +171,13 @@ class ML_KEM:
 
         # Generate the error vector s ∈ R^k
         s, N = self._generate_error_vector(sigma, self.eta_1, N)
-        s_hat = s.to_ntt()
 
         # Generate the error vector e ∈ R^k
         e, N = self._generate_error_vector(sigma, self.eta_1, N)
-        e_hat = e.to_ntt()
 
         # Compute public value (in NTT form)
+        s_hat = s.to_ntt()
+        e_hat = e.to_ntt()
         t_hat = A_hat @ s_hat + e_hat
 
         # Byte encode
@@ -170,25 +186,24 @@ class ML_KEM:
 
         return (ek_pke, dk_pke)
 
-    def _pke_encrypt(self, ek_pke, m, r):
+    def _k_pke_encrypt(self, ek_pke, m, r):
         """
-        Algorithm 13
+        Uses the encryption key to encrypt a plaintext message using the
+        randomness r following Algorithm 14 (FIPS 203)
 
         As well as performing the usual pke encryption, the FIPS document
         requires two additional checks.
 
         1. Type Check: The ek_pke is of the expected length
         2. Modulus Check: That t_hat has been canonically encoded
-        """
-        # These should always hold, as encaps() generates m, r and
-        # _pke_encrypt should never be called directly by a user
-        assert len(m) == 32
-        assert len(r) == 32
 
+        These are performed in this function and a ``ValueError`` is raised if
+        either fails.
+        """
         # First check if the encap key has the right length
         if len(ek_pke) != 384 * self.k + 32:
             raise ValueError(
-                f"Type check failed, ek_pke has the wrong length, expected {384 * self.k + 32} bytes and received {len(ek_pke)} b"
+                f"Type check failed, ek_pke has the wrong length, expected {384 * self.k + 32} bytes and received {len(ek_pke)}"
             )
 
         # Unpack ek
@@ -207,26 +222,26 @@ class ML_KEM:
         A_hat_T = self._generate_matrix_from_seed(rho, transpose=True)
 
         N = 0
-        r_vec, N = self._generate_error_vector(r, self.eta_1, N)
+        y, N = self._generate_error_vector(r, self.eta_1, N)
         e1, N = self._generate_error_vector(r, self.eta_2, N)
         e2, N = self._generate_polynomial(r, self.eta_2, N)
 
-        r_hat = r_vec.to_ntt()
+        y_hat = y.to_ntt()
 
-        u = (A_hat_T @ r_hat).from_ntt() + e1
+        u = (A_hat_T @ y_hat).from_ntt() + e1
 
         mu = self.R.decode(m, 1).decompress(1)
-        v = t_hat.dot(r_hat).from_ntt() + e2 + mu
+        v = t_hat.dot(y_hat).from_ntt() + e2 + mu
 
-        # TODO: we could make a compress then encode function
         c1 = u.compress(self.du).encode(self.du)
         c2 = v.compress(self.dv).encode(self.dv)
 
         return c1 + c2
 
-    def _pke_decrypt(self, dk_pke, c):
+    def _k_pke_decrypt(self, dk_pke, c):
         """
-        Algorithm 14
+        Uses the decryption key to decrypt a ciphertext following
+        Algorithm 15 (FIPS 203)
         """
         n = self.k * self.du * 32
         c1, c2 = c[:n], c[n:]
@@ -241,62 +256,87 @@ class ML_KEM:
 
         return m
 
-    def keygen(self):
+    def _keygen_internal(self, d, z):
         """
-        Generate a public encapsulation key and private decapsulation key.
-
-        Algorithm 15 in FIPS 203-ipd
+        Use randomness to generate an encapsulation key and a corresponding
+        decapsulation key following Algorithm 16 (FIPS 203)
 
         :return: Tuple with encapsulation key and decapsulation key.
         :rtype: tuple(bytes, bytes)
         """
-        z = self.random_bytes(32)
-        ek_pke, dk_pke = self._pke_keygen()
+        ek_pke, dk_pke = self._k_pke_keygen(d)
 
         ek = ek_pke
         dk = dk_pke + ek + self._H(ek) + z
 
         return (ek, dk)
 
-    def encaps(self, ek):
+    def keygen(self):
         """
-        Generate a random key, encapsulate it, return both it and ciphertext.
+        Generate an encapsulation key and corresponding decapsulation key
+        following Algorithm 19 (FIPS 203)
 
-        Algorithm 16 in FIPS 203-ipd
+        ``ek`` is encoded as bytes of length 384*k + 32
+        ``dk`` is encoded as bytes of length 768*k + 96
+
+        :return: Tuple with encapsulation key and decapsulation key.
+        :rtype: tuple(bytes, bytes)
+        """
+        d = self.random_bytes(32)
+        z = self.random_bytes(32)
+        (
+            ek,
+            dk,
+        ) = self._keygen_internal(d, z)
+        return (ek, dk)
+
+    def _encaps_internal(self, ek, m):
+        """
+        Uses the encapsulation key and randomness to generate a key and an
+        associated ciphertext following Algorithm 17 (FIPS 203)
 
         :param bytes ek: byte-encoded encapsulation key
         :return: a random key and an encapsulation of it
         :rtype: tuple(bytes, bytes)
         """
+        K, r = self._G(m + self._H(ek))
+
         # NOTE: ML-KEM requires input validation before returning the result of
         # encapsulation. These are performed by the following two checks:
         #
-        # 1) Type check: the byte length of ek must be correct
-        # 2) Modulus check: Encode(Decode(bytes)) must be correct
+        # 1) Type check: the byte length of ek must be correct: 384*k + 32
+        # 2) Modulus check: Encode(Decode(ek[0:384*k])) must be correct
         #
         # As the modulus is decoded within the pke_encrypt, the design choice
-        # here is to do both of these checks within the pke call
+        # here is to do both of these checks within the k-pke call.
+        try:
+            c = self._k_pke_encrypt(ek, m, r)
+        except ValueError as e:
+            raise ValueError(f"Validation of encapsulation key failed: {e = }")
 
+        return K, c
+
+    def encaps(self, ek):
+        """
+        Uses the encapsulation key to generate a shared secret key and an
+        associated ciphertext following Algorithm 20 (FIPS 203)
+
+        ``K`` is the shared secret key of length 32 bytes
+        ``c`` is the ciphertext of length 32(du*k + dv)
+
+        :param bytes ek: byte-encoded encapsulation key
+        :return: a random key and an encapsulation of it
+        :rtype: tuple(bytes, bytes)
+        """
         # Create random tokens
         m = self.random_bytes(32)
-        K, r = self._G(m + self._H(ek))
+        K, c = self._encaps_internal(ek, m)
+        return K, c
 
-        # Perform the underlying pke encryption, raises a ValueError if
-        # ek fails either the TypeCheck or ModulusCheck
-        try:
-            c = self._pke_encrypt(ek, m, r)
-        except ValueError as e:
-            raise ValueError(
-                f"Valildation of encapsulation key failed: {e = }"
-            )
-
-        return (K, c)
-
-    def decaps(self, c, dk):
+    def _decaps_internal(self, dk, c):
         """
-        Decapsulate a key from a ciphertext using a decapsulation key.
-
-        Algorithm 17 in FIPS 203-ipd
+        Uses the decapsulation key to produce a shared secret key from a
+        ciphertext following Algorithm 18 (FIPS 203)
 
         :param bytes c: ciphertext with an encapsulated key
         :param bytes dk: decapsulation key
@@ -304,15 +344,21 @@ class ML_KEM:
         :rtype: bytes
         """
         # NOTE: ML-KEM requires input validation before returning the result of
-        # decapsulation. These are performed by the following two checks:
+        # decapsulation. These are performed by the following three checks:
         #
         # 1) Ciphertext type check: the byte length of c must be correct
         # 2) Decapsulation type check: the byte length of dk must be correct
-        #
-        # Unlike encaps, these are simple length checks and so are performed
-        # in kem_decaps() itself.
-        assert len(c) == 32 * (self.du * self.k + self.dv)
-        assert len(dk) == 768 * self.k + 96
+        # 3) Hash check: a hash of the internals of the dk must match
+
+        # Unlike encaps, these are easily performed in the kem decaps
+        if len(c) != 32 * (self.du * self.k + self.dv):
+            raise ValueError(
+                f"ciphertext type check failed. Expected {32 * (self.du * self.k + self.dv)} bytes and obtained {len(c)}"
+            )
+        if len(dk) != 768 * self.k + 96:
+            raise ValueError(
+                f"decapsulation type check failed. Expected {768 * self.k + 96} bytes and obtained {len(dk)}"
+            )
 
         # Parse out data from dk
         dk_pke = dk[0 : 384 * self.k]
@@ -320,8 +366,12 @@ class ML_KEM:
         h = dk[768 * self.k + 32 : 768 * self.k + 64]
         z = dk[768 * self.k + 64 :]
 
+        # Ensure the hash-check passes
+        if self._H(ek_pke) != h:
+            raise ValueError("hash check failed")
+
         # Decrypt the ciphertext
-        m_prime = self._pke_decrypt(dk_pke, c)
+        m_prime = self._k_pke_decrypt(dk_pke, c)
 
         # Re-encrypt the recovered message
         K_prime, r_prime = self._G(m_prime + h)
@@ -330,10 +380,30 @@ class ML_KEM:
         # Here the public encapsulation key is read from the private
         # key and so we never expect this to fail the TypeCheck or
         # ModulusCheck
-        c_prime = self._pke_encrypt(ek_pke, m_prime, r_prime)
+        c_prime = self._k_pke_encrypt(ek_pke, m_prime, r_prime)
 
         # If c != c_prime, return K_bar as garbage
         # WARNING: for proper implementations, it is absolutely
         # vital that the selection between the key and garbage is
         # performed in constant time
         return select_bytes(K_bar, K_prime, c == c_prime)
+
+    def decaps(self, dk, c):
+        """
+        Uses the decapsulation key to produce a shared secret key from a
+        ciphertext following Algorithm 21 (FIPS 203).
+
+        ``K`` is the shared secret key of length 32 bytes
+
+        :param bytes dk: decapsulation key
+        :param bytes c: ciphertext with an encapsulated key
+        :return: shared secret key
+        :rtype: bytes
+        """
+        try:
+            K_prime = self._decaps_internal(dk, c)
+        except ValueError as e:
+            raise ValueError(
+                f"Validation of decapsulation key or ciphertext failed: {e = }"
+            )
+        return K_prime

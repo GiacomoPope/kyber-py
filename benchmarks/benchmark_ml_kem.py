@@ -23,7 +23,7 @@ def profile_ml_kem(ML_KEM):
         sort=1,
     )
     cProfile.runctx(
-        "[ML_KEM.decaps(c, dk) for _ in range(100)]",
+        "[ML_KEM.decaps(dk, c) for _ in range(100)]",
         globals=gvars,
         locals=lvars,
         sort=1,
@@ -45,7 +45,7 @@ def benchmark_ml_kem(ML_KEM, name, count):
         enc_times.append(time() - t1)
 
         t2 = time()
-        _ = ML_KEM.decaps(c, dk)
+        _ = ML_KEM.decaps(dk, c)
         dec_times.append(time() - t2)
 
     avg_keygen = sum(keygen_times) / count
