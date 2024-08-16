@@ -36,12 +36,12 @@ class TestKyber(unittest.TestCase):
                 key, c = Kyber.encaps(pk)
 
                 # Correct decaps works
-                _key = Kyber.decaps(c, sk)
+                _key = Kyber.decaps(sk, c)
                 self.assertEqual(key, _key)
 
                 # Incorrect ct does not work
                 _bad_ct = bytes([0] * len(c))
-                _bad = Kyber.decaps(_bad_ct, sk)
+                _bad = Kyber.decaps(sk, _bad_ct)
                 self.assertNotEqual(key, _bad)
 
     def test_kyber512(self):
@@ -94,7 +94,7 @@ class TestKyberDeterministic(unittest.TestCase):
         for _ in range(count):
             Kyber.set_drbg_seed(seed)
             key, c = Kyber.encaps(pk)
-            _key = Kyber.decaps(c, sk)
+            _key = Kyber.decaps(sk, c)
             # Check key derivation works
             self.assertEqual(key, _key)
             key_output.append(c + key)
@@ -159,5 +159,5 @@ def test_generic_kyber_known_answer(Kyber, seed, data):
     assert ct == data["ct"]
 
     # Assert decapsulation matches
-    _ss = Kyber.decaps(ct, sk)
+    _ss = Kyber.decaps(sk, ct)
     assert _ss == data["ss"]

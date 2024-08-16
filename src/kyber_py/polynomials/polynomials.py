@@ -35,7 +35,6 @@ class PolynomialRingKyber(PolynomialRing):
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
 
         Algorithm 6 (Sample NTT)
-        FIPS 203-ipd
 
         Parse: B^* -> R
         """
@@ -62,7 +61,6 @@ class PolynomialRingKyber(PolynomialRing):
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
 
         Algorithm 6 (Sample Poly CBD)
-        FIPS 203-ipd
 
         Expects a byte array of length (eta * deg / 4)
         For Kyber, this is 64 eta.

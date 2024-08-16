@@ -23,7 +23,7 @@ def profile_kyber(Kyber):
         sort=1,
     )
     cProfile.runctx(
-        "[Kyber.decaps(c, sk) for _ in range(100)]",
+        "[Kyber.decaps(sk, c) for _ in range(100)]",
         globals=gvars,
         locals=lvars,
         sort=1,
@@ -45,7 +45,7 @@ def benchmark_kyber(Kyber, name, count):
         enc_times.append(time() - t1)
 
         t2 = time()
-        dec = Kyber.decaps(c, sk)
+        dec = Kyber.decaps(sk, c)
         dec_times.append(time() - t2)
 
     avg_keygen = sum(keygen_times) / count

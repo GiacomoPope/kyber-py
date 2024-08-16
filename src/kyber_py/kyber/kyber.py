@@ -291,7 +291,7 @@ class Kyber:
 
         NOTE:
           We switch the order of the output (c, K) as (K, c) to align encaps
-          output with FIPS 203-ipd.
+          output with FIPS 203.
 
         :param bytes pk: byte-encoded public key
         :param int key_length: length of secret key, default value 32
@@ -330,15 +330,18 @@ class Kyber:
 
         return sk_pke, pk_pke, pk_hash, z
 
-    def decaps(self, c, sk, key_length=32):
+    def decaps(self, sk, c, key_length=32):
         """
         Decapsulate a key from a ciphertext using a secret key.
 
         Algorithm 9 (CCA KEM Decapsulation)
         https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf
 
-        :param bytes c: ciphertext with an encapsulated key
+        NOTE:
+          We switch the order of the input (c, sk) as (sk, c) to align with FIPS 203
+
         :param bytes sk: secret key
+        :param bytes c: ciphertext with an encapsulated key
         :param int key_length: length of secret key, default value 32
         :return: shared key
         :rtype: bytes

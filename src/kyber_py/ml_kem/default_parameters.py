@@ -1,5 +1,5 @@
 """
-The parameters defined in the FIPS 203 IPD document.
+The parameters defined in the FIPS 203 document.
 
 Includes the ML-KEM-512, ML-KEM-768, and ML-KEM-1024 parameters
 and initialised objects with them.
