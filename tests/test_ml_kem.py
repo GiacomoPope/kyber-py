@@ -58,6 +58,31 @@ class TestML_KEM(unittest.TestCase):
     def test_prf_failure(self):
         self.assertRaises(ValueError, lambda: ML_KEM_512._prf(2, b"1", b"2"))
 
+    def test_decaps_ct_type_check_failure(self):
+        """
+        Send a ciphertext of the wrong length
+        """
+        ek, dk = ML_KEM_512.keygen()
+        K, c = ML_KEM_512.encaps(ek)
+        self.assertRaises(ValueError, lambda: ML_KEM_512.decaps(dk, b"1"))
+
+    def test_decaps_dk_type_check_failure(self):
+        """
+        Send a ciphertext of the wrong length
+        """
+        ek, dk = ML_KEM_512.keygen()
+        K, c = ML_KEM_512.encaps(ek)
+        self.assertRaises(ValueError, lambda: ML_KEM_512.decaps(b"1", c))
+
+    def test_decaps_hash_check_failure(self):
+        """
+        Send a ciphertext of the wrong length
+        """
+        ek, dk = ML_KEM_512.keygen()
+        K, c = ML_KEM_512.encaps(ek)
+        dk_bad = b"0" * len(dk)
+        self.assertRaises(ValueError, lambda: ML_KEM_512.decaps(dk_bad, c))
+
 
 class TestML_KEM_KAT(unittest.TestCase):
     """
