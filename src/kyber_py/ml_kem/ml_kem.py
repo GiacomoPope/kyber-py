@@ -12,7 +12,7 @@ from ..utilities.utils import select_bytes
 class ML_KEM:
     def __init__(self, params):
         """
-        Initialise the ML-KEM with specified lattice parameters
+        Initialise the ML-KEM with specified lattice parameters.
 
         :param dict params: the lattice parameters
         """
