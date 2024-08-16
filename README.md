@@ -36,7 +36,7 @@ implementation which people can learn from.
 
 This code is not constant time, or written to be performant. Rather, it was
 written so that the python code closely follows the Kyber specification
-[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf) and [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final). To cryptographic guarantees are made of this work.
+[specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf) and [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final). No cryptographic guarantees are made of this work.
 
 ## History of this Repository
 
@@ -56,11 +56,11 @@ and [`test_ml_kem.py`](tests/test_ml_kem.py).
 
 The KAT files were either downloaded or generated:
 
-1. For **Kyber**, the KAT files were generated from the projects [GitHub
+1. For **ML-KEM**, the KAT files were download from the GitHub repository
+   [usnistgov/ACVP-Server/](https://github.com/usnistgov/ACVP-Server/releases/tag/v1.1.0.35) release 1.1.0.35, and are included in `assets/ML-KEM-*` directories.
+2. For **Kyber**, the KAT files were generated from the projects [GitHub
    repository](https://github.com/pq-crystals/kyber/) and are included in
    `assets/PQCLkemKAT_*.rsp`
-2. For **ML-KEM**, the KAT files were download from the GitHub repository
-   [usnistgov/ACVP-Server/](https://github.com/usnistgov/ACVP-Server/releases/tag/v1.1.0.35) release 1.1.0.35, and are included in `assets/ML-KEM-*` directories.
 
 **Note**: for Kyber v3.02, there is a discrepancy between the specification and
 reference implementation. To ensure all KATs pass, one has to generate the

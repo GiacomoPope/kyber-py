@@ -86,9 +86,8 @@ class TestML_KEM(unittest.TestCase):
 
 class TestML_KEM_KAT(unittest.TestCase):
     """
-    Test ML_KEM levels for internal
-    consistency by generating key pairs
-    and shared secrets.
+    Test ML-KEM against test vectors collected from
+    https://github.com/usnistgov/ACVP-Server/releases/tag/v1.1.0.35
     """
 
     def generic_keygen_kat(self, ML_KEM, index):
