@@ -1,5 +1,4 @@
 import unittest
-from random import randint
 from kyber_py.polynomials.polynomials import PolynomialRingKyber
 
 

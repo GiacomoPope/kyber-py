@@ -45,7 +45,7 @@ def benchmark_kyber(Kyber, name, count):
         enc_times.append(time() - t1)
 
         t2 = time()
-        dec = Kyber.decaps(sk, c)
+        _ = Kyber.decaps(sk, c)
         dec_times.append(time() - t2)
 
     avg_keygen = sum(keygen_times) / count
