@@ -89,6 +89,9 @@ use:
 - `ML_KEM.encaps(ek)`: generate a key and ciphertext pair `(key, ct)`
 - `ML_KEM.decaps(dk, ct)`: generate the shared key `key`
 
+Those, together with the `ML_KEM_512`, `ML_KEM_768`, and `ML_KEM_1024`
+objects comprise the kyber-py library stable API.
+
 #### Example
 
 ```python

@@ -279,6 +279,8 @@ class ML_KEM:
         ``ek`` is encoded as bytes of length 384*k + 32
         ``dk`` is encoded as bytes of length 768*k + 96
 
+        Part of stable API.
+
         :return: Tuple with encapsulation key and decapsulation key.
         :rtype: tuple(bytes, bytes)
         """
@@ -324,8 +326,10 @@ class ML_KEM:
         ``K`` is the shared secret key of length 32 bytes
         ``c`` is the ciphertext of length 32(du*k + dv)
 
+        Part of stable API.
+
         :param bytes ek: byte-encoded encapsulation key
-        :return: a random key and an encapsulation of it
+        :return: a random key (``K``) and an encapsulation of it (``c``)
         :rtype: tuple(bytes, bytes)
         """
         # Create random tokens
@@ -395,9 +399,11 @@ class ML_KEM:
 
         ``K`` is the shared secret key of length 32 bytes
 
+        Part of stable API.
+
         :param bytes dk: decapsulation key
         :param bytes c: ciphertext with an encapsulated key
-        :return: shared secret key
+        :return: shared secret key (``K``)
         :rtype: bytes
         """
         try:

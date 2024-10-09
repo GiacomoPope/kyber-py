@@ -22,6 +22,8 @@ ML_KEM_512 = ML_KEM(DEFAULT_PARAMETERS["ML512"])
 Key exchange object that uses ML-KEM-512 parameters internally.
 
 Provides about 128 bit level of security.
+
+Part of stable API.
 """
 
 ML_KEM_768 = ML_KEM(DEFAULT_PARAMETERS["ML768"])
@@ -29,6 +31,8 @@ ML_KEM_768 = ML_KEM(DEFAULT_PARAMETERS["ML768"])
 Key exchange object that uses ML-KEM-768 parameters internally.
 
 Provides about 192 bit level of security.
+
+Part of stable API.
 """
 
 ML_KEM_1024 = ML_KEM(DEFAULT_PARAMETERS["ML1024"])
@@ -36,4 +40,6 @@ ML_KEM_1024 = ML_KEM(DEFAULT_PARAMETERS["ML1024"])
 Key exchange object that uses ML-KEM-1024 parameters internally.
 
 Provides about 256 bit level of security.
+
+Part of stable API.
 """
