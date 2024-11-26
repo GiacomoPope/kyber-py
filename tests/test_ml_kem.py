@@ -105,7 +105,7 @@ class TestML_KEM_KAT(unittest.TestCase):
             self.assertEqual(ek, ek_kat)
             self.assertEqual(dk, dk_kat)
 
-    def generic_encap_decap_kat(self, ML_KEM, index):
+    def generic_encap_kat(self, ML_KEM, index):
         with open(
             "assets/ML-KEM-encapDecap-FIPS203/internalProjection.json"
         ) as f:
@@ -126,6 +126,24 @@ class TestML_KEM_KAT(unittest.TestCase):
             K_prime = ML_KEM.decaps(dk_kat, c_kat)
             self.assertEqual(K_prime, k_kat)
 
+    def generic_decap_kat(self, ML_KEM, index):
+        with open(
+            "assets/ML-KEM-encapDecap-FIPS203/internalProjection.json"
+        ) as f:
+            data = json.load(f)
+        kat_data = data["testGroups"][3 + index]["tests"]
+
+        # Parse out the decaps key
+        dk_hex = data["testGroups"][3 + index]["dk"]
+        dk_kat = bytes.fromhex(dk_hex)
+
+        # Ensure that decaps works
+        for test in kat_data:
+            c_kat = bytes.fromhex(test["c"])
+            k_kat = bytes.fromhex(test["k"])
+            K = ML_KEM.decaps(dk_kat, c_kat)
+            self.assertEqual(K, k_kat)
+
     def test_ML_KEM_512_keygen(self):
         self.generic_keygen_kat(ML_KEM_512, 0)
 
@@ -135,11 +153,20 @@ class TestML_KEM_KAT(unittest.TestCase):
     def test_ML_KEM_1024_keygen(self):
         self.generic_keygen_kat(ML_KEM_1024, 2)
 
-    def test_ML_KEM_512_encap_decap(self):
-        self.generic_encap_decap_kat(ML_KEM_512, 0)
+    def test_ML_KEM_512_encap(self):
+        self.generic_encap_kat(ML_KEM_512, 0)
 
-    def test_ML_KEM_768_encap_decap(self):
-        self.generic_encap_decap_kat(ML_KEM_768, 1)
+    def test_ML_KEM_768_encap(self):
+        self.generic_encap_kat(ML_KEM_768, 1)
 
-    def test_ML_KEM_1024_encap_decap(self):
-        self.generic_encap_decap_kat(ML_KEM_1024, 2)
+    def test_ML_KEM_1024_encap(self):
+        self.generic_encap_kat(ML_KEM_1024, 2)
+
+    def test_ML_KEM_512_decap(self):
+        self.generic_decap_kat(ML_KEM_512, 0)
+
+    def test_ML_KEM_768_decap(self):
+        self.generic_decap_kat(ML_KEM_768, 1)
+
+    def test_ML_KEM_1024_decap(self):
+        self.generic_decap_kat(ML_KEM_1024, 2)
