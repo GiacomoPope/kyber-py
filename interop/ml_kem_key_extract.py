@@ -1,7 +1,7 @@
 import sys
 
-if len(sys.argv) != 4:
-    raise ValueError(f"Usage: {sys.argv[0]} dk.pem secret.bin ciphertext.bin")
+if len(sys.argv) != 3:
+    raise ValueError(f"Usage: {sys.argv[0]} dk.pem ek.pem")
 
 from kyber_py.ml_kem import ML_KEM_512, ML_KEM_768, ML_KEM_1024
 
@@ -42,14 +42,11 @@ if empty != b"":
     raise der.UnexpectedDER("Trailing junk after the key")
 
 assert len(key) == 64
-_, dk = kem.key_derive(key)
+ek, _ = kem.key_derive(key)
 
-with open(sys.argv[3], "rb") as encaps_file:
-    encaps = encaps_file.read()
-
-secret = kem.decaps(dk, encaps)
-
-with open(sys.argv[2], "wb") as secret_file:
-    secret_file.write(secret)
-
-print("done")
+with open(sys.argv[2], "wb") as ek_file:
+    encoded = der.encode_sequence(
+        der.encode_sequence(der.encode_oid(*alg_id)),
+        der.encode_bitstring(ek, 0),
+    )
+    ek_file.write(der.topem(encoded, "PUBLIC KEY"))

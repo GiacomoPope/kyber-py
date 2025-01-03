@@ -1,7 +1,7 @@
 Tools that allow use of the OpenSSL Encapsulation and Decapsulation API.
 
-**Note:** this code expects draft-ietf-lamps-kyber-certificates-04 compatible behaviour.
-This is consistent with oqsprovider-0.8.0.
+**Note:** this code expects draft-ietf-lamps-kyber-certificates-06 compatible
+behaviour.
 
 
 OpenSSL setup

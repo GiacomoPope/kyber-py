@@ -21,8 +21,11 @@ else:
     raise ValueError(f"Unrecognised algorithm: {sys.argv[1]}")
 
 import ecdsa.der as der
+import os
 
-ek, dk = ML_KEM.keygen()
+seed = os.urandom(64)
+
+ek, _ = ML_KEM.key_derive(seed)
 
 with open(sys.argv[2], "wb") as ek_file:
     encoded = der.encode_sequence(
@@ -35,6 +38,6 @@ with open(sys.argv[3], "wb") as dk_file:
     encoded = der.encode_sequence(
         der.encode_integer(0),
         der.encode_sequence(der.encode_oid(*oid)),
-        der.encode_octet_string(der.encode_octet_string(dk + ek)),
+        der.encode_octet_string(seed),
     )
     dk_file.write(der.topem(encoded, "PRIVATE KEY"))
