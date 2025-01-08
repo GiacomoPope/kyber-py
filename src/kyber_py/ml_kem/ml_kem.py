@@ -292,6 +292,26 @@ class ML_KEM:
         ) = self._keygen_internal(d, z)
         return (ek, dk)
 
+    def key_derive(self, seed):
+        """
+        Derive an encapsulation key and corresponding decapsulation key
+        following the approach from Section 7.1 (FIPS 203)
+        with storage of the ``seed`` value for later expansion.
+
+        ``seed`` is a byte-encoded concatenation of the ``d`` and ``z``
+        values.
+
+        :return: Tuple with encapsulation key and decapsulation key.
+        :rtype: tuple(bytes, bytes)
+        """
+        if len(seed) != 64:
+            raise ValueError("The seed must be 64 bytes long")
+
+        d = seed[:32]
+        z = seed[32:]
+        ek, dk = self._keygen_internal(d, z)
+        return (ek, dk)
+
     def _encaps_internal(self, ek, m):
         """
         Uses the encapsulation key and randomness to generate a key and an
