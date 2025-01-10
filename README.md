@@ -82,10 +82,12 @@ To install dependencies, run `pip -r install requirements`.
 
 ### ML-KEM
 
-There are three functions exposed on the `ML_KEM` class which are intended for
+There are four functions exposed on the `ML_KEM` class which are intended for
 use:
 
 - `ML_KEM.keygen()`: generate a keypair `(ek, dk)`
+- `ML_KEM.key_derive(seed)`: generate a keypair `(ek, dk)` from the provided
+  seed
 - `ML_KEM.encaps(ek)`: generate a key and ciphertext pair `(key, ct)`
 - `ML_KEM.decaps(dk, ct)`: generate the shared key `key`
 
