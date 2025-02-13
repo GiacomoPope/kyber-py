@@ -77,7 +77,7 @@ jobs:
           ./dist/*.whl
     - name: Create GitHub Release
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       run: >-
         gh release create
         "$GITHUB_REF_NAME"
@@ -85,7 +85,7 @@ jobs:
         --notes ""
     - name: Upload artifact signatures to GitHub Release
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       # Upload to GitHub Release using the `gh` CLI.
       # `dist/` contains the built packages, and the
       # sigstore-produced signatures and certificates.
