@@ -13,12 +13,12 @@ OIDS = {
 
 import ecdsa.der as der
 
-with open(sys.argv[1], "rt") as ek_file:
-    ek_pem = ek_file.read()
+with open(sys.argv[1], "rt") as dk_file:
+    dk_pem = dk_file.read()
 
-ek_der = der.unpem(ek_pem)
+dk_der = der.unpem(dk_pem)
 
-s1, empty = der.remove_sequence(ek_der)
+s1, empty = der.remove_sequence(dk_der)
 if empty != b"":
     raise der.UnexpectedDER("Trailing junk after DER public key")
 
