@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/kyber-py
+      url: https://pypi.org/project/kyber-py/${{ github.ref_name }}
     permissions:
       id-token: write  # IMPORTANT: mandatory for trusted publishing
 
@@ -77,7 +77,7 @@ jobs:
           ./dist/*.whl
     - name: Create GitHub Release
       env:
-        GITHUB_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: >-
         gh release create
         "$GITHUB_REF_NAME"
