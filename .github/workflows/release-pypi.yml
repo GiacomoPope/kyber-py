@@ -83,7 +83,7 @@ jobs:
         "$GITHUB_REF_NAME"
         --repo "$GITHUB_REPOSITORY"
         --notes ""
-    - name: Upload artifact signatures to GitHub Release
+    - name: Upload artifact and their signatures to GitHub Release
       env:
         GITHUB_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
       # Upload to GitHub Release using the `gh` CLI.
