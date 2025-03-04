@@ -1,3 +1,23 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kyber-py"
+version = "1.0.1.dev0"
+requires-python = ">= 3.9"
+description = "A pure python implementation of ML-KEM (FIPS 203)"
+readme = "README.md"
+classifiers = [
+    "Topic :: Security :: Cryptography",
+    "Programming Language :: Python :: 3",
+]
+license = "MIT"
+
+[project.urls]
+Homepage = "https://github.com/GiacomoPope/kyber-py"
+Issues = "https://github.com/GiacomoPope/kyber-py/issues"
+
 [tool.black]
 line-length = 79
 
