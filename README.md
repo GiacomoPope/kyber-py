@@ -38,6 +38,15 @@ This code is not constant time, or written to be performant. Rather, it was
 written so that the python code closely follows the Kyber specification
 [specification](https://pq-crystals.org/kyber/data/kyber-specification-round3-20210804.pdf) and [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final). No cryptographic guarantees are made of this work.
 
+## Installation
+
+This package is available as `kyber-py` on
+[PyPI](https://pypi.org/project/kyber-py/):
+
+```
+pip install kyber-py
+```
+
 ## History of this Repository
 
 This work started by simply implementing Kyber for fun, however after NIST
