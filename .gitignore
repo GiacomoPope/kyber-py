@@ -2,3 +2,4 @@
 __pycache__
 docs/build
 .coverage
+*.pyc
