@@ -30,6 +30,22 @@ class ML_KEM:
         # use the method `set_drbg_seed()`
         self.random_bytes = os.urandom
 
+    def _ek_size(self):
+        """
+        Return the size of the encapsulation key for the selected paramters.
+
+        :rtype: int
+        """
+        return 384 * self.k + 32
+
+    def _dk_size(self):
+        """
+        Return the size of the decapsulation key for the selected parameters.
+
+        :rtype: int
+        """
+        return 768 * self.k + 96
+
     def set_drbg_seed(self, seed):
         """
         Change entropy source to a DRBG and seed it with provided value.
@@ -201,9 +217,9 @@ class ML_KEM:
         either fails.
         """
         # First check if the encap key has the right length
-        if len(ek_pke) != 384 * self.k + 32:
+        if len(ek_pke) != self._ek_size():
             raise ValueError(
-                f"Type check failed, ek_pke has the wrong length, expected {384 * self.k + 32} bytes and received {len(ek_pke)}"
+                f"Type check failed, ek_pke has the wrong length, expected {self._ek_size()} bytes and received {len(ek_pke)}"
             )
 
         # Unpack ek
@@ -379,9 +395,9 @@ class ML_KEM:
             raise ValueError(
                 f"ciphertext type check failed. Expected {32 * (self.du * self.k + self.dv)} bytes and obtained {len(c)}"
             )
-        if len(dk) != 768 * self.k + 96:
+        if len(dk) != self._dk_size():
             raise ValueError(
-                f"decapsulation type check failed. Expected {768 * self.k + 96} bytes and obtained {len(dk)}"
+                f"decapsulation type check failed. Expected {self._dk_size()} bytes and obtained {len(dk)}"
             )
 
         # Parse out data from dk
