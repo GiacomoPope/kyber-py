@@ -25,6 +25,7 @@ class ML_KEM:
 
         self.M = ModuleKyber()
         self.R = self.M.ring
+        self.oid = params["oid"] if "oid" in params else None
 
         # Use system randomness by default, for deterministic randomness
         # use the method `set_drbg_seed()`
