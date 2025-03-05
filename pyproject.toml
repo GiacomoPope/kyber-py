@@ -14,6 +14,11 @@ classifiers = [
 ]
 license = "MIT"
 
+[project.optional-dependencies]
+pkcs = [
+    "ecdsa",
+]
+
 [project.urls]
 Homepage = "https://github.com/GiacomoPope/kyber-py"
 Issues = "https://github.com/GiacomoPope/kyber-py/issues"
