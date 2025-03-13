@@ -16,7 +16,7 @@ license = "MIT"
 
 [project.optional-dependencies]
 pkcs = [
-    "ecdsa",
+    "ecdsa>=0.19.1",
 ]
 
 [project.urls]

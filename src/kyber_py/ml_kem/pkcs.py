@@ -7,7 +7,11 @@ of the public keys (encapsulation keys) from the Subject Public Key Info
 format used in X.509 certificates and in bare public keys.
 """
 
-from ecdsa import der
+try:
+    from ecdsa import der
+except ImportError:
+    raise ImportError("PKCS functionality requires the ecdsa library")
+
 from .default_parameters import ML_KEM_512, ML_KEM_768, ML_KEM_1024
 
 
