@@ -146,6 +146,22 @@ jobs:
           - name: py3.12
             os: ubuntu-latest
             python-version: "3.12"
+          - name: py3.9 with ecdsa
+            os: ubuntu-latest
+            python-version: "3.9"
+            opt-deps: ['ecdsa']
+          - name: py3.10 with ecdsa
+            os: ubuntu-latest
+            python-version: "3.10"
+            opt-deps: ['ecdsa']
+          - name: py3.11 with ecdsa
+            os: ubuntu-latest
+            python-version: "3.11"
+            opt-deps: ['ecdsa']
+          - name: py3.12 with ecdsa
+            os: ubuntu-latest
+            python-version: "3.12"
+            opt-deps: ['ecdsa']
     steps:
       - uses: actions/checkout@v4
         with:
@@ -169,6 +185,10 @@ jobs:
       - name: Install build dependencies
         run: |
           pip install -r requirements.txt
+      - name: Install ecdsa
+        if: ${{ contains(matrix.opt-deps, 'ecdsa') }}
+        run: |
+          pip install ecdsa
       - name: Display installed python package versions
         run: |
           pip list || :
