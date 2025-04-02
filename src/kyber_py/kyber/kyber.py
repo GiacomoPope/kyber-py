@@ -168,7 +168,7 @@ class Kyber:
         s_hat = s.to_ntt()
 
         # Generate the error vector e ∈ R^k
-        e, N = self._generate_error_vector(sigma, self.eta_1, N)
+        e, N = self._generate_error_vector(sigma, self.eta_2, N)
         e_hat = e.to_ntt()
 
         # Construct the public key
