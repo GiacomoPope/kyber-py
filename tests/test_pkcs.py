@@ -5,11 +5,14 @@ from kyber_py.ml_kem import ML_KEM_512, ML_KEM_768, ML_KEM_1024
 
 try:
     from ecdsa.der import unpem
+    from ecdsa import der
     from kyber_py.ml_kem.pkcs import (
         ek_to_pem,
         ek_from_pem,
+        ek_from_der,
         dk_to_pem,
         dk_from_pem,
+        dk_from_der,
     )
 
     ECDSA_PRESENT = True
@@ -615,3 +618,374 @@ v16sTsHMXer1mcihPkgjVAbRf/3cg0S2xmmEqGiqkvoCInoIaVDrDIcB7VjcYod2
 uYOILhF1
 -----END PUBLIC KEY-----
 """
+
+
+@unittest.skipUnless(ECDSA_PRESENT, "requires ecdsa package")
+class TestMalfomedKeys(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.kem = ML_KEM_512
+        cls.seed = bytes(64)
+        cls.ek, cls.dk = cls.kem.key_derive(cls.seed)
+
+    def test_ek_sanity_check(self):
+        enc = der.encode_sequence(
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_bitstring(self.ek, 0),
+        )
+
+        kem, key = ek_from_der(enc)
+
+        self.assertEqual(kem, self.kem)
+        self.assertEqual(key, self.ek)
+
+    def test_ek_trailing_junk_after_pub_key(self):
+        enc = (
+            der.encode_sequence(
+                der.encode_sequence(
+                    der.encode_oid(*self.kem.oid),
+                ),
+                der.encode_bitstring(self.ek, 0),
+            )
+            + b"\x00"
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            ek_from_der(enc)
+
+        self.assertIn("Trailing junk after DER public key", str(e.exception))
+
+    def test_ek_wrong_oid(self):
+        enc = der.encode_sequence(
+            der.encode_sequence(
+                der.encode_oid(1, 2, 3, 4),
+            ),
+            der.encode_bitstring(self.ek, 0),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            ek_from_der(enc)
+
+        self.assertIn(
+            "Not recognised algoritm OID: (1, 2, 3, 4)", str(e.exception)
+        )
+
+    def test_ek_parameters_in_alg_id(self):
+        enc = der.encode_sequence(
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+                der.encode_sequence(),
+            ),
+            der.encode_bitstring(self.ek, 0),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            ek_from_der(enc)
+
+        self.assertIn("Parameters specified for ML-KEM OID", str(e.exception))
+
+    def test_ek_junk_after_public_key(self):
+        enc = der.encode_sequence(
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_bitstring(self.ek, 0),
+            der.encode_integer(2),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            ek_from_der(enc)
+
+        self.assertIn(
+            "Trailing junk after public key bitsting", str(e.exception)
+        )
+
+    def test_ek_unexpected_size_of_key(self):
+        enc = der.encode_sequence(
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_bitstring(self.ek + b"\x00", 0),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            ek_from_der(enc)
+
+        self.assertIn(
+            "Wrong key size for the OID in structure", str(e.exception)
+        )
+
+    def test_dk_sanity_both(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk),
+                ),
+            ),
+        )
+
+        kem, expanded, seed, ek = dk_from_der(enc)
+
+        self.assertEqual(self.kem, kem)
+        self.assertEqual(self.dk, expanded)
+        self.assertEqual(self.seed, seed)
+        self.assertEqual(self.ek, ek)
+
+    def test_dk_sanity_seed(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_implicit(0, self.seed),
+            ),
+        )
+
+        kem, expanded, seed, ek = dk_from_der(enc)
+
+        self.assertEqual(self.kem, kem)
+        self.assertEqual(self.dk, expanded)
+        self.assertEqual(self.seed, seed)
+        self.assertEqual(self.ek, ek)
+
+    def test_dk_sanity_expanded_only(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_octet_string(self.dk),
+            ),
+        )
+
+        kem, expanded, seed, ek = dk_from_der(enc)
+
+        self.assertEqual(self.kem, kem)
+        self.assertEqual(self.dk, expanded)
+        self.assertEqual(None, seed)
+        self.assertEqual(self.ek, ek)
+
+    def test_dk_trailing_junk(self):
+        enc = (
+            der.encode_sequence(
+                der.encode_integer(0),
+                der.encode_sequence(
+                    der.encode_oid(*self.kem.oid),
+                ),
+                der.encode_octet_string(
+                    der.encode_sequence(
+                        der.encode_octet_string(self.seed),
+                        der.encode_octet_string(self.dk),
+                    ),
+                ),
+            )
+            + b"\x00"
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn(
+            "Trailing junk after private key structure", str(e.exception)
+        )
+
+    def test_dk_wrong_version(self):
+        enc = der.encode_sequence(
+            der.encode_integer(1),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk),
+                ),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn("Unsupported version: 1", str(e.exception))
+
+    def test_dk_wrong_oid(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(1, 3, 2, 1),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk),
+                ),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn(
+            "Not recognised algorithm OID: (1, 3, 2, 1)", str(e.exception)
+        )
+
+    def test_dk_junk_after_oid(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+                der.encode_integer(1),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk),
+                ),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn("Junk after algorithm OID", str(e.exception))
+
+    def test_dk_junk_after_both_encoding(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk),
+                )
+                + b"\x00",
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn("Junk after both encoding", str(e.exception))
+
+    def test_dk_junk_in_both_encoding(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk),
+                    der.encode_integer(1),
+                ),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn(
+            "Junk after 'expandedKey' in 'both' value", str(e.exception)
+        )
+
+    def test_dk_wrong_expanded_key_size(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed),
+                    der.encode_octet_string(self.dk + b"\x00"),
+                ),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn(
+            "Invalid expanded key size in encoding", str(e.exception)
+        )
+
+    def test_dk_wrong_seed_size(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_sequence(
+                    der.encode_octet_string(self.seed + b"\x00"),
+                    der.encode_octet_string(self.dk),
+                ),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn("Invalid length of seed in encoding", str(e.exception))
+
+    def test_dk_wrong_tag_in_seed_encoding(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_implicit(1, self.seed),
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn(
+            "Unexpected tag in private key encoding", str(e.exception)
+        )
+
+    def test_dk_junk_after_seed_encoding(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_implicit(0, self.seed) + b"\x00",
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn("Junk after seed encoding", str(e.exception))
+
+    def test_dk_junk_after_expanded_key(self):
+        enc = der.encode_sequence(
+            der.encode_integer(0),
+            der.encode_sequence(
+                der.encode_oid(*self.kem.oid),
+            ),
+            der.encode_octet_string(
+                der.encode_octet_string(self.dk) + b"\x00",
+            ),
+        )
+
+        with self.assertRaises(der.UnexpectedDER) as e:
+            dk_from_der(enc)
+
+        self.assertIn("Junk after expandedKey", str(e.exception))
