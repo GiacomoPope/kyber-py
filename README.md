@@ -87,6 +87,11 @@ However, I have not implemented AES itself, instead I import this from `pycrypto
 
 To install dependencies, run `pip -r install requirements`.
 
+The support for reading and writing the keys into PKCS formats requires
+the python-ecdsa package. It can be installed using `pip install ecdsa`,
+or by installing this package with the `pip install 'kyber-py[pkcs]'`
+command.
+
 ## Using kyber-py
 
 ### ML-KEM
@@ -99,6 +104,18 @@ use:
   seed
 - `ML_KEM.encaps(ek)`: generate a key and ciphertext pair `(key, ct)`
 - `ML_KEM.decaps(dk, ct)`: generate the shared key `key`
+
+Additionally there are few methods for reading and writing both types of keys
+in the `ml_kem.pkcs` module:
+
+- `ek_to_der`: for serialising the encapsulation key to a DER byte string
+- `ek_to_pem`: for serialising the encapsulation key to a PEM string
+- `ek_from_der`: for extracting the encapsulation key from a DER encoding
+- `ek_from_pem`: for extracting the encapsulation key from a PEM encoding
+- `dk_to_der`: for serialising the decapsulation key to a DER byte string
+- `dk_to_pem`: for serialising the decapsulation key to a PEM string
+- `dk_from_der`: for extracting the decapsulation key from a DER encoding
+- `dk_from_pem`: for extracting the decapsulation key from a PEM encoding
 
 Those, together with the `ML_KEM_512`, `ML_KEM_768`, and `ML_KEM_1024`
 objects comprise the kyber-py library stable API.

@@ -11,9 +11,30 @@ from .ml_kem import ML_KEM
 # we should maybe put these into the class and only allow a user to
 # select 128, 192 or 256 bit security.
 DEFAULT_PARAMETERS = {
-    "ML512": {"k": 2, "eta_1": 3, "eta_2": 2, "du": 10, "dv": 4},
-    "ML768": {"k": 3, "eta_1": 2, "eta_2": 2, "du": 10, "dv": 4},
-    "ML1024": {"k": 4, "eta_1": 2, "eta_2": 2, "du": 11, "dv": 5},
+    "ML512": {
+        "k": 2,
+        "eta_1": 3,
+        "eta_2": 2,
+        "du": 10,
+        "dv": 4,
+        "oid": (2, 16, 840, 1, 101, 3, 4, 4, 1),
+    },
+    "ML768": {
+        "k": 3,
+        "eta_1": 2,
+        "eta_2": 2,
+        "du": 10,
+        "dv": 4,
+        "oid": (2, 16, 840, 1, 101, 3, 4, 4, 2),
+    },
+    "ML1024": {
+        "k": 4,
+        "eta_1": 2,
+        "eta_2": 2,
+        "du": 11,
+        "dv": 5,
+        "oid": (2, 16, 840, 1, 101, 3, 4, 4, 3),
+    },
 }
 """Parameters for the :py:obj:`.ML_KEM` objects."""
 
