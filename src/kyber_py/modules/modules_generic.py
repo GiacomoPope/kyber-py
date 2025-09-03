@@ -1,71 +1,4 @@
-class Module:
-    def __init__(self, ring):
-        """
-        Initialise a module over the ring ``ring``.
-        """
-        self.ring = ring
-        self.matrix = Matrix
-
-    def random_element(self, m, n):
-        """
-        Generate a random element of the module of dimension m x n
-
-        :param int m: the number of rows in the matrix
-        :param int m: the number of columns in tge matrix
-        :return: an element of the module with dimension `m times n`
-        """
-        elements = [
-            [self.ring.random_element() for _ in range(n)] for _ in range(m)
-        ]
-        return self(elements)
-
-    def __repr__(self):
-        return f"Module over the commutative ring: {self.ring}"
-
-    def __str__(self):
-        return f"Module over the commutative ring: {self.ring}"
-
-    def __call__(self, matrix_elements, transpose=False):
-        if not isinstance(matrix_elements, list):
-            raise TypeError(
-                "elements of a module are matrices, built from elements of the base ring"
-            )
-
-        if isinstance(matrix_elements[0], list):
-            for element_list in matrix_elements:
-                if not all(
-                    isinstance(aij, self.ring.element) for aij in element_list
-                ):
-                    raise TypeError(
-                        f"All elements of the matrix must be elements of the ring: {self.ring}"
-                    )
-            return self.matrix(self, matrix_elements, transpose=transpose)
-
-        elif isinstance(matrix_elements[0], self.ring.element):
-            if not all(
-                isinstance(aij, self.ring.element) for aij in matrix_elements
-            ):
-                raise TypeError(
-                    f"All elements of the matrix must be elements of the ring: {self.ring}"
-                )
-            return self.matrix(self, [matrix_elements], transpose=transpose)
-
-        else:
-            raise TypeError(
-                "elements of a module are matrices, built from elements of the base ring"
-            )
-
-    def vector(self, elements):
-        """
-        Construct a vector given a list of elements of the module's ring
-
-        :param list: a list of elements of the ring
-        :return: a vector of the module
-        """
-        return self.matrix(self, [elements], transpose=True)
-
-
-class Matrix:
+class GenericMatrix:
     def __init__(self, parent, matrix_data, transpose=False):
         self.parent = parent
         self._data = matrix_data
@@ -238,3 +171,70 @@ class Matrix:
             ]
         )
         return f"[{info}]"
+
+
+class GenericModule:
+    def __init__(self, ring):
+        """
+        Initialise a module over the ring ``ring``.
+        """
+        self.ring = ring
+        self.matrix = GenericMatrix
+
+    def random_element(self, m, n):
+        """
+        Generate a random element of the module of dimension m x n
+
+        :param int m: the number of rows in the matrix
+        :param int m: the number of columns in tge matrix
+        :return: an element of the module with dimension `m times n`
+        """
+        elements = [
+            [self.ring.random_element() for _ in range(n)] for _ in range(m)
+        ]
+        return self(elements)
+
+    def __repr__(self):
+        return f"Module over the commutative ring: {self.ring}"
+
+    def __str__(self):
+        return f"Module over the commutative ring: {self.ring}"
+
+    def __call__(self, matrix_elements, transpose=False):
+        if not isinstance(matrix_elements, list):
+            raise TypeError(
+                "elements of a module are matrices, built from elements of the base ring"
+            )
+
+        if isinstance(matrix_elements[0], list):
+            for element_list in matrix_elements:
+                if not all(
+                    isinstance(aij, self.ring.element) for aij in element_list
+                ):
+                    raise TypeError(
+                        f"All elements of the matrix must be elements of the ring: {self.ring}"
+                    )
+            return self.matrix(self, matrix_elements, transpose=transpose)
+
+        elif isinstance(matrix_elements[0], self.ring.element):
+            if not all(
+                isinstance(aij, self.ring.element) for aij in matrix_elements
+            ):
+                raise TypeError(
+                    f"All elements of the matrix must be elements of the ring: {self.ring}"
+                )
+            return self.matrix(self, [matrix_elements], transpose=transpose)
+
+        else:
+            raise TypeError(
+                "elements of a module are matrices, built from elements of the base ring"
+            )
+
+    def vector(self, elements):
+        """
+        Construct a vector given a list of elements of the module's ring
+
+        :param list: a list of elements of the ring
+        :return: a vector of the module
+        """
+        return self.matrix(self, [elements], transpose=True)

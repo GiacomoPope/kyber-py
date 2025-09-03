@@ -53,9 +53,9 @@ def benchmark_kyber(Kyber, name, count):
     avg_dec = sum(dec_times) / count
     print(
         f" {name:11} |"
-        f"{avg_keygen*1000:7.2f}ms | {1/avg_keygen:10.2f} |"
-        f"{avg_enc*1000:6.2f}ms | {1/avg_enc:9.2f} |"
-        f"{avg_dec*1000:6.2f}ms | {1/avg_dec:7.2f} |"
+        f"{avg_keygen * 1000:7.2f}ms | {1 / avg_keygen:10.2f} |"
+        f"{avg_enc * 1000:6.2f}ms | {1 / avg_enc:9.2f} |"
+        f"{avg_dec * 1000:6.2f}ms | {1 / avg_dec:7.2f} |"
     )
 
 

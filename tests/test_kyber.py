@@ -141,7 +141,6 @@ def data_parse(filename):
     ],
 )
 def test_generic_kyber_known_answer(Kyber, seed, data):
-
     # Set the seed and check it matches the KAT
     assert seed == data["seed"]
 

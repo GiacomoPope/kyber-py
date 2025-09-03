@@ -34,7 +34,7 @@ def ek_to_der(kem, ek):
         raise ValueError("Only KEMs with specified OIDs can be encoded")
 
     if len(ek) != kem._ek_size():
-        raise ValueError(f"Provided key size doesn't match the provided kem")
+        raise ValueError("Provided key size doesn't match the provided kem")
 
     enc = der.encode_sequence(
         der.encode_sequence(
@@ -252,7 +252,7 @@ def dk_from_der(enc_key):
     else:
         tag, seed, empty = der.remove_implicit(priv_key)
         if tag != 0:
-            raise der.UnexpectedDER(f"Unexpected tag in private key encoding")
+            raise der.UnexpectedDER("Unexpected tag in private key encoding")
         if empty:
             raise der.UnexpectedDER("Junk after seed encoding")
 

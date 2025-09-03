@@ -1,9 +1,9 @@
 import unittest
-from kyber_py.polynomials.polynomials import PolynomialRingKyber
+from kyber_py.polynomials.polynomials import PolynomialRing
 
 
 class TestModuleKyber(unittest.TestCase):
-    R = PolynomialRingKyber()
+    R = PolynomialRing()
 
     def test_decode(self):
         for _ in range(10):
@@ -20,7 +20,7 @@ class TestModuleKyber(unittest.TestCase):
 
 
 class TestPolynomial(unittest.TestCase):
-    R = PolynomialRingKyber()
+    R = PolynomialRing()
 
     def test_ntt_transform(self):
         f = self.R.random_element()

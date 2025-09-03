@@ -1,6 +1,6 @@
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from ..modules.modules import ModuleKyber
+from ..modules.modules import Module
 from ..utilities.utils import select_bytes
 
 
@@ -17,7 +17,7 @@ class Kyber:
         self.du = parameter_set["du"]
         self.dv = parameter_set["dv"]
 
-        self.M = ModuleKyber()
+        self.M = Module()
         self.R = self.M.ring
 
         # Use system randomness by default, for deterministic randomness
@@ -111,7 +111,7 @@ class Kyber:
         Helper function which generates a element in the
         module from the Centered Binomial Distribution.
         """
-        elements = [0 for _ in range(self.k)]
+        elements = [self.R.zero() for _ in range(self.k)]
         for i in range(self.k):
             input_bytes = self._prf(sigma, bytes([N]), 64 * eta)
             elements[i] = self.R.cbd(input_bytes, eta)
@@ -135,7 +135,9 @@ class Kyber:
 
         When `transpose` is set to True, the matrix A is built as the transpose.
         """
-        A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
+        A_data = [
+            [self.R.zero() for _ in range(self.k)] for _ in range(self.k)
+        ]
         for i in range(self.k):
             for j in range(self.k):
                 input_bytes = self._xof(rho, bytes([j]), bytes([i]))
