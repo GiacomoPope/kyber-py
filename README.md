@@ -9,7 +9,7 @@
 > [!CAUTION]
 > :warning: **Under no circumstances should this be used for cryptographic
 applications.** :warning:
-> 
+>
 > This is an educational resource and has not been designed to be secure
 > against any form of side-channel attack. The intended use of this project
 > is for learning and experimenting with ML-KEM and Kyber
@@ -26,7 +26,7 @@ from the NIST post-quantum cryptography project.
 **Note**: This project accompanies
 [`dilithium-py`](https://github.com/GiacomoPope/dilithium-py) which is a
 pure-python implementation of ML-DSA and CRYSTALS-Dilithium and shares a lot of
-the lower-level code of this implementation. 
+the lower-level code of this implementation.
 
 ## Disclaimer
 
@@ -82,7 +82,7 @@ the
 
 Originally this project was planned to have zero dependencies, however to make this work
 pass the KATs, we needed a deterministic CSRNG. The reference implementation uses
-AES256 CTR DRBG. I have implemented this in [`aes256_ctr_drbg.py`](src/kyber_py/drbg/aes256_ctr_drbg.py). 
+AES256 CTR DRBG. I have implemented this in [`aes256_ctr_drbg.py`](src/kyber_py/drbg/aes256_ctr_drbg.py).
 However, I have not implemented AES itself, instead I import this from `pycryptodome`. If this dependency is too annoying, then please make an issue and we can have a pure-python AES included into the repo.
 
 To install dependencies, run `pip -r install requirements`.
@@ -206,7 +206,7 @@ require each element in a ring to have a multiplicative inverse). The ring in qu
 To help with experimenting with these polynomial rings themselves, the file [`polynomials_generic.py`](src/kyber_py/polynomials/polynomials_generic.py) has an implementation of the univariate polynomial ring
 
 $$
-R_q = \mathbb{F}_q[X] /(X^n + 1) 
+R_q = \mathbb{F}_q[X] /(X^n + 1)
 $$
 
 where the user can select any $q, n$. For example, you can create the
@@ -215,8 +215,8 @@ ring $R_{11} = \mathbb{F}_{11}[X] /(X^8 + 1)$ in the following way:
 #### Example
 
 ```python
->>> from kyber_py.polynomials.polynomials_generic import PolynomialRing
->>> R = PolynomialRing(11, 8)
+>>> from kyber_py.polynomials.polynomials_generic import GenericPolynomialRing
+>>> R = GenericPolynomialRing(11, 8)
 >>> x = R.gen()
 >>> f = 3*x**3 + 4*x**7
 >>> g = R.random_element(); g
@@ -233,23 +233,23 @@ We hope that this allows for some hands-on experience at working with these
 polynomials before starting to play with the whole of Kyber/ML-KEM.
 
 For the "Kyber-specific" functions, needed to implement the protocol itself, we
-have made a child class `PolynomialRingKyber(PolynomialRing)` which has the
+have made a child class `PolynomialRing(GenericPolynomialRing)` which has the
 following additional methods:
 
-- `PolynomialRingKyber`
+- `PolynomialRing`
   - `ntt_sample(bytes)` takes $3n$ bytes and produces a random polynomial in $R_q$
   - `decode(bytes, l)` takes $\ell n$ bits and produces a polynomial in $R_q$
   - `cbd(beta, eta)` takes $\eta \cdot n / 4$ bytes and produces a polynomial in
     $R_q$ with coefficents taken from a centered binomial distribution
-- `PolynomialKyber`
+- `Polynomial`
   - `encode(l)` takes the polynomial and returns a length $\ell n / 8$ bytearray
   - `to_ntt()` converts the polynomial into the NTT domain for efficient
     polynomial multiplication and returns an element of type
-    `PolynomialKyberNTT`
-- `PolynomialKyberNTT`
+    `PolynomialNTT`
+- `PolynomialNTT`
   - `from_ntt()` converts the polynomial back from the NTT domain and returns an
-    element of type `PolynomialKyber`
-  
+    element of type `Polynomial`
+
 This class fixes $q = 3329$ and $n = 256$
 
 Lastly, we define a `self.compress(d)` and `self.decompress(d)` method for
@@ -276,20 +276,20 @@ Building on `polynomials_generic.py` we also include a file
 [`modules_generic.py`](src/kyber_py/modules/modules_generic.py) which has all of
 the functions needed to perform linear algebra given a ring.
 
-Note that `Matrix` allows elements of the module to be of size $m \times n$ but
+Note that `GenericMatrix` allows elements of the module to be of size $m \times n$ but
 for Kyber, we only need vectors of length $k$ and square matrices of size $k
 \times k$.
 
-As an example of the operations we can perform with out `Module` lets revisit
+As an example of the operations we can perform with out `GenericModule` let's revisit
 the ring from the previous example:
 
 #### Example
 
 ```python
->>> R = PolynomialRing(11, 8)
+>>> R = GenericPolynomialRing(11, 8)
 >>> x = R.gen()
 >>>
->>> M = Module(R)
+>>> M = GenericModule(R)
 >>> # We create a matrix by feeding the coefficients to M
 >>> A = M([[x + 3*x**2, 4 + 3*x**7], [3*x**3 + 9*x**7, x**4]])
 >>> A
@@ -325,8 +325,8 @@ the ring from the previous example:
 [        2 + 6*x^4 + x^5]
 ```
 
-On top of this class, we have the classes `ModuleKyber(Module)` and
-`MatrixKyber(Matrix)` which have helper functions which (for example) encode
+On top of this class, we have the classes `Module(GenericModule)` and
+`Matrix(GenericMatrix)` which have helper functions which (for example) encode
 every element of a matrix, or convert every element to or from the NTT domain.
-These are simple functions which call the respective `PolynomialKyber` methods
+These are simple functions which call the respective `Polynomial` methods
 for every element.

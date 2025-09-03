@@ -1,12 +1,12 @@
 import unittest
 from random import randint
-from kyber_py.polynomials.polynomials_generic import PolynomialRing
-from kyber_py.modules.modules_generic import Module
+from kyber_py.polynomials.polynomials_generic import GenericPolynomialRing
+from kyber_py.modules.modules_generic import GenericModule
 
 
 class TestModule(unittest.TestCase):
-    R = PolynomialRing(11, 5)
-    M = Module(R)
+    R = GenericPolynomialRing(11, 5)
+    M = GenericModule(R)
 
     def test_random_element(self):
         for _ in range(100):
@@ -42,10 +42,10 @@ class TestModule(unittest.TestCase):
 
 
 class TestMatrix(unittest.TestCase):
-    R = PolynomialRing(11, 5)
-    R_prime = PolynomialRing(11, 2)
-    M = Module(R)
-    M_prime = Module(R)
+    R = GenericPolynomialRing(11, 5)
+    R_prime = GenericPolynomialRing(11, 2)
+    M = GenericModule(R)
+    M_prime = GenericModule(R)
 
     def test_equality(self):
         for _ in range(100):
@@ -173,12 +173,14 @@ class TestMatrix(unittest.TestCase):
 
     def test_print(self):
         A = self.M(
-            [self.R([1, 2]), self.R([3, 4, 5, 6])],
-            [self.R([0, 0, 0, 0, 3]), self.R([0, 1, 0, 3])],
+            [
+                [self.R([1, 2]), self.R([3, 4, 5, 6])],
+                [self.R([0, 0, 0, 0, 3]), self.R([0, 1, 0, 3])],
+            ],
         )
         u = self.M([self.R([1, 2]), self.R([3, 4, 5, 6])])
 
-        sA = "[                1 + 2*x]\n[3 + 4*x + 5*x^2 + 6*x^3]"
+        sA = "[1 + 2*x, 3 + 4*x + 5*x^2 + 6*x^3]\n[  3*x^4,               x + 3*x^3]"
         su = "[1 + 2*x, 3 + 4*x + 5*x^2 + 6*x^3]"
         self.assertEqual(str(A), sA)
         self.assertEqual(str(u), su)

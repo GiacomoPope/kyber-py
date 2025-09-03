@@ -1,10 +1,10 @@
 import unittest
 from random import randint
-from kyber_py.modules.modules import ModuleKyber
+from kyber_py.modules.modules import Module
 
 
 class TestModuleKyber(unittest.TestCase):
-    M = ModuleKyber()
+    M = Module()
     R = M.ring
 
     def test_decode_vector(self):

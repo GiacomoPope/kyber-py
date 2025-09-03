@@ -1,8 +1,8 @@
 from ..utilities.utils import bit_count
-from .polynomials_generic import PolynomialRing, Polynomial
+from .polynomials_generic import GenericPolynomialRing, GenericPolynomial
 
 
-class PolynomialRingKyber(PolynomialRing):
+class PolynomialRing(GenericPolynomialRing):
     """
     Initialise the polynomial ring:
 
@@ -12,8 +12,8 @@ class PolynomialRingKyber(PolynomialRing):
     def __init__(self):
         self.q = 3329
         self.n = 256
-        self.element = PolynomialKyber
-        self.element_ntt = PolynomialKyberNTT
+        self.element = Polynomial
+        self.element_ntt = PolynomialNTT
 
         root_of_unity = 17
         self.ntt_zetas = [
@@ -120,7 +120,7 @@ class PolynomialRingKyber(PolynomialRing):
         return element(self, coefficients)
 
 
-class PolynomialKyber(Polynomial):
+class Polynomial(GenericPolynomial):
     def __init__(self, parent, coefficients):
         self.parent = parent
         self.coeffs = self._parse_coefficients(coefficients)
@@ -185,6 +185,7 @@ class PolynomialKyber(Polynomial):
             while start < 256:
                 zeta = zetas[k]
                 k = k + 1
+                j = start
                 for j in range(start, start + l):
                     t = zeta * coeffs[j + l]
                     coeffs[j + l] = coeffs[j] - t
@@ -204,7 +205,7 @@ class PolynomialKyber(Polynomial):
         raise TypeError(f"Polynomial not in the NTT domain: {type(self) = }")
 
 
-class PolynomialKyberNTT(PolynomialKyber):
+class PolynomialNTT(Polynomial):
     def __init__(self, parent, coefficients):
         self.parent = parent
         self.coeffs = self._parse_coefficients(coefficients)
@@ -231,6 +232,7 @@ class PolynomialKyberNTT(PolynomialKyber):
             while start < 256:
                 zeta = zetas[k]
                 k = k - 1
+                j = start
                 for j in range(start, start + l):
                     t = coeffs[j]
                     coeffs[j] = t + coeffs[j + l]

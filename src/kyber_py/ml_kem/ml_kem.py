@@ -5,12 +5,13 @@ https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.203.pdf
 
 import os
 from hashlib import sha3_256, sha3_512, shake_128, shake_256
-from ..modules.modules import ModuleKyber
+from ..modules.modules import Module, Matrix, Vector
+from ..polynomials.polynomials import Polynomial
 from ..utilities.utils import select_bytes
 
 
 class ML_KEM:
-    def __init__(self, params):
+    def __init__(self, params: dict):
         """
         Initialise the ML-KEM with specified lattice parameters.
 
@@ -23,7 +24,7 @@ class ML_KEM:
         self.du = params["du"]
         self.dv = params["dv"]
 
-        self.M = ModuleKyber()
+        self.M = Module()
         self.R = self.M.ring
         self.oid = params["oid"] if "oid" in params else None
 
@@ -31,7 +32,7 @@ class ML_KEM:
         # use the method `set_drbg_seed()`
         self.random_bytes = os.urandom
 
-    def _ek_size(self):
+    def _ek_size(self) -> int:
         """
         Return the size of the encapsulation key for the selected paramters.
 
@@ -39,7 +40,7 @@ class ML_KEM:
         """
         return 384 * self.k + 32
 
-    def _dk_size(self):
+    def _dk_size(self) -> int:
         """
         Return the size of the decapsulation key for the selected parameters.
 
@@ -47,7 +48,7 @@ class ML_KEM:
         """
         return 768 * self.k + 96
 
-    def set_drbg_seed(self, seed):
+    def set_drbg_seed(self, seed: bytes):
         """
         Change entropy source to a DRBG and seed it with provided value.
 
@@ -74,7 +75,7 @@ class ML_KEM:
             )
 
     @staticmethod
-    def _xof(bytes32, i, j):
+    def _xof(b: bytes, i: bytes, j: bytes) -> bytes:
         """
         eXtendable-Output Function (XOF) described in 4.9 of FIPS 203 (page 19)
 
@@ -88,7 +89,7 @@ class ML_KEM:
           Casa de Chá da Boa Nova
           https://cryptojedi.org/papers/terminate-20230516.pdf
         """
-        input_bytes = bytes32 + i + j
+        input_bytes = b + i + j
         if len(input_bytes) != 34:
             raise ValueError(
                 "Input bytes should be one 32 byte array and 2 single bytes."
@@ -96,7 +97,7 @@ class ML_KEM:
         return shake_128(input_bytes).digest(840)
 
     @staticmethod
-    def _prf(eta, s, b):
+    def _prf(eta: int, s: bytes, b: bytes) -> bytes:
         """
         Pseudorandom function described in 4.3 of FIPS 203 (page 18)
         """
@@ -108,28 +109,30 @@ class ML_KEM:
         return shake_256(input_bytes).digest(eta * 64)
 
     @staticmethod
-    def _H(s):
+    def _H(s: bytes) -> bytes:
         """
         Hash function described in 4.4 of FIPS 203 (page 18)
         """
         return sha3_256(s).digest()
 
     @staticmethod
-    def _J(s):
+    def _J(s: bytes) -> bytes:
         """
         Hash function described in 4.4 of FIPS 203 (page 18)
         """
         return shake_256(s).digest(32)
 
     @staticmethod
-    def _G(s):
+    def _G(s: bytes) -> tuple[bytes, bytes]:
         """
         Hash function described in 4.5 of FIPS 203 (page 18)
         """
         h = sha3_512(s).digest()
         return h[:32], h[32:]
 
-    def _generate_matrix_from_seed(self, rho, transpose=False):
+    def _generate_matrix_from_seed(
+        self, rho: bytes, transpose: bool = False
+    ) -> Matrix:
         """
         Helper function which generates a element of size
         k x k from a seed `rho`.
@@ -137,7 +140,9 @@ class ML_KEM:
         When `transpose` is set to True, the matrix A is
         built as the transpose.
         """
-        A_data = [[0 for _ in range(self.k)] for _ in range(self.k)]
+        A_data = [
+            [self.R.zero() for _ in range(self.k)] for _ in range(self.k)
+        ]
         for i in range(self.k):
             for j in range(self.k):
                 xof_bytes = self._xof(rho, bytes([j]), bytes([i]))
@@ -145,12 +150,14 @@ class ML_KEM:
         A_hat = self.M(A_data, transpose=transpose)
         return A_hat
 
-    def _generate_error_vector(self, sigma, eta, N):
+    def _generate_error_vector(
+        self, sigma: bytes, eta: int, N: int
+    ) -> tuple[Vector, int]:
         """
         Helper function which generates a element in the
         module from the Centered Binomial Distribution.
         """
-        elements = [0 for _ in range(self.k)]
+        elements = [self.R.zero() for _ in range(self.k)]
         for i in range(self.k):
             prf_output = self._prf(eta, sigma, bytes([N]))
             elements[i] = self.R.cbd(prf_output, eta)
@@ -158,7 +165,9 @@ class ML_KEM:
         v = self.M.vector(elements)
         return v, N
 
-    def _generate_polynomial(self, sigma, eta, N):
+    def _generate_polynomial(
+        self, sigma: bytes, eta: int, N: int
+    ) -> tuple[Polynomial, int]:
         """
         Helper function which generates a element in the
         polynomial ring from the Centered Binomial Distribution.
@@ -167,7 +176,7 @@ class ML_KEM:
         p = self.R.cbd(prf_output, eta)
         return p, N + 1
 
-    def _k_pke_keygen(self, d):
+    def _k_pke_keygen(self, d: bytes) -> tuple[bytes, bytes]:
         """
         Use randomness to generate an encryption key and a corresponding
         decryption key following Algorithm 13 (FIPS 203)
@@ -203,7 +212,7 @@ class ML_KEM:
 
         return (ek_pke, dk_pke)
 
-    def _k_pke_encrypt(self, ek_pke, m, r):
+    def _k_pke_encrypt(self, ek_pke: bytes, m: bytes, r: bytes) -> bytes:
         """
         Uses the encryption key to encrypt a plaintext message using the
         randomness r following Algorithm 14 (FIPS 203)
@@ -255,7 +264,7 @@ class ML_KEM:
 
         return c1 + c2
 
-    def _k_pke_decrypt(self, dk_pke, c):
+    def _k_pke_decrypt(self, dk_pke: bytes, c: bytes) -> bytes:
         """
         Uses the decryption key to decrypt a ciphertext following
         Algorithm 15 (FIPS 203)
@@ -273,7 +282,7 @@ class ML_KEM:
 
         return m
 
-    def _keygen_internal(self, d, z):
+    def _keygen_internal(self, d: bytes, z: bytes) -> tuple[bytes, bytes]:
         """
         Use randomness to generate an encapsulation key and a corresponding
         decapsulation key following Algorithm 16 (FIPS 203)
@@ -288,7 +297,7 @@ class ML_KEM:
 
         return (ek, dk)
 
-    def keygen(self):
+    def keygen(self) -> tuple[bytes, bytes]:
         """
         Generate an encapsulation key and corresponding decapsulation key
         following Algorithm 19 (FIPS 203)
@@ -309,7 +318,7 @@ class ML_KEM:
         ) = self._keygen_internal(d, z)
         return (ek, dk)
 
-    def key_derive(self, seed):
+    def key_derive(self, seed: bytes) -> tuple[bytes, bytes]:
         """
         Derive an encapsulation key and corresponding decapsulation key
         following the approach from Section 7.1 (FIPS 203)
@@ -329,7 +338,7 @@ class ML_KEM:
         ek, dk = self._keygen_internal(d, z)
         return (ek, dk)
 
-    def _encaps_internal(self, ek, m):
+    def _encaps_internal(self, ek: bytes, m: bytes) -> tuple[bytes, bytes]:
         """
         Uses the encapsulation key and randomness to generate a key and an
         associated ciphertext following Algorithm 17 (FIPS 203)
@@ -355,7 +364,7 @@ class ML_KEM:
 
         return K, c
 
-    def encaps(self, ek):
+    def encaps(self, ek: bytes) -> tuple[bytes, bytes]:
         """
         Uses the encapsulation key to generate a shared secret key and an
         associated ciphertext following Algorithm 20 (FIPS 203)
@@ -374,7 +383,7 @@ class ML_KEM:
         K, c = self._encaps_internal(ek, m)
         return K, c
 
-    def _decaps_internal(self, dk, c):
+    def _decaps_internal(self, dk: bytes, c: bytes) -> bytes:
         """
         Uses the decapsulation key to produce a shared secret key from a
         ciphertext following Algorithm 18 (FIPS 203)
@@ -429,7 +438,7 @@ class ML_KEM:
         # performed in constant time
         return select_bytes(K_bar, K_prime, c == c_prime)
 
-    def decaps(self, dk, c):
+    def decaps(self, dk: bytes, c: bytes) -> bytes:
         """
         Uses the decapsulation key to produce a shared secret key from a
         ciphertext following Algorithm 21 (FIPS 203).

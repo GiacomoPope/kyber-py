@@ -1,7 +1,7 @@
 import random
 
 
-class PolynomialRing:
+class GenericPolynomialRing:
     """
     Initialise the polynomial ring:
 
@@ -11,7 +11,13 @@ class PolynomialRing:
     def __init__(self, q, n):
         self.q = q
         self.n = n
-        self.element = Polynomial
+        self.element = GenericPolynomial
+
+    def zero(self):
+        """
+        Return the zero element of the polynomial ring
+        """
+        return self([0])
 
     def gen(self):
         """
@@ -40,7 +46,7 @@ class PolynomialRing:
         return f"Univariate Polynomial Ring in x over Finite Field of size {self.q} with modulus x^{self.n} + 1"
 
 
-class Polynomial:
+class GenericPolynomial:
     def __init__(self, parent, coefficients):
         self.parent = parent
         self.coeffs = self._parse_coefficients(coefficients)
