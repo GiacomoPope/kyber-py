@@ -28,6 +28,10 @@ from the NIST post-quantum cryptography project.
 pure-python implementation of ML-DSA and CRYSTALS-Dilithium and shares a lot of
 the lower-level code of this implementation.
 
+## Licenses
+
+This project is dual-licensed under your choice of the MIT License OR the Apache License 2.0.
+
 ## Disclaimer
 
 `kyber-py` has been written as an educational tool. The goal of this project was
