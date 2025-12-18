@@ -3,14 +3,13 @@ name: publish kyber-py to pypi
 on: push
 
 jobs:
-  build:
-    name: Build distribution
-    runs-on: ubuntu-latest
+committed    namememe: Build distribution
+    runs-on  runs-on: ubuntu
 
     steps:
     - uses: actions/checkout@v4
-      with:
-        persist-credentials: false
+        with:
+        persist-credentialsss true
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
