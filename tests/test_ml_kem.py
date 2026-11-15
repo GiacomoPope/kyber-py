@@ -1,5 +1,6 @@
 import unittest
 import json
+from unittest.mock import patch
 from kyber_py.ml_kem import ML_KEM_512, ML_KEM_768, ML_KEM_1024
 
 
@@ -322,3 +323,127 @@ class TestML_KEM_KAT(unittest.TestCase):
 
     def test_ML_KEM_1024_decap(self):
         self.generic_decap_kat(ML_KEM_1024, 2)
+
+
+# The vectors are from C2SP/wycheproof at commit
+# 65ca494727a52944c204441c860b039e6786b99b and are Apache-2.0 licensed.
+class TestML_KEM_Wycheproof(unittest.TestCase):
+    def load_vectors(self, filename):
+        with open(
+            f"assets/wycheproof/testvectors_v1/{filename}"
+        ) as vector_file:
+            return json.load(vector_file)
+
+    def generic_wycheproof_test(self, ML_KEM, filename):
+        data = self.load_vectors(filename)
+        for group_index, group in enumerate(data["testGroups"]):
+            for test in group["tests"]:
+                with self.subTest(group=group_index, tcId=test["tcId"]):
+                    if test["result"] == "invalid":
+                        with self.assertRaises(ValueError):
+                            _, dk = ML_KEM.key_derive(
+                                bytes.fromhex(test["seed"])
+                            )
+                            ML_KEM.decaps(dk, bytes.fromhex(test["c"]))
+                        continue
+                    ek, dk = ML_KEM.key_derive(bytes.fromhex(test["seed"]))
+                    self.assertEqual(ek, bytes.fromhex(test["ek"]))
+                    shared_secret = ML_KEM.decaps(dk, bytes.fromhex(test["c"]))
+                    self.assertEqual(shared_secret, bytes.fromhex(test["K"]))
+
+    def generic_wycheproof_keygen_seed_test(self, ML_KEM, filename):
+        data = self.load_vectors(filename)
+        for group_index, group in enumerate(data["testGroups"]):
+            for test in group["tests"]:
+                with self.subTest(group=group_index, tcId=test["tcId"]):
+                    ek, dk = ML_KEM.key_derive(bytes.fromhex(test["seed"]))
+                    self.assertEqual(ek, bytes.fromhex(test["ek"]))
+                    self.assertEqual(dk, bytes.fromhex(test["dk"]))
+
+    def generic_wycheproof_encaps_test(self, ML_KEM, filename):
+        data = self.load_vectors(filename)
+        for group_index, group in enumerate(data["testGroups"]):
+            for test in group["tests"]:
+                with self.subTest(group=group_index, tcId=test["tcId"]):
+                    m = bytes.fromhex(test["m"])
+                    with patch.object(ML_KEM, "random_bytes", return_value=m):
+                        if test["result"] == "invalid":
+                            with self.assertRaises(ValueError):
+                                ML_KEM.encaps(bytes.fromhex(test["ek"]))
+                            continue
+                        shared_secret, ciphertext = ML_KEM.encaps(
+                            bytes.fromhex(test["ek"])
+                        )
+                    self.assertEqual(shared_secret, bytes.fromhex(test["K"]))
+                    self.assertEqual(ciphertext, bytes.fromhex(test["c"]))
+
+    def generic_wycheproof_semi_expanded_decaps_test(self, ML_KEM, filename):
+        data = self.load_vectors(filename)
+        for group_index, group in enumerate(data["testGroups"]):
+            for test in group["tests"]:
+                with self.subTest(group=group_index, tcId=test["tcId"]):
+                    if test["result"] == "invalid":
+                        with self.assertRaises(ValueError):
+                            ML_KEM.decaps(
+                                bytes.fromhex(test["dk"]),
+                                bytes.fromhex(test["c"]),
+                            )
+                        continue
+                    shared_secret = ML_KEM.decaps(
+                        bytes.fromhex(test["dk"]), bytes.fromhex(test["c"])
+                    )
+                    self.assertEqual(shared_secret, bytes.fromhex(test["K"]))
+
+    def test_ML_KEM_512_wycheproof(self):
+        self.generic_wycheproof_test(ML_KEM_512, "mlkem_512_test.json")
+
+    def test_ML_KEM_768_wycheproof(self):
+        self.generic_wycheproof_test(ML_KEM_768, "mlkem_768_test.json")
+
+    def test_ML_KEM_1024_wycheproof(self):
+        self.generic_wycheproof_test(ML_KEM_1024, "mlkem_1024_test.json")
+
+    def test_ML_KEM_512_wycheproof_encaps(self):
+        self.generic_wycheproof_encaps_test(
+            ML_KEM_512, "mlkem_512_encaps_test.json"
+        )
+
+    def test_ML_KEM_768_wycheproof_encaps(self):
+        self.generic_wycheproof_encaps_test(
+            ML_KEM_768, "mlkem_768_encaps_test.json"
+        )
+
+    def test_ML_KEM_1024_wycheproof_encaps(self):
+        self.generic_wycheproof_encaps_test(
+            ML_KEM_1024, "mlkem_1024_encaps_test.json"
+        )
+
+    def test_ML_KEM_512_wycheproof_keygen_seed(self):
+        self.generic_wycheproof_keygen_seed_test(
+            ML_KEM_512, "mlkem_512_keygen_seed_test.json"
+        )
+
+    def test_ML_KEM_768_wycheproof_keygen_seed(self):
+        self.generic_wycheproof_keygen_seed_test(
+            ML_KEM_768, "mlkem_768_keygen_seed_test.json"
+        )
+
+    def test_ML_KEM_1024_wycheproof_keygen_seed(self):
+        self.generic_wycheproof_keygen_seed_test(
+            ML_KEM_1024, "mlkem_1024_keygen_seed_test.json"
+        )
+
+    def test_ML_KEM_512_wycheproof_semi_expanded_decaps(self):
+        self.generic_wycheproof_semi_expanded_decaps_test(
+            ML_KEM_512, "mlkem_512_semi_expanded_decaps_test.json"
+        )
+
+    def test_ML_KEM_768_wycheproof_semi_expanded_decaps(self):
+        self.generic_wycheproof_semi_expanded_decaps_test(
+            ML_KEM_768, "mlkem_768_semi_expanded_decaps_test.json"
+        )
+
+    def test_ML_KEM_1024_wycheproof_semi_expanded_decaps(self):
+        self.generic_wycheproof_semi_expanded_decaps_test(
+            ML_KEM_1024, "mlkem_1024_semi_expanded_decaps_test.json"
+        )
