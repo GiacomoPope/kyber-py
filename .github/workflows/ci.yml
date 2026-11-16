@@ -134,9 +134,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: py3.9
-            os: ubuntu-latest
-            python-version: "3.9"
           - name: py3.10
             os: ubuntu-latest
             python-version: "3.10"
@@ -146,10 +143,6 @@ jobs:
           - name: py3.12
             os: ubuntu-latest
             python-version: "3.12"
-          - name: py3.9 with ecdsa
-            os: ubuntu-latest
-            python-version: "3.9"
-            opt-deps: ['ecdsa']
           - name: py3.10 with ecdsa
             os: ubuntu-latest
             python-version: "3.10"
