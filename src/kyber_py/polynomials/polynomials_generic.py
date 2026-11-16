@@ -128,7 +128,7 @@ class GenericPolynomial:
                 for x, y in zip(self.coeffs, other.coeffs)
             ]
         elif isinstance(other, int):
-            new_coeffs = self.coeffs.copy()
+            new_coeffs = self.coeffs[:]
             new_coeffs[0] = self._add_mod_q(new_coeffs[0], other)
         else:
             raise NotImplementedError(
@@ -154,7 +154,7 @@ class GenericPolynomial:
                 for x, y in zip(self.coeffs, other.coeffs)
             ]
         elif isinstance(other, int):
-            new_coeffs = self.coeffs.copy()
+            new_coeffs = self.coeffs[:]
             new_coeffs[0] = self._sub_mod_q(new_coeffs[0], other)
         else:
             raise NotImplementedError(
